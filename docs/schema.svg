@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+  <!-- Central Fact Table -->
+  <rect x="250" y="175" width="100" height="50" fill="#4A90E2" stroke="#2E5C8A" stroke-width="2" rx="5"/>
+  <text x="300" y="195" text-anchor="middle" fill="white" font-size="12" font-weight="bold">fact_monthly</text>
+  <text x="300" y="210" text-anchor="middle" fill="white" font-size="8">Monthly KPIs</text>
+
+  <!-- Top - Advisors Dimension -->
+  <rect x="250" y="30" width="100" height="50" fill="#50C878" stroke="#2E8B57" stroke-width="2" rx="5"/>
+  <text x="300" y="50" text-anchor="middle" fill="white" font-size="12" font-weight="bold">advisors</text>
+  <text x="300" y="65" text-anchor="middle" fill="white" font-size="8">id, name</text>
+  <line x1="300" y1="80" x2="300" y2="175" stroke="#666" stroke-width="2"/>
+  <circle cx="300" cy="175" r="3" fill="#666"/>
+
+  <!-- Top-Right - Platforms Dimension -->
+  <rect x="480" y="100" width="100" height="50" fill="#50C878" stroke="#2E8B57" stroke-width="2" rx="5"/>
+  <text x="530" y="120" text-anchor="middle" fill="white" font-size="12" font-weight="bold">platforms</text>
+  <text x="530" y="135" text-anchor="middle" fill="white" font-size="8">id, name</text>
+  <line x1="480" y1="125" x2="350" y2="195" stroke="#666" stroke-width="2"/>
+  <circle cx="350" cy="195" r="3" fill="#666"/>
+
+  <!-- Bottom-Right - Months Dimension -->
+  <rect x="430" y="290" width="100" height="50" fill="#50C878" stroke="#2E8B57" stroke-width="2" rx="5"/>
+  <text x="480" y="310" text-anchor="middle" fill="white" font-size="12" font-weight="bold">months</text>
+  <text x="480" y="325" text-anchor="middle" fill="white" font-size="8">month, year</text>
+  <line x1="430" y1="300" x2="350" y2="215" stroke="#666" stroke-width="2"/>
+  <circle cx="350" cy="215" r="3" fill="#666"/>
+
+  <!-- Bottom-Left - Sites Dimension -->
+  <rect x="70" y="290" width="100" height="50" fill="#50C878" stroke="#2E8B57" stroke-width="2" rx="5"/>
+  <text x="120" y="310" text-anchor="middle" fill="white" font-size="12" font-weight="bold">sites</text>
+  <text x="120" y="325" text-anchor="middle" fill="white" font-size="8">id, name</text>
+  <line x1="170" y1="300" x2="250" y2="215" stroke="#666" stroke-width="2"/>
+  <circle cx="250" cy="215" r="3" fill="#666"/>
+
+  <!-- Top-Left - KPIs Reference Table -->
+  <rect x="20" y="100" width="100" height="50" fill="#FFA500" stroke="#CC8400" stroke-width="2" rx="5"/>
+  <text x="70" y="120" text-anchor="middle" fill="white" font-size="12" font-weight="bold">kpis</text>
+  <text x="70" y="135" text-anchor="middle" fill="white" font-size="8">name, unit</text>
+  <line x1="120" y1="125" x2="250" y2="195" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+  <circle cx="250" cy="195" r="3" fill="#666"/>
+
+  <!-- Legend -->
+  <rect x="220" y="360" width="180" height="25" fill="#F5F5F5" stroke="#999" stroke-width="1" rx="3"/>
+  <rect x="230" y="368" width="12" height="8" fill="#4A90E2"/>
+  <text x="248" y="374" font-size="8" fill="#333">Fact</text>
+  <rect x="275" y="368" width="12" height="8" fill="#50C878"/>
+  <text x="293" y="374" font-size="8" fill="#333">Dimensions</text>
+  <rect x="345" y="368" width="12" height="8" fill="#FFA500"/>
+  <text x="363" y="374" font-size="8" fill="#333">Reference</text>
+</svg>

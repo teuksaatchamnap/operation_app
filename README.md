@@ -18,7 +18,7 @@ This BI database implements a **star schema** (also known as star model), which 
 The star schema is the optimal choice for business intelligence and analytical workloads because:
 
 - **Simplified Queries**: All dimension tables connect directly to the fact table, making JOIN operations straightforward and performant
-- **Historisation** : As advisor and facts are directly linked we can see in the data the history oif changes
+- **Historisation** : We keep the history of the fact. For example : advisor and facts are directly linked so we can see in the data "for C1, advisor XXX was in charge in 2021 but it was YYY starting in C2" When you use a normal relational schema with advisor behind site, when advisor is reassigned to another site it applies to all past data.
 - **Fast Aggregations**: Fact tables contain only measurements and foreign keys, optimized for rapid aggregation of large datasets
 - **Intuitive Structure**: Business users can easily understand the model without deep technical knowledge
 - **Scalability**: Handles millions or billions of fact records efficiently while keeping dimension tables relatively small
@@ -26,53 +26,9 @@ The star schema is the optimal choice for business intelligence and analytical w
 
 ## Architecture
 
-The star schema consists of a central **fact_monthly** table surrounded by **dimension tables** (sites, advisors, platforms):
+The star schema consists of a central **fact_monthly** table surrounded by **dimension tables** (sites, advisors, platforms, months):
 
-```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
-  <!-- Central Fact Table -->
-  <rect x="220" y="170" width="160" height="60" fill="#4A90E2" stroke="#2E5C8A" stroke-width="2" rx="5"/>
-  <text x="300" y="190" text-anchor="middle" fill="white" font-size="14" font-weight="bold">fact_monthly</text>
-  <text x="300" y="210" text-anchor="middle" fill="white" font-size="10">Monthly KPIs & Metrics</text>
-
-  <!-- Sites Dimension -->
-  <rect x="20" y="40" width="120" height="50" fill="#50C878" stroke="#2E8B57" stroke-width="2" rx="5"/>
-  <text x="80" y="62" text-anchor="middle" fill="white" font-size="12" font-weight="bold">sites</text>
-  <text x="80" y="78" text-anchor="middle" fill="white" font-size="9">id, name</text>
-  <line x1="140" y1="65" x2="220" y2="180" stroke="#666" stroke-width="2"/>
-  <circle cx="220" cy="180" r="3" fill="#666"/>
-
-  <!-- Advisors Dimension -->
-  <rect x="240" y="20" width="120" height="50" fill="#50C878" stroke="#2E8B57" stroke-width="2" rx="5"/>
-  <text x="300" y="42" text-anchor="middle" fill="white" font-size="12" font-weight="bold">advisors</text>
-  <text x="300" y="58" text-anchor="middle" fill="white" font-size="9">id, name</text>
-  <line x1="300" y1="70" x2="300" y2="170" stroke="#666" stroke-width="2"/>
-  <circle cx="300" cy="170" r="3" fill="#666"/>
-
-  <!-- Platforms Dimension -->
-  <rect x="460" y="40" width="120" height="50" fill="#50C878" stroke="#2E8B57" stroke-width="2" rx="5"/>
-  <text x="520" y="62" text-anchor="middle" fill="white" font-size="12" font-weight="bold">platforms</text>
-  <text x="520" y="78" text-anchor="middle" fill="white" font-size="9">id, name</text>
-  <line x1="460" y1="65" x2="380" y2="180" stroke="#666" stroke-width="2"/>
-  <circle cx="380" cy="180" r="3" fill="#666"/>
-
-  <!-- KPIs Reference Table -->
-  <rect x="240" y="330" width="120" height="50" fill="#FFA500" stroke="#CC8400" stroke-width="2" rx="5"/>
-  <text x="300" y="352" text-anchor="middle" fill="white" font-size="12" font-weight="bold">kpis</text>
-  <text x="300" y="368" text-anchor="middle" fill="white" font-size="9">name, col_name, unit</text>
-  <line x1="300" y1="330" x2="300" y2="230" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
-  <circle cx="300" cy="230" r="3" fill="#666"/>
-
-  <!-- Legend -->
-  <rect x="20" y="340" width="200" height="50" fill="#F5F5F5" stroke="#999" stroke-width="1" rx="3"/>
-  <rect x="30" y="350" width="15" height="10" fill="#4A90E2"/>
-  <text x="50" y="358" font-size="9" fill="#333">= Fact Table</text>
-  <rect x="30" y="365" width="15" height="10" fill="#50C878"/>
-  <text x="50" y="373" font-size="9" fill="#333">= Dimension Tables</text>
-  <rect x="110" y="350" width="15" height="10" fill="#FFA500"/>
-  <text x="130" y="358" font-size="9" fill="#333">= Reference</text>
-</svg>
-```
+![Database Schema](docs/schema.svg)
 
 ## Tables
 
@@ -97,12 +53,13 @@ The star schema consists of a central **fact_monthly** table surrounded by **dim
 | who_compliance | boolean     | WHO compliance status                    |
 | profitable     | boolean     | Profitability flag (P&L + Salary >= 200) |
 
-### Dimension Tables
+### Why one column per KPI ?
 
-**`sites`**
-**`advisors`**
-**`platforms`**
+Initially it was planned to have only one column "value" and a column "kpi_id" to know which KPI it was about. Here the reasons why it was a terrible idea :
 
-### Reference Table
+- The type of the column "value" would have been problematic. It can be int or float or boolean or even text.
+- The simplest calculations would have been very difficult. For example if you want to do (sales-expenses) we would have needed ao do a self join on a multi million lines table. With one column per KPI you can just do it directly. It will reduce the number of KPI as it doesnt make sense to pre-calculate KPIs when there are just a simple addition of 2 existing Kpis.
+- The performance would have been exactly the same. The table is much bigger with one col per KPI but as we always use SELECT xxx, useless data is never in the query
+- Standardisation : current schema can go out of the box to common BI tools without any change
 
-**`kpis`** - KPI definitions and metadata:
+KPIs is now a simple metadata table to describe KPI (the unit, the periodicity, the name). One of this metadata is the name of the column containing this KPI data in the fact table.
