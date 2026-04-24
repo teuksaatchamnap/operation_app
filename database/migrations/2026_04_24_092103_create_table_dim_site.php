@@ -13,15 +13,15 @@ return new class extends Migration
     {
         Schema::create('sites', function (Blueprint $table) {
             $table->id();
-            $table->string("name");
+            $table->string("name")->unique();
         });
         Schema::create('advisors', function (Blueprint $table) {
             $table->id();
-            $table->string("name");
+            $table->string("name")->unique();
         });
         Schema::create('platforms', function (Blueprint $table) {
             $table->id();
-            $table->string("name");
+            $table->string("name")->unique();
         });
         Schema::create('kpis', function (Blueprint $table) {
             $table->id();

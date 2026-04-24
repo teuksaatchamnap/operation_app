@@ -26,7 +26,6 @@ return new class extends Migration
             $table->integer('consumers')->comment("Number of workers");
             $table->boolean('who_compliance')->comment("0:no 1:yes");
             $table->boolean('profitable')->comment("0:no 1:yes.  (P&L + Salary Entrepreneur) >= 200 ");
-            $table->timestamps();
         });
     }
 
