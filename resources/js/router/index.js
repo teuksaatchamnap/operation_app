@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
 
 const pageModules = import.meta.glob('../pages/**/*.vue');
 
@@ -35,6 +36,21 @@ const router = createRouter({
         { path: '/', redirect: '/login' },
         ...generateRoutes(),
     ],
+});
+
+router.beforeEach(async (to) => {
+    if (to.path === '/login') return true;
+
+    const authStore = useAuthStore();
+    if (authStore.isLoggedIn) return true;
+
+    try {
+        await authStore.fetchCsrfAndAuth();
+        return true;
+    } catch {
+        authStore.setInitialRoute(to.fullPath);
+        return '/login';
+    }
 });
 
 export default router;
