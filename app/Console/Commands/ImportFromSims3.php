@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Site;
 use App\Models\Platform;
 use App\Models\Sims3\Sale as Sims3Sale;
 use App\Models\Sims3\Site as Sims3Site;
+use App\Models\Site;
 use Illuminate\Console\Command;
 
 class ImportFromSims3 extends Command
@@ -42,6 +42,7 @@ class ImportFromSims3 extends Command
 
             if (empty($siteName)) {
                 $skipped++;
+
                 continue;
             }
 
@@ -79,8 +80,9 @@ class ImportFromSims3 extends Command
         foreach ($distinctAdvisors as $advisorName) {
             $advisorName = trim($advisorName);
 
-            if (empty($advisorName) || $advisorName == "Stop") {
+            if (empty($advisorName) || $advisorName == 'Stop') {
                 $skipped++;
+
                 continue;
             }
 
@@ -118,8 +120,9 @@ class ImportFromSims3 extends Command
         foreach ($distinctPlatforms as $platformName) {
             $platformName = trim($platformName);
 
-            if (empty($platformName) || $platformName == "Dead") {
+            if (empty($platformName) || $platformName == 'Dead') {
                 $skipped++;
+
                 continue;
             }
 

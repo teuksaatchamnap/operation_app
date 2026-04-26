@@ -18,14 +18,14 @@ return new class extends Migration
             $table->foreignId('advisor_id')->nullable();
             $table->date('month');
             $table->string('tier');
-            $table->integer('sales_volume')->comment("Sales Volume (excl. WiS)");
+            $table->integer('sales_volume')->comment('Sales Volume (excl. WiS)');
             $table->integer('days_open');
             $table->integer('expenses');
             $table->integer('revenue');
-            $table->integer('workers')->comment("Number of workers");
-            $table->integer('consumers')->comment("Number of workers");
-            $table->boolean('who_compliance')->comment("0:no 1:yes");
-            $table->boolean('profitable')->comment("0:no 1:yes.  (P&L + Salary Entrepreneur) >= 200 ");
+            $table->integer('workers')->comment('Number of workers');
+            $table->integer('consumers')->comment('Number of workers');
+            $table->boolean('who_compliance')->comment('0:no 1:yes');
+            $table->boolean('profitable')->comment('0:no 1:yes.  (P&L + Salary Entrepreneur) >= 200 ');
         });
     }
 

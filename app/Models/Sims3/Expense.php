@@ -2,6 +2,7 @@
 
 namespace App\Models\Sims3;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Expense extends Model
@@ -12,12 +13,12 @@ class Expense extends Model
 
     public $timestamps = false;
 
-    protected function performInsert(\Illuminate\Database\Eloquent\Builder $query)
+    protected function performInsert(Builder $query)
     {
         return false;
     }
 
-    protected function performUpdate(\Illuminate\Database\Eloquent\Builder $query)
+    protected function performUpdate(Builder $query)
     {
         return false;
     }

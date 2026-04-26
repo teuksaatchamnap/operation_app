@@ -13,23 +13,23 @@ return new class extends Migration
     {
         Schema::create('sites', function (Blueprint $table) {
             $table->id();
-            $table->string("name")->unique();
+            $table->string('name')->unique();
         });
         Schema::create('advisors', function (Blueprint $table) {
             $table->id();
-            $table->string("name")->unique();
+            $table->string('name')->unique();
         });
         Schema::create('platforms', function (Blueprint $table) {
             $table->id();
-            $table->string("name")->unique();
+            $table->string('name')->unique();
         });
         Schema::create('kpis', function (Blueprint $table) {
             $table->id();
-            $table->string("name");
-            $table->string("col_name");
-            $table->string("unit");
-            $table->string("periodicity")->comment("[monthly, year to date, year]");
-            $table->string("type")->comment("[quantitative, qualitative, calculated]");
+            $table->string('name');
+            $table->string('col_name');
+            $table->string('unit');
+            $table->string('periodicity')->comment('[monthly, year to date, year]');
+            $table->string('type')->comment('[quantitative, qualitative, calculated]');
         });
     }
 
