@@ -23,8 +23,7 @@ class Expense extends Model
         return false;
     }
 
-    protected function performDeleteOnModel()
+    protected function performDeleteOnModel(): void
     {
-        return false;
     }
 }
