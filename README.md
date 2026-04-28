@@ -12,6 +12,24 @@ php artisan migrate:fresh --seed
 php artisan sims3:import-dimensions
 ```
 
+# Jobs
+
+All data is retrieved from sims3 using asynchronous jobs.
+
+- ComputeSalesVolume : compute kpis sales_volume and days_open
+- ComputeDimensions : compute kpis platform and advisor
+
+You can launch a job manually like below :
+
+```sh
+# recalculate sales for M24 for each month of 2026
+php artisan job:run "App\Jobs\ComputeSalesVolume" --year=2026 --site=M24
+# recalculate sales for all sites in jan 2026
+php artisan job:run "App\Jobs\ComputeSalesVolume" --month=2026-01
+# recalculate advisor and platform for M24 in 2026
+php artisan job:run "App\Jobs\ComputeDimensions" --year=2026 --site=M24
+```
+
 # Data model
 
 This BI database implements a **star schema** (also known as star model), which is the industry standard for data warehouse design.

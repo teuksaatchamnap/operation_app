@@ -13,19 +13,19 @@ return new class extends Migration
     {
         Schema::create('fact_monthly', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('site_id')->nullable();
-            $table->foreignId('platform_id')->nullable();
-            $table->foreignId('advisor_id')->nullable();
+            $table->foreignId('site_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('platform_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('advisor_id')->nullable()->constrained()->nullOnDelete();
             $table->date('month');
-            $table->string('tier');
-            $table->integer('sales_volume')->comment('Sales Volume (excl. WiS)');
-            $table->integer('days_open');
-            $table->integer('expenses');
-            $table->integer('revenue');
-            $table->integer('workers')->comment('Number of workers');
-            $table->integer('consumers')->comment('Number of workers');
-            $table->boolean('who_compliance')->comment('0:no 1:yes');
-            $table->boolean('profitable')->comment('0:no 1:yes.  (P&L + Salary Entrepreneur) >= 200 ');
+            $table->string('tier')->nullable();
+            $table->integer('sales_volume')->nullable()->comment('Sales Volume (excl. WiS)');
+            $table->integer('days_open')->nullable();
+            $table->integer('expenses')->nullable();
+            $table->integer('revenue')->nullable();
+            $table->integer('workers')->nullable()->comment('Number of workers');
+            $table->integer('consumers')->nullable()->comment('Number of workers');
+            $table->boolean('who_compliance')->nullable()->comment('0:no 1:yes');
+            $table->boolean('profitable')->nullable()->comment('0:no 1:yes.  (P&L + Salary Entrepreneur) >= 200 ');
         });
     }
 

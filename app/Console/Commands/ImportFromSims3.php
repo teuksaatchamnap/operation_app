@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Advisor;
 use App\Models\Platform;
 use App\Models\Sims3\Sale as Sims3Sale;
 use App\Models\Sims3\Site as Sims3Site;
@@ -86,17 +87,17 @@ class ImportFromSims3 extends Command
                 continue;
             }
 
-            $site = Site::firstOrCreate(
+            $advisor = Advisor::firstOrCreate(
                 ['name' => $advisorName],
                 ['name' => $advisorName]
             );
 
-            if ($site->wasRecentlyCreated) {
+            if ($advisor->wasRecentlyCreated) {
                 $created++;
-                $this->info("  Created site: {$advisorName}");
+                $this->info("  Created advisor: {$advisorName}");
             } else {
                 $skipped++;
-                $this->line("  Skipped existing site: {$advisorName}");
+                $this->line("  Skipped advisor site: {$advisorName}");
             }
         }
 

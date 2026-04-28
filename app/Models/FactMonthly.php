@@ -12,6 +12,8 @@ class FactMonthly extends Model
     /** @use HasFactory<FactMonthlyFactory> */
     use HasFactory;
 
+    public $timestamps = false;
+
     protected $table = 'fact_monthly';
 
     protected $fillable = [

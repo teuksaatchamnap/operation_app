@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Kpi;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Artisan;
 
 class KpiSeeder extends Seeder
 {
@@ -87,5 +88,7 @@ class KpiSeeder extends Seeder
                 $kpi
             );
         }
+
+        Artisan::call("sims3:import-dimensions");
     }
 }
