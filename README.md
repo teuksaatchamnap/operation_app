@@ -13,7 +13,10 @@ php artisan sims3:import-dimensions
 # run some worker to get data from 2026
 php artisan job:run "App\Jobs\ComputeDimensions" --year=2026 --site=M24
 php artisan job:run "App\Jobs\ComputeSalesVolume" --year=2026 --site=M24
+php artisan serve
 ```
+
+The API is automatically documented and browsable on http://localhost:8000/docs/api
 
 # Jobs
 
