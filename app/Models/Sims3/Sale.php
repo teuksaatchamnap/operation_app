@@ -40,6 +40,11 @@ use Illuminate\Database\Eloquent\Model;
 //   `Project` tinyint(1) DEFAULT NULL
 // ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 
+/**
+ * @property \DateTimeInterface|null $Month
+ * @property string|null $Id_Site
+ * @property int|null $Number_Open_Days
+ */
 class Sale extends Model
 {
     protected $connection = 'sims3';

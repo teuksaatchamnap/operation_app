@@ -1,0 +1,77 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\FactMonthly;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class FactMonthlyController extends Controller
+{
+    /**
+     * Get fact monthly data with optional filters and column selection.
+     *
+     * @authenticated
+     *
+     * @queryParam month string Optional. Filter by month in YYYY-MM format. Example: 2025-01
+     * @queryParam year int Optional. Filter by year (4 digits). Example: 2025
+     * @queryParam platform_id int Optional. Filter by platform ID. Example: 3
+     * @queryParam advisor_id int Optional. Filter by advisor ID. Example: 1
+     * @queryParam site_id int Optional. Filter by site ID. Example: 5
+     * @queryParam kpis string Optional. Comma-separated list of columns to include in the response.
+     *   Always includes: id, month, site_id, platform_id, advisor_id.
+     *   Available: tier, sales_volume, days_open, expenses, revenue, workers, consumers, who_compliance, profitable.
+     *   Example: revenue,sales_volume,consumers
+     *
+     * @response [
+     *   {"id": 1, "month": "2025-01-01", "site_id": 5, "platform_id": 3, "advisor_id": 1, "revenue": 15000, "sales_volume": 200},
+     *   {"id": 2, "month": "2025-02-01", "site_id": 5, "platform_id": 3, "advisor_id": 1, "revenue": 18000, "sales_volume": 250}
+     * ]
+     *
+     * @return JsonResponse
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'month' => 'sometimes|date_format:Y-m',
+            'year' => 'sometimes|integer|digits:4',
+            'platform_id' => 'sometimes|integer',
+            'advisor_id' => 'sometimes|integer',
+            'site_id' => 'sometimes|integer',
+            'kpis' => 'sometimes|string',
+        ]);
+
+        $query = FactMonthly::query();
+
+        if ($request->filled('month')) {
+            $query->whereMonth('month', '=', substr($validated['month'], 5, 2))
+                ->whereYear('month', '=', substr($validated['month'], 0, 4));
+        }
+
+        if ($request->filled('year')) {
+            $query->whereYear('month', '=', $validated['year']);
+        }
+
+        if ($request->filled('platform_id')) {
+            $query->where('platform_id', $validated['platform_id']);
+        }
+
+        if ($request->filled('advisor_id')) {
+            $query->where('advisor_id', $validated['advisor_id']);
+        }
+
+        if ($request->filled('site_id')) {
+            $query->where('site_id', $validated['site_id']);
+        }
+
+        $baseColumns = ['id', 'month', 'site_id', 'platform_id', 'advisor_id'];
+
+        if ($request->filled('kpis')) {
+            $kpiColumns = explode(',', $validated['kpis']);
+            $columns = array_values(array_unique(array_merge($baseColumns, $kpiColumns)));
+            $query->select($columns);
+        }
+
+        return response()->json($query->get());
+    }
+}

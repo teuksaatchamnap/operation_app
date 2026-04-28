@@ -127,6 +127,11 @@ CREATE TABLE `sites` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
  */
 
+/**
+ * @property string $Id_Site
+ * @property string|null $Platform
+ * @property string|null $Advisor
+ */
 class Site extends Model
 {
     protected $connection = 'sims3';

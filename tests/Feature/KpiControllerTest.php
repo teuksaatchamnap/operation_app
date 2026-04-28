@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Kpi;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -10,8 +11,15 @@ class KpiControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_unauthenticated_request_fails(): void
+    {
+        $this->getJson('/api/kpis')->assertUnauthorized();
+    }
+
     public function test_can_list_all_kpis(): void
     {
+        $user = User::factory()->create();
+
         Kpi::create([
             'name' => 'Revenue',
             'col_name' => 'revenue',
@@ -28,7 +36,7 @@ class KpiControllerTest extends TestCase
             'type' => 'qualitative',
         ]);
 
-        $response = $this->getJson('/api/kpis');
+        $response = $this->actingAs($user)->getJson('/api/kpis');
 
         $response->assertStatus(200);
         $response->assertJsonCount(2);
@@ -38,6 +46,8 @@ class KpiControllerTest extends TestCase
 
     public function test_can_create_a_kpi(): void
     {
+        $user = User::factory()->create();
+
         $payload = [
             'name' => 'Churn Rate',
             'col_name' => 'churn_rate',
@@ -46,7 +56,7 @@ class KpiControllerTest extends TestCase
             'type' => 'calculated',
         ];
 
-        $response = $this->postJson('/api/kpis', $payload);
+        $response = $this->actingAs($user)->postJson('/api/kpis', $payload);
 
         $response->assertStatus(201);
         $response->assertJsonFragment($payload);
@@ -55,6 +65,8 @@ class KpiControllerTest extends TestCase
 
     public function test_can_show_a_kpi(): void
     {
+        $user = User::factory()->create();
+
         $kpi = Kpi::create([
             'name' => 'NPS',
             'col_name' => 'nps',
@@ -63,7 +75,7 @@ class KpiControllerTest extends TestCase
             'type' => 'qualitative',
         ]);
 
-        $response = $this->getJson("/api/kpis/{$kpi->id}");
+        $response = $this->actingAs($user)->getJson("/api/kpis/{$kpi->id}");
 
         $response->assertStatus(200);
         $response->assertJsonFragment(['name' => 'NPS']);
@@ -71,6 +83,8 @@ class KpiControllerTest extends TestCase
 
     public function test_can_update_a_kpi(): void
     {
+        $user = User::factory()->create();
+
         $kpi = Kpi::create([
             'name' => 'Revenue',
             'col_name' => 'revenue',
@@ -79,7 +93,7 @@ class KpiControllerTest extends TestCase
             'type' => 'quantitative',
         ]);
 
-        $response = $this->putJson("/api/kpis/{$kpi->id}", [
+        $response = $this->actingAs($user)->putJson("/api/kpis/{$kpi->id}", [
             'name' => 'Gross Revenue',
             'unit' => 'EUR',
         ]);
@@ -91,6 +105,8 @@ class KpiControllerTest extends TestCase
 
     public function test_can_delete_a_kpi(): void
     {
+        $user = User::factory()->create();
+
         $kpi = Kpi::create([
             'name' => 'Revenue',
             'col_name' => 'revenue',
@@ -99,7 +115,7 @@ class KpiControllerTest extends TestCase
             'type' => 'quantitative',
         ]);
 
-        $response = $this->deleteJson("/api/kpis/{$kpi->id}");
+        $response = $this->actingAs($user)->deleteJson("/api/kpis/{$kpi->id}");
 
         $response->assertStatus(204);
         $this->assertDatabaseMissing('kpis', ['id' => $kpi->id]);

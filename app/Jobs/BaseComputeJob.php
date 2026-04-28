@@ -70,7 +70,7 @@ abstract class BaseComputeJob implements ShouldQueue
             $query->where('name', $this->site);
         }
 
-        return $query->get()->pluck('id', 'name');
+        return $query->pluck('id', 'name');
     }
 
     protected function resolveMonths(): Collection
