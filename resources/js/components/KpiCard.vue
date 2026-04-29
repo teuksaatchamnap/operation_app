@@ -32,7 +32,7 @@
 
         <v-card-text class="text-center py-6">
             <div class="text-h1 font-weight-bold text-primary kpi-value">
-                {{ formatValue(computedValue) }}
+                {{ formatValue(displayValue) }}
             </div>
             <div class="text-subtitle-1 text-medium-emphasis mt-2">
                 {{ kpi?.unit || "" }}
@@ -42,7 +42,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, onUnmounted } from "vue";
 import axios from "axios";
 
 const props = defineProps({
@@ -59,16 +59,18 @@ const props = defineProps({
 const kpi = ref(null);
 const computedValue = ref(0);
 const loading = ref(false);
+const displayValue = ref(0);
+const randomInterval = ref(null);
 
 function formatValue(value) {
     if (value === null || value === undefined) return "-";
-    
+
     // Convert string to number if necessary
     const numValue = typeof value === "string" ? parseFloat(value) : value;
-    
+
     if (!isNaN(numValue)) {
         return numValue.toLocaleString("en-US", {
-            maximumFractionDigits: 0,
+            maximumFractionDigits: 2,
             minimumFractionDigits: 0,
         });
     }
@@ -139,12 +141,45 @@ onMounted(async () => {
     await fetchComputedValue();
 });
 
+onUnmounted(() => {
+    if (randomInterval.value) {
+        clearInterval(randomInterval.value);
+    }
+});
+
 watch(
     () => props.filters,
     async () => {
         await fetchComputedValue();
     },
     { deep: true },
+);
+
+watch(
+    () => loading.value,
+    (isLoading) => {
+        if (isLoading) {
+            randomInterval.value = setInterval(() => {
+                displayValue.value = Math.floor(Math.random() * 999999);
+            }, 50);
+        } else {
+            if (randomInterval.value) {
+                clearInterval(randomInterval.value);
+                randomInterval.value = null;
+            }
+            displayValue.value = computedValue.value;
+        }
+    },
+    { immediate: true },
+);
+
+watch(
+    () => computedValue.value,
+    (newValue) => {
+        if (!loading.value) {
+            displayValue.value = newValue;
+        }
+    },
 );
 </script>
 
@@ -158,13 +193,13 @@ watch(
 }
 
 .kpi-value {
-    font-size: 4rem !important;
-    line-height: 1.2;
+    font-size: 2rem !important;
+    line-height: 1;
 }
 
 @media (min-width: 960px) {
     .kpi-value {
-        font-size: 5rem !important;
+        font-size: 3rem !important;
     }
 }
 </style>

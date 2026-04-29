@@ -76,22 +76,22 @@ class FactMonthlyController extends Controller
         if ($request->filled('aggregate') && $request->filled('kpis')) {
             $kpiColumns = explode(',', $validated['kpis']);
             $aggregateFunc = $validated['aggregate'];
-            
+
             $selectColumns = [];
             foreach ($kpiColumns as $col) {
                 $selectColumns[] = "{$aggregateFunc}({$col}) as {$col}";
             }
-            
+
             $query->selectRaw(implode(', ', $selectColumns));
             $result = $query->first();
-            
+
             // Cast aggregated values to proper numeric types
             foreach ($kpiColumns as $col) {
                 if (isset($result->$col)) {
                     $result->$col = (float) $result->$col;
                 }
             }
-            
+
             return response()->json([$result]);
         }
 

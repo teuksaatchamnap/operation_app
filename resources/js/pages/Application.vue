@@ -2,19 +2,30 @@
     <v-container>
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-bold">📡 Command Center</h1>
-            <v-btn
-                color="error"
-                variant="outlined"
-                prepend-icon="mdi-logout"
-                @click="logout"
-            >
-                Logout
-            </v-btn>
+            <div class="flex gap-2">
+                <v-tooltip location="bottom" text="Toggle dark mode">
+                    <template v-slot:activator="{ props }">
+                        <v-btn
+                            :icon="isDark ? 'mdi-weather-night' : 'mdi-weather-sunny'"
+                            variant="text"
+                            v-bind="props"
+                            @click="toggleDarkMode"
+                        ></v-btn>
+                    </template>
+                </v-tooltip>
+                <v-tooltip location="bottom" text="Logout">
+                    <template v-slot:activator="{ props }">
+                        <v-btn
+                            icon="mdi-logout"
+                            color="error"
+                            variant="text"
+                            v-bind="props"
+                            @click="logout"
+                        ></v-btn>
+                    </template>
+                </v-tooltip>
+            </div>
         </div>
-
-        <v-alert type="success" variant="tonal" class="mb-6">
-            Welcome, {{ authStore.user?.name }}!
-        </v-alert>
 
         <!-- Filter Form -->
         <v-card class="mb-6 pa-4">
@@ -115,16 +126,10 @@
         <!-- KPI Cards -->
         <v-row class="mb-6">
             <v-col cols="12" md="6">
-                <KpiCard
-                    kpi-col-name="sales_volume"
-                    :filters="kpiFilters"
-                />
+                <KpiCard kpi-col-name="sales_volume" :filters="kpiFilters" />
             </v-col>
             <v-col cols="12" md="6">
-                <KpiCard
-                    kpi-col-name="days_open"
-                    :filters="kpiFilters"
-                />
+                <KpiCard kpi-col-name="days_open" :filters="kpiFilters" />
             </v-col>
         </v-row>
     </v-container>
@@ -133,12 +138,28 @@
 <script setup>
 import { ref, watch, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
+import { useTheme } from "vuetify";
 import { useAuthStore } from "../stores/auth";
 import axios from "axios";
 import KpiCard from "../components/KpiCard.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
+const theme = useTheme();
+
+// Dark mode
+const isDark = computed(() => theme.global.current.value.dark);
+
+function toggleDarkMode() {
+    theme.global.name.value = isDark.value ? 'light' : 'dark';
+    localStorage.setItem('darkMode', isDark.value ? 'true' : 'false');
+}
+
+// Initialize dark mode from localStorage or system preference
+if (localStorage.getItem('darkMode') === 'true' ||
+    (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    theme.global.name.value = 'dark';
+}
 
 // Get current month in YYYY-MM format
 const now = new Date();
@@ -205,8 +226,6 @@ onMounted(async () => {
         sites.value = sitesRes.data;
         advisors.value = advisorsRes.data;
         platforms.value = platformsRes.data;
-
-
     } catch (error) {
         console.error("Failed to load dimensions:", error);
     }
