@@ -35,27 +35,27 @@ class FactMonthlyControllerTest extends TestCase
             ->assertSuccessful();
     }
 
-    public function test_can_filter_by_platform_id(): void
+    public function test_can_filter_by_multiple_platform_ids(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user)
-            ->getJson('/api/fact-monthly?platform_id=1')
+            ->getJson('/api/fact-monthly?platform_ids[]=1&platform_ids[]=2')
             ->assertSuccessful();
     }
 
-    public function test_can_filter_by_advisor_id(): void
+    public function test_can_filter_by_multiple_advisor_ids(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user)
-            ->getJson('/api/fact-monthly?advisor_id=1')
+            ->getJson('/api/fact-monthly?advisor_ids[]=1&advisor_ids[]=2')
             ->assertSuccessful();
     }
 
-    public function test_can_filter_by_site_id(): void
+    public function test_can_filter_by_multiple_site_ids(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user)
-            ->getJson('/api/fact-monthly?site_id=1')
+            ->getJson('/api/fact-monthly?site_ids[]=1&site_ids[]=2&site_ids[]=3')
             ->assertSuccessful();
     }
 
@@ -67,11 +67,35 @@ class FactMonthlyControllerTest extends TestCase
             ->assertSuccessful();
     }
 
-    public function test_can_combine_filters_and_kpis(): void
+    public function test_can_combine_array_filters_and_kpis(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user)
-            ->getJson('/api/fact-monthly?year=2025&platform_id=1&kpis=revenue,consumers')
+            ->getJson('/api/fact-monthly?year=2025&platform_ids[]=1&platform_ids[]=2&site_ids[]=5&advisor_ids[]=1&kpis=revenue,sales_volume,consumers')
             ->assertSuccessful();
+    }
+
+    public function test_platform_ids_must_be_array(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)
+            ->getJson('/api/fact-monthly?platform_ids=1')
+            ->assertUnprocessable();
+    }
+
+    public function test_advisor_ids_must_be_array(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)
+            ->getJson('/api/fact-monthly?advisor_ids=1')
+            ->assertUnprocessable();
+    }
+
+    public function test_site_ids_must_be_array(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)
+            ->getJson('/api/fact-monthly?site_ids=1')
+            ->assertUnprocessable();
     }
 }

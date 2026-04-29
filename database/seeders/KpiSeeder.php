@@ -23,6 +23,7 @@ class KpiSeeder extends Seeder
                 'unit' => 'tier level',
                 'periodicity' => 'monthly',
                 'type' => 'qualitative',
+                'description' => ''
             ],
             [
                 'name' => 'Sales Volume',
@@ -30,6 +31,8 @@ class KpiSeeder extends Seeder
                 'unit' => 'count',
                 'periodicity' => 'monthly',
                 'type' => 'quantitative',
+                'description' => 'This is the total sales excluding WiS and new bottles',
+                'aggregate' => 'sum'
             ],
             [
                 'name' => 'Days Open',
@@ -37,6 +40,8 @@ class KpiSeeder extends Seeder
                 'unit' => 'days',
                 'periodicity' => 'monthly',
                 'type' => 'quantitative',
+                'description' => 'The number of days the site reported at least one sale',
+                'aggregate' => 'avg'
             ],
             [
                 'name' => 'Expenses',

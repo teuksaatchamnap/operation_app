@@ -19,5 +19,7 @@ class Kpi extends Model
         'unit',
         'periodicity',
         'type',
+        'description',
+        'aggregate'
     ];
 }

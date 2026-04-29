@@ -15,9 +15,9 @@ class FactMonthlyController extends Controller
      *
      * @queryParam month string Optional. Filter by month in YYYY-MM format. Example: 2025-01
      * @queryParam year int Optional. Filter by year (4 digits). Example: 2025
-     * @queryParam platform_id int Optional. Filter by platform ID. Example: 3
-     * @queryParam advisor_id int Optional. Filter by advisor ID. Example: 1
-     * @queryParam site_id int Optional. Filter by site ID. Example: 5
+     * @queryParam platform_ids int[] Optional. Filter by platform IDs (array). Example: [1, 2, 3]
+     * @queryParam advisor_ids int[] Optional. Filter by advisor IDs (array). Example: [1, 2]
+     * @queryParam site_ids int[] Optional. Filter by site IDs (array). Example: [5, 6]
      * @queryParam kpis string Optional. Comma-separated list of columns to include in the response.
      *   Always includes: id, month, site_id, platform_id, advisor_id.
      *   Available: tier, sales_volume, days_open, expenses, revenue, workers, consumers, who_compliance, profitable.
@@ -35,9 +35,12 @@ class FactMonthlyController extends Controller
         $validated = $request->validate([
             'month' => 'sometimes|date_format:Y-m',
             'year' => 'sometimes|integer|digits:4',
-            'platform_id' => 'sometimes|integer',
-            'advisor_id' => 'sometimes|integer',
-            'site_id' => 'sometimes|integer',
+            'platform_ids' => 'sometimes|array',
+            'platform_ids.*' => 'integer',
+            'advisor_ids' => 'sometimes|array',
+            'advisor_ids.*' => 'integer',
+            'site_ids' => 'sometimes|array',
+            'site_ids.*' => 'integer',
             'kpis' => 'sometimes|string',
         ]);
 
@@ -52,16 +55,16 @@ class FactMonthlyController extends Controller
             $query->whereYear('month', '=', $validated['year']);
         }
 
-        if ($request->filled('platform_id')) {
-            $query->where('platform_id', $validated['platform_id']);
+        if ($request->filled('platform_ids')) {
+            $query->whereIn('platform_id', $validated['platform_ids']);
         }
 
-        if ($request->filled('advisor_id')) {
-            $query->where('advisor_id', $validated['advisor_id']);
+        if ($request->filled('advisor_ids')) {
+            $query->whereIn('advisor_id', $validated['advisor_ids']);
         }
 
-        if ($request->filled('site_id')) {
-            $query->where('site_id', $validated['site_id']);
+        if ($request->filled('site_ids')) {
+            $query->whereIn('site_id', $validated['site_ids']);
         }
 
         $baseColumns = ['id', 'month', 'site_id', 'platform_id', 'advisor_id'];
