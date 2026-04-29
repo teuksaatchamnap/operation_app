@@ -32,54 +32,7 @@
             <v-card-title class="text-h6 mb-4">Filters</v-card-title>
             <v-row>
                 <v-col cols="12" md="6" lg="3">
-                    <v-menu
-                        v-model="monthMenu"
-                        :close-on-content-click="false"
-                        location="bottom"
-                    >
-                        <template v-slot:activator="{ props }">
-                            <v-text-field
-                                v-model="selectedMonth"
-                                label="Month"
-                                placeholder="YYYY-MM"
-                                prepend-inner-icon="mdi-calendar"
-                                readonly
-                                clearable
-                                v-bind="props"
-                            />
-                        </template>
-                        <v-card min-width="280">
-                            <v-card-text>
-                                <v-text-field
-                                    v-model="pickerYear"
-                                    label="Year"
-                                    type="number"
-                                    class="mb-4"
-                                />
-                                <v-row density="comfortable">
-                                    <v-col
-                                        v-for="(month, index) in months"
-                                        :key="index"
-                                        cols="3"
-                                    >
-                                        <v-btn
-                                            :color="
-                                                isSelectedMonth(index)
-                                                    ? 'primary'
-                                                    : ''
-                                            "
-                                            variant="text"
-                                            size="small"
-                                            block
-                                            @click="selectMonth(index)"
-                                        >
-                                            {{ month }}
-                                        </v-btn>
-                                    </v-col>
-                                </v-row>
-                            </v-card-text>
-                        </v-card>
-                    </v-menu>
+                    <MonthPicker v-model="selectedMonth" />
                 </v-col>
                 <v-col cols="12" md="6" lg="3">
                     <v-select
@@ -142,6 +95,7 @@ import { useTheme } from "vuetify";
 import { useAuthStore } from "../stores/auth";
 import axios from "axios";
 import KpiCard from "../components/KpiCard.vue";
+import MonthPicker from "../components/MonthPicker.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -165,23 +119,6 @@ if (localStorage.getItem('darkMode') === 'true' ||
 const now = new Date();
 const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
-// Month picker data
-const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-];
-const pickerYear = ref(now.getFullYear());
-
 // Filter state
 const sites = ref([]);
 const advisors = ref([]);
@@ -190,7 +127,6 @@ const selectedSites = ref([]);
 const selectedAdvisors = ref([]);
 const selectedPlatforms = ref([]);
 const selectedMonth = ref(currentMonth);
-const monthMenu = ref(false);
 
 // Computed filters object for KPI cards
 const kpiFilters = computed(() => ({
@@ -199,21 +135,6 @@ const kpiFilters = computed(() => ({
     platform_ids: selectedPlatforms.value,
     month: selectedMonth.value,
 }));
-
-function isSelectedMonth(monthIndex) {
-    if (!selectedMonth.value) return false;
-    const [year, month] = selectedMonth.value.split("-");
-    return (
-        parseInt(year) === pickerYear.value &&
-        parseInt(month) === monthIndex + 1
-    );
-}
-
-function selectMonth(monthIndex) {
-    const month = String(monthIndex + 1).padStart(2, "0");
-    selectedMonth.value = `${pickerYear.value}-${month}`;
-    monthMenu.value = false;
-}
 
 // Load dimensions data on mount
 onMounted(async () => {
