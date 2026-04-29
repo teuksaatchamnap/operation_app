@@ -28,7 +28,7 @@ class KpiSeeder extends Seeder
             [
                 'name' => 'Sales Volume',
                 'col_name' => 'sales_volume',
-                'unit' => 'count',
+                'unit' => 'bottles',
                 'periodicity' => 'monthly',
                 'type' => 'quantitative',
                 'description' => 'This is the total sales excluding WiS and new bottles',

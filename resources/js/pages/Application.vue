@@ -112,51 +112,30 @@
             </v-row>
         </v-card>
 
-        <!-- Results -->
-        <v-card v-if="factMonthlyData.length > 0" class="mb-6">
-            <v-card-title class="text-h6"
-                >Results ({{ factMonthlyData.length }} records)</v-card-title
-            >
-            <v-table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Month</th>
-                        <th>Site ID</th>
-                        <th>Platform ID</th>
-                        <th>Advisor ID</th>
-                        <th>Sales Volume</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="item in factMonthlyData" :key="item.id">
-                        <td>{{ item.id }}</td>
-                        <td>{{ item.month }}</td>
-                        <td>{{ item.site_id }}</td>
-                        <td>{{ item.platform_id }}</td>
-                        <td>{{ item.advisor_id }}</td>
-                        <td>{{ item.sales_volume }}</td>
-                    </tr>
-                </tbody>
-            </v-table>
-        </v-card>
-
-        <v-alert
-            v-else-if="hasSearched"
-            type="info"
-            variant="tonal"
-            class="mb-6"
-        >
-            No results found for the selected filters.
-        </v-alert>
+        <!-- KPI Cards -->
+        <v-row class="mb-6">
+            <v-col cols="12" md="6">
+                <KpiCard
+                    kpi-col-name="sales_volume"
+                    :filters="kpiFilters"
+                />
+            </v-col>
+            <v-col cols="12" md="6">
+                <KpiCard
+                    kpi-col-name="days_open"
+                    :filters="kpiFilters"
+                />
+            </v-col>
+        </v-row>
     </v-container>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import axios from "axios";
+import KpiCard from "../components/KpiCard.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -192,10 +171,13 @@ const selectedPlatforms = ref([]);
 const selectedMonth = ref(currentMonth);
 const monthMenu = ref(false);
 
-// Results state
-const factMonthlyData = ref([]);
-const hasSearched = ref(false);
-const isLoading = ref(false);
+// Computed filters object for KPI cards
+const kpiFilters = computed(() => ({
+    site_ids: selectedSites.value,
+    advisor_ids: selectedAdvisors.value,
+    platform_ids: selectedPlatforms.value,
+    month: selectedMonth.value,
+}));
 
 function isSelectedMonth(monthIndex) {
     if (!selectedMonth.value) return false;
@@ -224,69 +206,11 @@ onMounted(async () => {
         advisors.value = advisorsRes.data;
         platforms.value = platformsRes.data;
 
-        // Load initial data with current month
-        await fetchFactMonthlyData();
+
     } catch (error) {
         console.error("Failed to load dimensions:", error);
     }
 });
-
-// Watch for filter changes and fetch data
-watch(
-    [selectedSites, selectedAdvisors, selectedPlatforms, selectedMonth],
-    async () => {
-        await fetchFactMonthlyData();
-    },
-    { deep: true },
-);
-
-async function fetchFactMonthlyData() {
-    // Only fetch if at least one filter is set
-    const hasFilters =
-        selectedSites.value.length > 0 ||
-        selectedAdvisors.value.length > 0 ||
-        selectedPlatforms.value.length > 0 ||
-        selectedMonth.value;
-
-    if (!hasFilters) {
-        factMonthlyData.value = [];
-        hasSearched.value = false;
-        return;
-    }
-
-    isLoading.value = true;
-    hasSearched.value = true;
-
-    try {
-        const params = {
-            kpis: "sales_volume",
-        };
-
-        if (selectedSites.value.length > 0) {
-            params.site_ids = selectedSites.value;
-        }
-
-        if (selectedAdvisors.value.length > 0) {
-            params.advisor_ids = selectedAdvisors.value;
-        }
-
-        if (selectedPlatforms.value.length > 0) {
-            params.platform_ids = selectedPlatforms.value;
-        }
-
-        if (selectedMonth.value) {
-            params.month = selectedMonth.value;
-        }
-
-        const response = await axios.get("/api/fact-monthly", { params });
-        factMonthlyData.value = response.data;
-    } catch (error) {
-        console.error("Failed to fetch fact monthly data:", error);
-        factMonthlyData.value = [];
-    } finally {
-        isLoading.value = false;
-    }
-}
 
 function logout() {
     axios.post("/api/logout").then(() => {
