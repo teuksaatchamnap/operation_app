@@ -1,5 +1,5 @@
 <template>
-    <v-card elevation="3" class="kpi-card" :loading="loading">
+    <v-card class="kpi-card rounded-xl" :loading="loading">
         <v-card-item>
             <div class="d-flex justify-space-between align-start">
                 <div>
@@ -184,14 +184,6 @@ watch(
 </script>
 
 <style scoped>
-.kpi-card {
-    transition: transform 0.2s ease;
-}
-
-.kpi-card:hover {
-    transform: translateY(-2px);
-}
-
 .kpi-value {
     font-size: 2rem !important;
     line-height: 1;

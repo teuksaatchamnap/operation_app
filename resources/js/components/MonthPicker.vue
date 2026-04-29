@@ -1,9 +1,5 @@
 <template>
-    <v-menu
-        v-model="menu"
-        :close-on-content-click="false"
-        location="bottom"
-    >
+    <v-menu v-model="menu" :close-on-content-click="false" location="bottom">
         <template v-slot:activator="{ props }">
             <v-text-field
                 :model-value="modelValue"
@@ -14,6 +10,7 @@
                 clearable
                 v-bind="props"
                 @click:clear="$emit('update:modelValue', null)"
+                hide-details
             />
         </template>
         <v-card min-width="280">
@@ -63,8 +60,18 @@ const props = defineProps({
 const emit = defineEmits(["update:modelValue"]);
 
 const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
 ];
 
 const now = new Date();
@@ -80,7 +87,10 @@ if (props.modelValue) {
 function isSelectedMonth(monthIndex) {
     if (!props.modelValue) return false;
     const [year, month] = props.modelValue.split("-");
-    return parseInt(year) === pickerYear.value && parseInt(month) === monthIndex + 1;
+    return (
+        parseInt(year) === pickerYear.value &&
+        parseInt(month) === monthIndex + 1
+    );
 }
 
 function selectMonth(monthIndex) {

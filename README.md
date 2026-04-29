@@ -13,6 +13,8 @@ php artisan sims3:import-dimensions
 # run some worker to get data from 2026
 php artisan job:run "App\Jobs\ComputeDimensions" --year=2026 --site=M24
 php artisan job:run "App\Jobs\ComputeSalesVolume" --year=2026 --site=M24
+# All in one
+php artisan migrate:fresh --seed && php artisan job:run "App\Jobs\ComputeDimensions" --year=2026 --site=M24 && php artisan job:run "App\Jobs\ComputeSalesVolume" --year=2026 --site=M24
 php artisan serve
 ```
 
