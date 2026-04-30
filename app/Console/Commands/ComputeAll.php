@@ -26,9 +26,35 @@ class ComputeAll extends Command
      */
     public function handle()
     {
-        for ($year = 2005; $year <= date('Y'); $year++) {
+        $startTime = microtime(true);
+        $startDateTime = now()->toDateTimeString();
+        $this->info("Starting computation at {$startDateTime}");
+
+        $startYear = 2005;
+        $endYear = date('Y');
+        $totalYears = $endYear - $startYear + 1;
+        $totalIterations = $totalYears * 2;
+
+        $bar = $this->output->createProgressBar($totalIterations);
+        $bar->setFormat('verbose');
+        $bar->start();
+
+        for ($year = $startYear; $year <= $endYear; $year++) {
             Artisan::call("job:run", ["job" => "App\Jobs\ComputeDimensions", "--year" => $year]);
+            $bar->advance();
+
             Artisan::call("job:run", ["job" => "App\Jobs\ComputeSalesVolume", "--year" => $year]);
+            $bar->advance();
         }
+
+        $bar->finish();
+        $this->newLine();
+
+        $endTime = microtime(true);
+        $elapsed = round($endTime - $startTime, 2);
+        $endDateTime = now()->toDateTimeString();
+
+        $this->info("Completed at {$endDateTime}");
+        $this->info("Total time: {$elapsed} seconds");
     }
 }
