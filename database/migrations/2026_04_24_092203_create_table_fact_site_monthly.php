@@ -20,6 +20,9 @@ return new class extends Migration
             $table->string('tier')->nullable();
             $table->integer('sales_volume')->nullable()->comment('Sales Volume (excl. WiS)');
             $table->integer('days_open')->nullable();
+            $table->boolean('active')->nullable();
+            $table->boolean('super_tier_1')->nullable();
+            $table->integer('bottles_per_day')->nullable();
             $table->integer('expenses')->nullable();
             $table->integer('revenue')->nullable();
             $table->integer('workers')->nullable()->comment('Number of workers');

@@ -51,14 +51,23 @@
     </v-card>
 
     <!-- KPI Cards -->
-    <v-row class="mb-6">
-        <v-col cols="12" md="6">
+    <div class="d-flex flex-row mb-6" style="gap: 16px;">
+        <div class="flex-1-1">
             <KpiCard kpi-col-name="sales_volume" :filters="kpiFilters" />
-        </v-col>
-        <v-col cols="12" md="6">
+        </div>
+        <div class="flex-1-1">
             <KpiCard kpi-col-name="days_open" :filters="kpiFilters" />
-        </v-col>
-    </v-row>
+        </div>
+        <div class="flex-1-1">
+            <KpiCard kpi-col-name="active" :filters="kpiFilters" />
+        </div>
+        <div class="flex-1-1">
+            <KpiCard kpi-col-name="super_tier_1" :filters="kpiFilters" />
+        </div>
+        <div class="flex-1-1">
+            <KpiCard kpi-col-name="bottles_per_day" :filters="kpiFilters" />
+        </div>
+    </div>
 </template>
 
 <script setup>

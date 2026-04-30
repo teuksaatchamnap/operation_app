@@ -44,6 +44,33 @@ class KpiSeeder extends Seeder
                 'aggregate' => 'avg'
             ],
             [
+                'name' => 'Active sites',
+                'col_name' => 'active',
+                'unit' => 'sites',
+                'periodicity' => 'monthly',
+                'type' => 'quantitative',
+                'description' => 'The number of active sites (site reported at least one sale for the period)',
+                'aggregate' => 'sum'
+            ],
+            [
+                'name' => 'Super Tier 1',
+                'col_name' => 'super_tier_1',
+                'unit' => 'sites',
+                'periodicity' => 'monthly',
+                'type' => 'quantitative',
+                'description' => 'The number of sites with more that 110 sales per day (exclude WinS and new bottles)',
+                'aggregate' => 'sum'
+            ],
+            [
+                'name' => 'Bottles per day',
+                'col_name' => 'bottles_per_day',
+                'unit' => 'bottles',
+                'periodicity' => 'monthly',
+                'type' => 'quantitative',
+                'description' => 'The average number of bottles sold per days excluding WinS',
+                'aggregate' => 'avg'
+            ],
+            [
                 'name' => 'Expenses',
                 'col_name' => 'expenses',
                 'unit' => 'Riels',

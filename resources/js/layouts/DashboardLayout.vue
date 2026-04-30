@@ -27,19 +27,19 @@
             ></v-list-item>
             <v-list-item
                 prepend-icon="mdi-file-chart"
-                title="Reports"
+                title="Technical"
                 value="reports"
                 disabled
             ></v-list-item>
             <v-list-item
                 prepend-icon="mdi-chart-line"
-                title="Analytics"
+                title="Tech manager"
                 value="analytics"
                 disabled
             ></v-list-item>
             <v-list-item
                 prepend-icon="mdi-cog"
-                title="Settings"
+                title="Laboratory"
                 value="settings"
                 disabled
             ></v-list-item>
