@@ -45,22 +45,83 @@ abstract class BaseComputeJob implements ShouldQueue
 
         $data = $this->prepareData($siteMap, $months, $siteNames);
 
+        $recordsToUpsert = [];
+        $batchSize = 500;
+        $processed = 0;
+
         foreach ($months as $month) {
             $monthStart = $month->copy()->startOfMonth();
             $monthKey = $monthStart->format('Y-m-d');
 
             foreach ($siteMap as $siteName => $siteId) {
                 $key = $siteName . '|' . $monthKey;
-
-                FactMonthly::updateOrCreate(
-                    ['site_id' => $siteId, 'month' => $monthStart],
-                    $data[$key] ?? [],
+                $recordData = $data[$key] ?? [];
+                
+                // Skip empty records - no data to update
+                if (empty($recordData)) {
+                    continue;
+                }
+                
+                $recordsToUpsert[] = array_merge(
+                    ['site_id' => $siteId, 'month' => $monthStart->format('Y-m-d')],
+                    $recordData
                 );
+                
+                $processed++;
+
+                if ($processed >= $batchSize) {
+                    $this->upsertBatch($recordsToUpsert);
+                    $recordsToUpsert = [];
+                    $processed = 0;
+                }
             }
+        }
+
+        if (!empty($recordsToUpsert)) {
+            $this->upsertBatch($recordsToUpsert);
         }
     }
 
     abstract protected function prepareData(Collection $siteMap, Collection $months, array $siteNames): array;
+
+    private function upsertBatch(array $records): void
+    {
+        if (empty($records)) {
+            return;
+        }
+
+        // Deduplicate records by site_id + month (keep last)
+        $deduped = [];
+        foreach ($records as $record) {
+            $key = $record['site_id'] . '|' . $record['month'];
+            $deduped[$key] = $record;
+        }
+        $records = array_values($deduped);
+
+        // Collect all unique keys from all records for normalization
+        $allKeys = [];
+        foreach ($records as $record) {
+            $allKeys = array_merge($allKeys, array_keys($record));
+        }
+        $allKeys = array_unique($allKeys);
+
+        // Normalize all records to have the same keys
+        $normalizedRecords = [];
+        foreach ($records as $record) {
+            $normalizedRecords[] = array_merge(
+                array_fill_keys($allKeys, null),
+                $record
+            );
+        }
+
+        $updateColumns = array_diff($allKeys, ['site_id', 'month']);
+
+        FactMonthly::upsert(
+            $normalizedRecords,
+            ['site_id', 'month'],
+            $updateColumns
+        );
+    }
 
     protected function resolveSites(): Collection
     {

@@ -14,7 +14,7 @@ php artisan sims3:import-dimensions
 php artisan job:run "App\Jobs\ComputeDimensions" --year=2026 --site=M24
 php artisan job:run "App\Jobs\ComputeSalesVolume" --year=2026 --site=M24
 # All in one
-php artisan migrate:fresh --seed && php artisan job:run "App\Jobs\ComputeDimensions" --year=2026 --site=M24 && php artisan job:run "App\Jobs\ComputeSalesVolume" --year=2026 --site=M24
+php artisan migrate:fresh --seed && php artisan compute:all
 php artisan serve
 ```
 
@@ -94,3 +94,13 @@ Initially it was planned to have only one column "value" and a column "kpi_id" t
 Table KPIs is now a simple metadata table to describe KPI (the unit, the periodicity, the name). One of this metadata is the name of the column containing the KPI data in the fact table.
 
 I am still confident I can create a single universal API to get KPI with this schema.
+
+# Test server
+
+```sh
+ssh sims3@sims3-test.teuksaat1001.com
+
+cd /var/www/sims3/
+git fetch && git pull && npm run build
+sudo chown -R www-data:www-data . && sudo chmod -R 775 .
+```

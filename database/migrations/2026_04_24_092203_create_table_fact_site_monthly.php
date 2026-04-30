@@ -29,6 +29,7 @@ return new class extends Migration
             $table->integer('consumers')->nullable()->comment('Number of workers');
             $table->boolean('who_compliance')->nullable()->comment('0:no 1:yes');
             $table->boolean('profitable')->nullable()->comment('0:no 1:yes.  (P&L + Salary Entrepreneur) >= 200 ');
+            $table->unique(['site_id', 'month']);
         });
     }
 

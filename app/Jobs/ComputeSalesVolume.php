@@ -32,8 +32,12 @@ class ComputeSalesVolume extends BaseComputeJob
                     'days_open' => $sale->Number_Open_Days !== null ? (int) $sale->Number_Open_Days : 0,
                 ];
                 $map[$key]['active'] = $map[$key]['sales_volume'] > 0 ? 1 : 0;
-                $map[$key]['super_tier_1'] = ($map[$key]['sales_volume'] / $map[$key]['days_open']) > 110 ? 1 : 0;
-                $map[$key]['bottles_per_day'] = $map[$key]['days_open'] > 0 ? $map[$key]['sales_volume'] / $map[$key]['days_open'] : 0;
+                $map[$key]['super_tier_1'] = 0;
+                $map[$key]['bottles_per_day'] = 0;
+                if ($map[$key]['days_open'] > 0) {
+                    $map[$key]['super_tier_1'] = ($map[$key]['sales_volume'] / $map[$key]['days_open']) > 110 ? 1 : 0;
+                    $map[$key]['bottles_per_day'] = $map[$key]['sales_volume'] / $map[$key]['days_open'];
+                }
             }
         }
         return $map;
