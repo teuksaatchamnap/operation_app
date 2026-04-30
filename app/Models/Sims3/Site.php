@@ -136,7 +136,7 @@ class Site extends Model
 {
     protected $connection = 'sims3';
 
-    protected $table = 'sites';
+    protected $table = 'Sites';
 
     public $timestamps = false;
 

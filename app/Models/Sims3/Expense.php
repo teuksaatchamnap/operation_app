@@ -22,7 +22,7 @@ class Expense extends Model
 {
     protected $connection = 'sims3';
 
-    protected $table = 'expenses';
+    protected $table = 'Expenses';
 
     public $timestamps = false;
 

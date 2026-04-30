@@ -49,7 +49,7 @@ class Sale extends Model
 {
     protected $connection = 'sims3';
 
-    protected $table = 'sales';
+    protected $table = 'Sales';
 
     public $timestamps = false;
 
