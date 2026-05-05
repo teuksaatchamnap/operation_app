@@ -35,6 +35,15 @@ class KpiSeeder extends Seeder
                 'aggregate' => 'sum'
             ],
             [
+                'name' => 'Sales Volume LfL',
+                'col_name' => 'sales_volume_lfl',
+                'unit' => 'bottles',
+                'periodicity' => 'monthly',
+                'type' => 'quantitative',
+                'description' => 'Like to like sales, this is the total sales excluding WiS and new bottles for sites who were opened on january of the reference year',
+                'aggregate' => 'sum'
+            ],
+            [
                 'name' => 'Days Open',
                 'col_name' => 'days_open',
                 'unit' => 'days',

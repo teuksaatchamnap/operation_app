@@ -20,15 +20,33 @@ class ComputeSalesVolume extends BaseComputeJob
             ->orderBy('Code_Sales')
             ->get();
 
+        $januarySitesByYear = [];
+
+        // determine if a site was open on january for LFL kpis
+        foreach ($sales as $sale) {
+            $carbon = Carbon::parse($sale->Month)->startOfMonth();
+            if ($carbon->month === 1) {
+                $volume = ($sale->Total_Sales ?? 0) - ($sale->WiS_Sales ?? 0) - ($sale->Bottle_Sales ?? 0);
+                if ($volume > 0) {
+                    $januarySitesByYear[$carbon->year][trim($sale->Id_Site)] = true;
+                }
+            }
+        }
+
         $map = [];
         foreach ($sales as $sale) {
-            $monthKey = Carbon::parse($sale->Month)->startOfMonth()->format('Y-m-d');
-            $key = trim($sale->Id_Site) . '|' . $monthKey;
+            $carbon = Carbon::parse($sale->Month)->startOfMonth();
+            $monthKey = $carbon->format('Y-m-d');
+            $site = trim($sale->Id_Site);
+            $key = $site . '|' . $monthKey;
 
-            if (!isset($map[$key])) {
+            if (! isset($map[$key])) {
                 $volume = ($sale->Total_Sales ?? 0) - ($sale->WiS_Sales ?? 0) - ($sale->Bottle_Sales ?? 0);
                 $map[$key] = [
                     'sales_volume' => (int) round($volume),
+                    'sales_volume_lfl' => isset($januarySitesByYear[$carbon->year][$site])
+                        ? (int) round($volume)
+                        : null,
                     'days_open' => $sale->Number_Open_Days !== null ? (int) $sale->Number_Open_Days : 0,
                 ];
                 $map[$key]['active'] = $map[$key]['sales_volume'] > 0 ? 1 : 0;
@@ -40,6 +58,7 @@ class ComputeSalesVolume extends BaseComputeJob
                 }
             }
         }
+
         return $map;
     }
 }

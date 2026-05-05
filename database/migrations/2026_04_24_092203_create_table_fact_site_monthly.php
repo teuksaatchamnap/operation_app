@@ -19,6 +19,7 @@ return new class extends Migration
             $table->date('month');
             $table->string('tier')->nullable();
             $table->integer('sales_volume')->nullable()->comment('Sales Volume (excl. WiS)');
+            $table->integer('sales_volume_lfl')->nullable()->comment('Sales Volume like for like (excl. WiS). NULL for sites that were not opened on Jan.');
             $table->integer('days_open')->nullable();
             $table->boolean('active')->nullable();
             $table->boolean('super_tier_1')->nullable();

@@ -11,19 +11,21 @@
                         v-if="latestAvailable"
                         class="text-caption text-medium-emphasis"
                     >
-                        Latest Available
+                        Latest Available in
+                        {{ filters.month.slice(0, 4) ?? "" }}
                     </v-card-subtitle>
                     <v-card-subtitle
                         v-else-if="yearToDate"
                         class="text-caption text-medium-emphasis"
                     >
-                        YTD
+                        YTD ⇒ {{ filters.month ?? "" }}
                     </v-card-subtitle>
                     <v-card-subtitle
                         v-else
                         class="text-caption text-medium-emphasis"
                     >
                         {{ kpi?.periodicity || "Monthly" }}
+                        {{ filters.month ?? "" }}
                     </v-card-subtitle>
                 </div>
                 <v-tooltip

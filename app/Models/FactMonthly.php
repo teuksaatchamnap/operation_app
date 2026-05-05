@@ -23,6 +23,7 @@ class FactMonthly extends Model
         'month',
         'tier',
         'sales_volume',
+        'sales_volume_lfl',
         'days_open',
         'active',
         'super_tier_1',

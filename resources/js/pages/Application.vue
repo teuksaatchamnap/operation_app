@@ -60,7 +60,14 @@
             />
         </div>
         <div class="flex-1-1">
-            <KpiCard kpi-col-name="days_open" :filters="kpiFilters" />
+            <KpiCard
+                kpi-col-name="sales_volume_lfl"
+                :year-to-date="1"
+                :filters="kpiFilters"
+            />
+        </div>
+        <div class="flex-1-1">
+            <KpiCard kpi-col-name="sales_volume_lfl" :filters="kpiFilters" />
         </div>
         <div class="flex-1-1">
             <KpiCard kpi-col-name="active" :filters="kpiFilters" />
@@ -75,7 +82,7 @@
         <div class="flex-1-1">
             <KpiCard
                 kpi-col-name="bottles_per_day"
-                :latest-available="1"
+                :year-to-date="1"
                 :filters="kpiFilters"
             />
         </div>
