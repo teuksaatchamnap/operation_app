@@ -76,10 +76,8 @@
         </v-tooltip>
     </v-app-bar>
 
-    <v-main class="bg-background">
-        <v-container>
-            <slot></slot>
-        </v-container>
+    <v-main class="bg-background mt-2 ml-1 mr-1">
+        <slot></slot>
     </v-main>
 </template>
 

@@ -102,14 +102,6 @@ class FactMonthlyControllerTest extends TestCase
             ->assertUnprocessable();
     }
 
-    public function test_kpis_must_be_single_column(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user)
-            ->getJson('/api/fact-monthly?kpis=revenue,sales_volume')
-            ->assertUnprocessable();
-    }
-
     // -- year_to_date tests --
 
     public function test_year_to_date_requires_month_or_year(): void

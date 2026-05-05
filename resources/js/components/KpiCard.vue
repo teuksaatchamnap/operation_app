@@ -219,6 +219,11 @@ watch(
     line-height: 1;
 }
 
+.kpi-card {
+    min-width: 210px;
+    flex-shrink: 0;
+}
+
 @media (min-width: 960px) {
     .kpi-value {
         font-size: 3rem !important;

@@ -110,6 +110,7 @@ class KpiSeeder extends Seeder
                 'unit' => 'consumers',
                 'periodicity' => 'monthly',
                 'type' => 'quantitative',
+                'description' => 'The number of consumers who bought from sites',
                 'aggregate' => 'sum',
             ],
             [
