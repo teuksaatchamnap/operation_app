@@ -2,12 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Models\FactMonthly;
+use App\Models\Site;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class FactMonthlyControllerTest extends TestCase
 {
-
+    use RefreshDatabase;
     public function test_unauthenticated_request_fails(): void
     {
         $this->getJson('/api/fact-monthly')->assertUnauthorized();
@@ -59,19 +62,11 @@ class FactMonthlyControllerTest extends TestCase
             ->assertSuccessful();
     }
 
-    public function test_can_select_kpi_columns(): void
+    public function test_can_combine_array_filters_and_kpi(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user)
-            ->getJson('/api/fact-monthly?kpis=revenue,sales_volume')
-            ->assertSuccessful();
-    }
-
-    public function test_can_combine_array_filters_and_kpis(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user)
-            ->getJson('/api/fact-monthly?year=2025&platform_ids[]=1&platform_ids[]=2&site_ids[]=5&advisor_ids[]=1&kpis=revenue,sales_volume,consumers')
+            ->getJson('/api/fact-monthly?year=2025&platform_ids[]=1&platform_ids[]=2&site_ids[]=5&advisor_ids[]=1&kpis=revenue')
             ->assertSuccessful();
     }
 
@@ -107,6 +102,24 @@ class FactMonthlyControllerTest extends TestCase
             ->assertUnprocessable();
     }
 
+    public function test_kpis_must_be_single_column(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)
+            ->getJson('/api/fact-monthly?kpis=revenue,sales_volume')
+            ->assertUnprocessable();
+    }
+
+    public function test_kpis_must_be_valid_identifier(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)
+            ->getJson('/api/fact-monthly?kpis=revenue;drop table')
+            ->assertUnprocessable();
+    }
+
+    // -- year_to_date tests --
+
     public function test_year_to_date_requires_month_or_year(): void
     {
         $user = User::factory()->create();
@@ -137,5 +150,140 @@ class FactMonthlyControllerTest extends TestCase
         $this->actingAs($user)
             ->getJson('/api/fact-monthly?year=2025&kpis=revenue&year_to_date=1')
             ->assertSuccessful();
+    }
+
+    // -- latest_available tests --
+
+    public function test_latest_available_requires_aggregate(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)
+            ->getJson('/api/fact-monthly?kpis=revenue&latest_available=1&year=2025')
+            ->assertUnprocessable();
+    }
+
+    public function test_latest_available_requires_month_or_year(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)
+            ->getJson('/api/fact-monthly?kpis=revenue&latest_available=1&aggregate=sum')
+            ->assertUnprocessable();
+    }
+
+    public function test_latest_available_mutually_exclusive_with_year_to_date(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)
+            ->getJson('/api/fact-monthly?kpis=revenue&latest_available=1&year_to_date=1&aggregate=sum&year=2025')
+            ->assertUnprocessable();
+    }
+
+    public function test_latest_available_returns_sum_of_latest_non_null_per_site(): void
+    {
+        $site1 = Site::factory()->create();
+        $site2 = Site::factory()->create();
+
+        FactMonthly::factory()->create([
+            'site_id' => $site1->id,
+            'month' => '2025-01-01',
+            'revenue' => 1000,
+        ]);
+        FactMonthly::factory()->create([
+            'site_id' => $site1->id,
+            'month' => '2025-02-01',
+            'revenue' => 2000,
+        ]);
+        FactMonthly::factory()->create([
+            'site_id' => $site1->id,
+            'month' => '2025-03-01',
+            'revenue' => null,
+        ]);
+        FactMonthly::factory()->create([
+            'site_id' => $site2->id,
+            'month' => '2025-01-01',
+            'revenue' => null,
+        ]);
+        FactMonthly::factory()->create([
+            'site_id' => $site2->id,
+            'month' => '2025-02-01',
+            'revenue' => 500,
+        ]);
+
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)
+            ->getJson('/api/fact-monthly?kpis=revenue&latest_available=1&aggregate=sum&year=2025')
+            ->assertSuccessful();
+
+        $data = $response->json();
+        $this->assertEquals(2500.0, $data[0]['revenue']);
+    }
+
+    public function test_latest_available_ignores_month_and_uses_year(): void
+    {
+        $site = Site::factory()->create();
+
+        FactMonthly::factory()->create([
+            'site_id' => $site->id,
+            'month' => '2025-03-01',
+            'revenue' => 3000,
+        ]);
+
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)
+            ->getJson('/api/fact-monthly?kpis=revenue&latest_available=1&aggregate=sum&month=2025-01')
+            ->assertSuccessful();
+
+        $data = $response->json();
+        $this->assertEquals(3000.0, $data[0]['revenue']);
+    }
+
+    public function test_latest_available_with_avg(): void
+    {
+        $site1 = Site::factory()->create();
+        $site2 = Site::factory()->create();
+
+        FactMonthly::factory()->create([
+            'site_id' => $site1->id,
+            'month' => '2025-02-01',
+            'revenue' => 2000,
+        ]);
+        FactMonthly::factory()->create([
+            'site_id' => $site2->id,
+            'month' => '2025-01-01',
+            'revenue' => 4000,
+        ]);
+
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)
+            ->getJson('/api/fact-monthly?kpis=revenue&latest_available=1&aggregate=avg&year=2025')
+            ->assertSuccessful();
+
+        $data = $response->json();
+        $this->assertEquals(3000.0, $data[0]['revenue']);
+    }
+
+    public function test_latest_available_skips_sites_with_all_null(): void
+    {
+        $site1 = Site::factory()->create();
+        $site2 = Site::factory()->create();
+
+        FactMonthly::factory()->create([
+            'site_id' => $site1->id,
+            'month' => '2025-01-01',
+            'revenue' => 1000,
+        ]);
+        FactMonthly::factory()->create([
+            'site_id' => $site2->id,
+            'month' => '2025-01-01',
+            'revenue' => null,
+        ]);
+
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)
+            ->getJson('/api/fact-monthly?kpis=revenue&latest_available=1&aggregate=sum&year=2025')
+            ->assertSuccessful();
+
+        $data = $response->json();
+        $this->assertEquals(1000.0, $data[0]['revenue']);
     }
 }

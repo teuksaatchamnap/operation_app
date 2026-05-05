@@ -8,7 +8,13 @@
                     </v-card-title>
 
                     <v-card-subtitle
-                        v-if="yearToDate == 1"
+                        v-if="latestAvailable"
+                        class="text-caption text-medium-emphasis"
+                    >
+                        Latest Available
+                    </v-card-subtitle>
+                    <v-card-subtitle
+                        v-else-if="yearToDate"
                         class="text-caption text-medium-emphasis"
                     >
                         YTD
@@ -61,7 +67,12 @@ const props = defineProps({
         required: true,
     },
     yearToDate: {
-        type: Boolean,
+        type: Number,
+        required: false,
+        default: () => 0,
+    },
+    latestAvailable: {
+        type: Number,
         required: false,
         default: () => 0,
     },
@@ -114,6 +125,7 @@ async function fetchComputedValue() {
         const params = {
             kpis: props.kpiColName,
             year_to_date: props.yearToDate,
+            latest_available: props.latestAvailable,
         };
 
         if (kpi.value?.aggregate) {

@@ -66,12 +66,16 @@
             <KpiCard kpi-col-name="active" :filters="kpiFilters" />
         </div>
         <div class="flex-1-1">
-            <KpiCard kpi-col-name="super_tier_1" :filters="kpiFilters" />
+            <KpiCard
+                kpi-col-name="super_tier_1"
+                :latest-available="1"
+                :filters="kpiFilters"
+            />
         </div>
         <div class="flex-1-1">
             <KpiCard
                 kpi-col-name="bottles_per_day"
-                :year-to-date="1"
+                :latest-available="1"
                 :filters="kpiFilters"
             />
         </div>
