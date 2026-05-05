@@ -2,10 +2,10 @@
 
 namespace Database\Factories;
 
-use App\Models\FactMonthly;
-use App\Models\Site;
-use App\Models\Platform;
 use App\Models\Advisor;
+use App\Models\FactMonthly;
+use App\Models\Platform;
+use App\Models\Site;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -27,10 +27,10 @@ class FactMonthlyFactory extends Factory
             'days_open' => fake()->randomNumber(),
             'expenses' => fake()->randomFloat(2),
             'revenue' => fake()->randomFloat(2),
-            'workers' => fake()->randomNumber(),
+            'has_3_workers' => fake()->integer(),
             'consumers' => fake()->randomNumber(),
-            'who_compliance' => fake()->boolean(),
-            'profitable' => fake()->boolean(),
+            'who_compliance' => fake()->integer(),
+            'profitable' => fake()->integer(),
         ];
     }
 }

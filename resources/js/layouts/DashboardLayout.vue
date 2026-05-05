@@ -100,7 +100,7 @@ const rail = ref(false);
 const isDark = computed(() => theme.global.current.value.dark);
 
 function toggleDarkMode() {
-    theme.global.name.value = isDark.value ? "light" : "dark";
+    theme.change(isDark.value ? "light" : "dark");
     localStorage.setItem("darkMode", isDark.value ? "true" : "false");
 }
 
@@ -109,7 +109,7 @@ if (
     (!localStorage.getItem("darkMode") &&
         window.matchMedia("(prefers-color-scheme: dark)").matches)
 ) {
-    theme.global.name.value = "dark";
+    theme.change("dark");
 }
 
 function logout() {

@@ -33,17 +33,20 @@ class ComputeAll extends Command
         $startYear = 2005;
         $endYear = date('Y');
         $totalYears = $endYear - $startYear + 1;
-        $totalIterations = $totalYears * 2;
+        $totalIterations = $totalYears * 3;
 
         $bar = $this->output->createProgressBar($totalIterations);
         $bar->setFormat('verbose');
         $bar->start();
 
         for ($year = $startYear; $year <= $endYear; $year++) {
-            Artisan::call("job:run", ["job" => "App\Jobs\ComputeDimensions", "--year" => $year]);
+            Artisan::call('job:run', ['job' => "App\Jobs\ComputeDimensions", '--year' => $year]);
             $bar->advance();
 
-            Artisan::call("job:run", ["job" => "App\Jobs\ComputeSalesVolume", "--year" => $year]);
+            Artisan::call('job:run', ['job' => "App\Jobs\ComputeSalesVolume", '--year' => $year]);
+            $bar->advance();
+
+            Artisan::call('job:run', ['job' => "App\Jobs\ComputeHas3Workers", '--year' => $year]);
             $bar->advance();
         }
 

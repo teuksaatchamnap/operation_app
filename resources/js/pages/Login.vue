@@ -133,13 +133,13 @@ const systemMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
 function applySystemPreference() {
     if (!manualOverride.value) {
-        theme.global.name.value = systemMediaQuery.matches ? "dark" : "light";
+        theme.change(systemMediaQuery.matches ? "dark" : "light");
     }
 }
 
 function toggleTheme() {
     manualOverride.value = true;
-    theme.global.name.value = isDark.value ? "light" : "dark";
+    theme.change(isDark.value ? "light" : "dark");
 }
 
 function onGoogleAuthSuccess(response) {

@@ -23,7 +23,7 @@ class KpiSeeder extends Seeder
                 'unit' => 'tier level',
                 'periodicity' => 'monthly',
                 'type' => 'qualitative',
-                'description' => ''
+                'description' => '',
             ],
             [
                 'name' => 'Sales Volume',
@@ -32,7 +32,7 @@ class KpiSeeder extends Seeder
                 'periodicity' => 'monthly',
                 'type' => 'quantitative',
                 'description' => 'This is the total sales excluding WiS and new bottles',
-                'aggregate' => 'sum'
+                'aggregate' => 'sum',
             ],
             [
                 'name' => 'Sales Volume LfL',
@@ -41,7 +41,7 @@ class KpiSeeder extends Seeder
                 'periodicity' => 'monthly',
                 'type' => 'quantitative',
                 'description' => 'Like to like sales, this is the total sales excluding WiS and new bottles for sites who were opened on january of the reference year',
-                'aggregate' => 'sum'
+                'aggregate' => 'sum',
             ],
             [
                 'name' => 'Days Open',
@@ -50,7 +50,7 @@ class KpiSeeder extends Seeder
                 'periodicity' => 'monthly',
                 'type' => 'quantitative',
                 'description' => 'The number of days the site reported at least one sale',
-                'aggregate' => 'avg'
+                'aggregate' => 'avg',
             ],
             [
                 'name' => 'Active sites',
@@ -59,7 +59,7 @@ class KpiSeeder extends Seeder
                 'periodicity' => 'monthly',
                 'type' => 'quantitative',
                 'description' => 'The number of active sites (site reported at least one sale for the period)',
-                'aggregate' => 'sum'
+                'aggregate' => 'sum',
             ],
             [
                 'name' => 'Super Tier 1',
@@ -68,7 +68,7 @@ class KpiSeeder extends Seeder
                 'periodicity' => 'monthly',
                 'type' => 'quantitative',
                 'description' => 'The number of sites with more that 110 sales per day (exclude WinS and new bottles)',
-                'aggregate' => 'sum'
+                'aggregate' => 'sum',
             ],
             [
                 'name' => 'Bottles per day',
@@ -77,7 +77,7 @@ class KpiSeeder extends Seeder
                 'periodicity' => 'monthly',
                 'type' => 'quantitative',
                 'description' => 'The average number of bottles sold per days excluding WinS',
-                'aggregate' => 'avg'
+                'aggregate' => 'avg',
             ],
             [
                 'name' => 'Expenses',
@@ -85,6 +85,7 @@ class KpiSeeder extends Seeder
                 'unit' => 'Riels',
                 'periodicity' => 'monthly',
                 'type' => 'quantitative',
+                'aggregate' => 'sum',
             ],
             [
                 'name' => 'Revenue',
@@ -92,13 +93,16 @@ class KpiSeeder extends Seeder
                 'unit' => 'Riels',
                 'periodicity' => 'monthly',
                 'type' => 'quantitative',
+                'aggregate' => 'sum',
             ],
             [
-                'name' => 'Workers',
-                'col_name' => 'workers',
-                'unit' => 'workers',
+                'name' => 'Has 3 Workers',
+                'col_name' => 'has_3_workers',
+                'unit' => 'sites',
                 'periodicity' => 'monthly',
                 'type' => 'quantitative',
+                'description' => 'True if the site has 3 or more operators, null if no data',
+                'aggregate' => 'sum',
             ],
             [
                 'name' => 'Consumers',
@@ -106,20 +110,23 @@ class KpiSeeder extends Seeder
                 'unit' => 'consumers',
                 'periodicity' => 'monthly',
                 'type' => 'quantitative',
+                'aggregate' => 'sum',
             ],
             [
                 'name' => 'WHO Compliance',
                 'col_name' => 'who_compliance',
-                'unit' => 'yes/no',
+                'unit' => 'sites',
                 'periodicity' => 'monthly',
                 'type' => 'qualitative',
+                'aggregate' => 'sum',
             ],
             [
                 'name' => 'Profitable',
                 'col_name' => 'profitable',
-                'unit' => 'yes/no',
+                'unit' => 'sites',
                 'periodicity' => 'monthly',
                 'type' => 'qualitative',
+                'aggregate' => 'sum',
             ],
         ];
 
@@ -130,6 +137,6 @@ class KpiSeeder extends Seeder
             );
         }
 
-        Artisan::call("sims3:import-dimensions");
+        Artisan::call('sims3:import-dimensions');
     }
 }

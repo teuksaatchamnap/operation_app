@@ -86,6 +86,9 @@
                 :filters="kpiFilters"
             />
         </div>
+        <div class="flex-1-1">
+            <KpiCard kpi-col-name="has_3_workers" :filters="kpiFilters" />
+        </div>
     </div>
 </template>
 

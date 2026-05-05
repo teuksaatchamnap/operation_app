@@ -50,7 +50,7 @@ class FactMonthlyController extends Controller
             'site_ids' => 'sometimes|array',
             'site_ids.*' => 'integer',
             'kpis' => 'required|string',
-            'aggregate' => 'sometimes|string|in:sum,avg',
+            'aggregate' => 'sometimes|string|in:sum,avg,count',
             'year_to_date' => 'sometimes|boolean',
             'latest_available' => 'sometimes|boolean',
         ]);

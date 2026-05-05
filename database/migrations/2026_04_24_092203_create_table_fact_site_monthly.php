@@ -26,7 +26,7 @@ return new class extends Migration
             $table->integer('bottles_per_day')->nullable();
             $table->integer('expenses')->nullable();
             $table->integer('revenue')->nullable();
-            $table->integer('workers')->nullable()->comment('Number of workers');
+            $table->integer('has_3_workers')->nullable()->comment('True is site has more than 3 workers');
             $table->integer('consumers')->nullable()->comment('Number of workers');
             $table->boolean('who_compliance')->nullable()->comment('0:no 1:yes');
             $table->boolean('profitable')->nullable()->comment('0:no 1:yes.  (P&L + Salary Entrepreneur) >= 200 ');
