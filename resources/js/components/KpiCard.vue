@@ -6,7 +6,17 @@
                     <v-card-title class="text-h6 font-weight-medium">
                         {{ kpi?.name || kpiColName }}
                     </v-card-title>
-                    <v-card-subtitle class="text-caption text-medium-emphasis">
+
+                    <v-card-subtitle
+                        v-if="yearToDate == 1"
+                        class="text-caption text-medium-emphasis"
+                    >
+                        YTD
+                    </v-card-subtitle>
+                    <v-card-subtitle
+                        v-else
+                        class="text-caption text-medium-emphasis"
+                    >
                         {{ kpi?.periodicity || "Monthly" }}
                     </v-card-subtitle>
                 </div>
@@ -49,6 +59,11 @@ const props = defineProps({
     kpiColName: {
         type: String,
         required: true,
+    },
+    yearToDate: {
+        type: Boolean,
+        required: false,
+        default: () => 0,
     },
     filters: {
         type: Object,
@@ -98,6 +113,7 @@ async function fetchComputedValue() {
     try {
         const params = {
             kpis: props.kpiColName,
+            year_to_date: props.yearToDate,
         };
 
         if (kpi.value?.aggregate) {

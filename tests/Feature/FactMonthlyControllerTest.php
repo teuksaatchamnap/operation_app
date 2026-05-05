@@ -16,14 +16,14 @@ class FactMonthlyControllerTest extends TestCase
     public function test_can_fetch_fact_monthly_without_filters(): void
     {
         $user = User::factory()->create();
-        $this->actingAs($user)->getJson('/api/fact-monthly')->assertSuccessful();
+        $this->actingAs($user)->getJson('/api/fact-monthly?kpis=revenue')->assertSuccessful();
     }
 
     public function test_can_filter_by_year(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user)
-            ->getJson('/api/fact-monthly?year=2026')
+            ->getJson('/api/fact-monthly?year=2026&kpis=revenue')
             ->assertSuccessful();
     }
 
@@ -31,7 +31,7 @@ class FactMonthlyControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user)
-            ->getJson('/api/fact-monthly?month=2025-01')
+            ->getJson('/api/fact-monthly?month=2025-01&kpis=revenue')
             ->assertSuccessful();
     }
 
@@ -39,7 +39,7 @@ class FactMonthlyControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user)
-            ->getJson('/api/fact-monthly?platform_ids[]=1&platform_ids[]=2')
+            ->getJson('/api/fact-monthly?platform_ids[]=1&platform_ids[]=2&kpis=revenue')
             ->assertSuccessful();
     }
 
@@ -47,7 +47,7 @@ class FactMonthlyControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user)
-            ->getJson('/api/fact-monthly?advisor_ids[]=1&advisor_ids[]=2')
+            ->getJson('/api/fact-monthly?advisor_ids[]=1&advisor_ids[]=2&kpis=revenue')
             ->assertSuccessful();
     }
 
@@ -55,7 +55,7 @@ class FactMonthlyControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user)
-            ->getJson('/api/fact-monthly?site_ids[]=1&site_ids[]=2&site_ids[]=3')
+            ->getJson('/api/fact-monthly?site_ids[]=1&site_ids[]=2&site_ids[]=3&kpis=revenue')
             ->assertSuccessful();
     }
 
@@ -79,7 +79,7 @@ class FactMonthlyControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user)
-            ->getJson('/api/fact-monthly?platform_ids=1')
+            ->getJson('/api/fact-monthly?platform_ids=1&kpis=revenue')
             ->assertUnprocessable();
     }
 
@@ -87,7 +87,7 @@ class FactMonthlyControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user)
-            ->getJson('/api/fact-monthly?advisor_ids=1')
+            ->getJson('/api/fact-monthly?advisor_ids=1&kpis=revenue')
             ->assertUnprocessable();
     }
 
@@ -95,7 +95,47 @@ class FactMonthlyControllerTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user)
-            ->getJson('/api/fact-monthly?site_ids=1')
+            ->getJson('/api/fact-monthly?site_ids=1&kpis=revenue')
             ->assertUnprocessable();
+    }
+
+    public function test_kpis_is_required(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)
+            ->getJson('/api/fact-monthly')
+            ->assertUnprocessable();
+    }
+
+    public function test_year_to_date_requires_month_or_year(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)
+            ->getJson('/api/fact-monthly?kpis=revenue&year_to_date=1')
+            ->assertUnprocessable();
+    }
+
+    public function test_year_to_date_without_aggregate_groups_by_dimensions(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)
+            ->getJson('/api/fact-monthly?month=2025-06&kpis=revenue&year_to_date=1')
+            ->assertSuccessful();
+    }
+
+    public function test_year_to_date_with_aggregate_returns_single_result(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)
+            ->getJson('/api/fact-monthly?month=2025-06&kpis=revenue&aggregate=sum&year_to_date=1')
+            ->assertSuccessful();
+    }
+
+    public function test_year_to_date_with_year_filters_full_year(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)
+            ->getJson('/api/fact-monthly?year=2025&kpis=revenue&year_to_date=1')
+            ->assertSuccessful();
     }
 }

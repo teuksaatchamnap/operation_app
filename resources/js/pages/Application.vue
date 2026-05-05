@@ -51,9 +51,13 @@
     </v-card>
 
     <!-- KPI Cards -->
-    <div class="d-flex flex-row mb-6" style="gap: 16px;">
+    <div class="d-flex flex-row mb-6" style="gap: 16px">
         <div class="flex-1-1">
-            <KpiCard kpi-col-name="sales_volume" :filters="kpiFilters" />
+            <KpiCard
+                kpi-col-name="sales_volume"
+                :year-to-date="1"
+                :filters="kpiFilters"
+            />
         </div>
         <div class="flex-1-1">
             <KpiCard kpi-col-name="days_open" :filters="kpiFilters" />
@@ -65,7 +69,11 @@
             <KpiCard kpi-col-name="super_tier_1" :filters="kpiFilters" />
         </div>
         <div class="flex-1-1">
-            <KpiCard kpi-col-name="bottles_per_day" :filters="kpiFilters" />
+            <KpiCard
+                kpi-col-name="bottles_per_day"
+                :year-to-date="1"
+                :filters="kpiFilters"
+            />
         </div>
     </div>
 </template>
