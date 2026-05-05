@@ -27,10 +27,10 @@ class FactMonthlyFactory extends Factory
             'days_open' => fake()->randomNumber(),
             'expenses' => fake()->randomFloat(2),
             'revenue' => fake()->randomFloat(2),
-            'has_3_workers' => fake()->integer(),
+            'has_3_workers' => fake()->randomDigit(),
             'consumers' => fake()->randomNumber(),
-            'who_compliance' => fake()->integer(),
-            'profitable' => fake()->integer(),
+            'who_compliance' => fake()->randomDigit(),
+            'profitable' => fake()->randomDigit(),
         ];
     }
 }

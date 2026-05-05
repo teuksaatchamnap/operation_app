@@ -40,8 +40,6 @@ class FactMonthly extends Model
     {
         return [
             'month' => 'date',
-            'who_compliance' => 'boolean',
-            'profitable' => 'boolean',
         ];
     }
 

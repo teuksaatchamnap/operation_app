@@ -76,6 +76,11 @@
         />
         <KpiCard kpi-col-name="has_3_workers" :filters="kpiFilters" />
         <KpiCard kpi-col-name="consumers" :filters="kpiFilters" />
+        <KpiCard
+            kpi-col-name="who_compliance"
+            :filters="kpiFilters"
+            :latest-available="1"
+        />
     </ScrollPanel>
 </template>
 

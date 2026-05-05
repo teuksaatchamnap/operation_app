@@ -119,6 +119,7 @@ class KpiSeeder extends Seeder
                 'unit' => 'sites',
                 'periodicity' => 'monthly',
                 'type' => 'qualitative',
+                'description' => 'WHO compliance E.Coli and Coliform 0 CFU/100ml',
                 'aggregate' => 'sum',
             ],
             [
