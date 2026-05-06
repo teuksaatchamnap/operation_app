@@ -36,6 +36,7 @@ class KpiController extends Controller
             'unit' => 'required|string',
             'periodicity' => 'required|string',
             'type' => 'required|string',
+            'description' => 'required|string',
         ]);
 
         $kpi = Kpi::create($validated);
@@ -71,6 +72,7 @@ class KpiController extends Controller
             'unit' => 'sometimes|required|string',
             'periodicity' => 'sometimes|required|string',
             'type' => 'sometimes|required|string',
+            'description' => 'required|string',
         ]);
 
         $kpi->update($validated);

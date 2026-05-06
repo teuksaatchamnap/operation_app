@@ -102,6 +102,13 @@
                         variant="outlined"
                         density="compact"
                     ></v-text-field>
+                    <v-textarea
+                        v-model="kpiForm.description"
+                        label="Description"
+                        variant="outlined"
+                        density="compact"
+                        rows="3"
+                    ></v-textarea>
                     <v-text-field
                         v-model="kpiForm.col_name"
                         label="Column Name"
@@ -242,6 +249,7 @@ const kpiDialog = ref(false);
 const editingKpi = ref(null);
 const kpiForm = ref({
     name: "",
+    description: "",
     col_name: "",
     unit: "",
     periodicity: "monthly",
@@ -279,6 +287,7 @@ function openKpiDialog(item = null) {
         editingKpi.value = item;
         kpiForm.value = {
             name: item.name,
+            description: item.description || "",
             col_name: item.col_name,
             unit: item.unit,
             periodicity: item.periodicity,
@@ -288,6 +297,7 @@ function openKpiDialog(item = null) {
         editingKpi.value = null;
         kpiForm.value = {
             name: "",
+            description: "",
             col_name: "",
             unit: "",
             periodicity: "monthly",
