@@ -59,17 +59,26 @@
             </div>
             <div v-if="matchingObjective">
                 <v-chip
+                    v-if="objectiveReached"
                     size="small"
-                    :color="objectiveReached ? 'success' : 'error'"
+                    color="success"
                     variant="tonal"
                     class="ma-0"
                 >
                     <v-icon start size="x-small">
-                        {{
-                            objectiveReached
-                                ? "mdi-check-circle"
-                                : "mdi-close-circle"
-                        }}
+                        mdi-check-circle
+                    </v-icon>
+                    Objective : {{ formatValue(matchingObjective.value) }}
+                </v-chip>
+                <v-chip
+                    v-else
+                    size="small"
+                    color="error"
+                    variant="tonal"
+                    class="ma-0"
+                >
+                    <v-icon start size="x-small">
+                        mdi-close-circle
                     </v-icon>
                     Objective : {{ formatValue(matchingObjective.value) }}
                 </v-chip>
