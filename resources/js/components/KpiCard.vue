@@ -3,8 +3,10 @@
         <v-card-item>
             <div class="d-flex justify-space-between align-start">
                 <div>
-                    <v-card-title class="text-h6 font-weight-medium">
-                        {{ kpi?.name || kpiColName }}
+                    <v-card-title>
+                        <span class="text-lg">{{
+                            kpi?.name || kpiColName
+                        }}</span>
                     </v-card-title>
 
                     <v-card-subtitle
@@ -48,11 +50,11 @@
             </div>
         </v-card-item>
 
-        <v-card-text class="text-center py-6">
+        <v-card-text class="text-center py-4">
             <div class="text-h1 font-weight-bold text-primary kpi-value">
                 {{ formatValue(displayValue) }}
             </div>
-            <div class="text-subtitle-1 text-medium-emphasis mt-2">
+            <div class="text-subtitle-1 text-medium-emphasis mt-1">
                 {{ kpi?.unit || "" }}
             </div>
         </v-card-text>
@@ -215,7 +217,7 @@ watch(
 
 <style scoped>
 .kpi-value {
-    font-size: 2.2rem !important;
+    font-size: 2rem !important;
     line-height: 1;
 }
 
