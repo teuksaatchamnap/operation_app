@@ -28,7 +28,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('col_name');
             $table->string('unit');
-            $table->string('aggregate')->default("sum");
+            $table->string('aggregate')->default('sum');
             $table->string('periodicity')->comment('[monthly, year to date, year]');
             $table->string('type')->comment('[quantitative, qualitative, calculated]');
             $table->text('description')->nullable()->comment('[quantitative, qualitative, calculated]');

@@ -26,10 +26,11 @@ return new class extends Migration
             $table->integer('bottles_per_day')->nullable();
             $table->integer('expenses')->nullable();
             $table->integer('revenue')->nullable();
+            $table->integer('is_profitable')->nullable()->comment('True is site revenue - site expense + salaray entrepreneur >= 200');
             $table->integer('has_3_workers')->nullable()->comment('True is site has more than 3 workers');
             $table->integer('consumers')->nullable()->comment('Number of workers');
-            $table->boolean('who_compliance')->nullable()->comment('0:no 1:yes');
-            $table->boolean('profitable')->nullable()->comment('0:no 1:yes.  (P&L + Salary Entrepreneur) >= 200 ');
+            $table->integer('who_compliance')->nullable()->comment('0:no 1:yes');
+            $table->integer('ec_collection')->nullable()->comment('0:no 1:yes, paid > amount_expenses for the Ref_expenses=entrepreneur_contribution');
             $table->unique(['site_id', 'month']);
         });
     }

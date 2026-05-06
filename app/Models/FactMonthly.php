@@ -30,10 +30,11 @@ class FactMonthly extends Model
         'bottles_per_day',
         'expenses',
         'revenue',
+        'is_profitable',
         'has_3_workers',
         'consumers',
         'who_compliance',
-        'profitable',
+        'ec_collection',
     ];
 
     protected function casts(): array

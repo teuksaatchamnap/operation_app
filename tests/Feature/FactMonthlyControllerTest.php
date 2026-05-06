@@ -11,6 +11,7 @@ use Tests\TestCase;
 class FactMonthlyControllerTest extends TestCase
 {
     use RefreshDatabase;
+
     public function test_unauthenticated_request_fails(): void
     {
         $this->getJson('/api/fact-monthly')->assertUnauthorized();

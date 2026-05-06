@@ -164,7 +164,7 @@ class FactMonthlyController extends Controller
         }
 
         if ($yearToDate) {
-            $query->selectRaw('site_id, platform_id, advisor_id, SUM(' . $kpi . ') as ' . $kpi)
+            $query->selectRaw('site_id, platform_id, advisor_id, SUM('.$kpi.') as '.$kpi)
                 ->groupBy('site_id', 'platform_id', 'advisor_id');
 
             return response()->json($query->get());

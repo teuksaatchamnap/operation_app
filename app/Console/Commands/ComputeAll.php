@@ -33,7 +33,7 @@ class ComputeAll extends Command
         $startYear = 2005;
         $endYear = date('Y');
         $totalYears = $endYear - $startYear + 1;
-        $totalIterations = $totalYears * 5;
+        $totalIterations = $totalYears * 8;
 
         $bar = $this->output->createProgressBar($totalIterations);
         $bar->setFormat('verbose');
@@ -53,6 +53,15 @@ class ComputeAll extends Command
             $bar->advance();
 
             Artisan::call('job:run', ['job' => "App\Jobs\ComputeWhoCompliance", '--year' => $year]);
+            $bar->advance();
+
+            Artisan::call('job:run', ['job' => "App\Jobs\ComputeExpenses", '--year' => $year]);
+            $bar->advance();
+
+            Artisan::call('job:run', ['job' => "App\Jobs\ComputeIsProfitable", '--year' => $year]);
+            $bar->advance();
+
+            Artisan::call('job:run', ['job' => "App\Jobs\ComputeEcCollection", '--year' => $year]);
             $bar->advance();
         }
 

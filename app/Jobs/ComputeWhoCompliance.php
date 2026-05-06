@@ -24,9 +24,9 @@ class ComputeWhoCompliance extends BaseComputeJob
         foreach ($samples as $sample) {
             $site = trim($sample->site);
             $monthKey = Carbon::parse($sample->sample_date)->startOfMonth()->format('Y-m-d');
-            $key = $site . '|' . $monthKey;
+            $key = $site.'|'.$monthKey;
 
-            if (!isset($latestBySiteMonth[$key])) {
+            if (! isset($latestBySiteMonth[$key])) {
                 $latestBySiteMonth[$key] = $sample;
             }
         }

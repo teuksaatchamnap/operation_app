@@ -4,6 +4,7 @@ namespace App\Models\Sims3;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+
 /*
 --
 -- Table structure for table `sites`

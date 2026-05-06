@@ -124,10 +124,20 @@ class KpiSeeder extends Seeder
             ],
             [
                 'name' => 'Profitable',
-                'col_name' => 'profitable',
+                'col_name' => 'is_profitable',
                 'unit' => 'sites',
                 'periodicity' => 'monthly',
                 'type' => 'qualitative',
+                'description' => 'True if site revenue - site expense + salary entrepreneur >= 200',
+                'aggregate' => 'sum',
+            ],
+            [
+                'name' => 'EC Collection',
+                'col_name' => 'ec_collection',
+                'unit' => 'sites',
+                'periodicity' => 'monthly',
+                'type' => 'qualitative',
+                'description' => 'True if paid >= amount_expenses for entrepreneur_contribution expenses',
                 'aggregate' => 'sum',
             ],
         ];

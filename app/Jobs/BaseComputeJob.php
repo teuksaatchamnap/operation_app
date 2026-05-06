@@ -3,8 +3,8 @@
 namespace App\Jobs;
 
 use App\Models\FactMonthly;
-use App\Models\Site;
 use App\Models\Sims3\Sale;
+use App\Models\Site;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -30,18 +30,20 @@ abstract class BaseComputeJob implements ShouldQueue
         $months = $this->resolveMonths();
 
         if ($siteMap->isEmpty()) {
-            Log::warning(static::class . ': no local sites found' . ($this->site ? " matching '{$this->site}'" : ''));
+            Log::warning(static::class.': no local sites found'.($this->site ? " matching '{$this->site}'" : ''));
+
             return;
         }
 
         if ($months->isEmpty()) {
-            Log::warning(static::class . ': no months found to process');
+            Log::warning(static::class.': no months found to process');
+
             return;
         }
 
         $siteNames = $siteMap->keys()->toArray();
 
-        Log::info(static::class . ": processing {$months->count()} months for sites: " . implode(', ', $siteNames));
+        Log::info(static::class.": processing {$months->count()} months for sites: ".implode(', ', $siteNames));
 
         $data = $this->prepareData($siteMap, $months, $siteNames);
 
@@ -54,19 +56,19 @@ abstract class BaseComputeJob implements ShouldQueue
             $monthKey = $monthStart->format('Y-m-d');
 
             foreach ($siteMap as $siteName => $siteId) {
-                $key = $siteName . '|' . $monthKey;
+                $key = $siteName.'|'.$monthKey;
                 $recordData = $data[$key] ?? [];
-                
+
                 // Skip empty records - no data to update
                 if (empty($recordData)) {
                     continue;
                 }
-                
+
                 $recordsToUpsert[] = array_merge(
                     ['site_id' => $siteId, 'month' => $monthStart->format('Y-m-d')],
                     $recordData
                 );
-                
+
                 $processed++;
 
                 if ($processed >= $batchSize) {
@@ -77,7 +79,7 @@ abstract class BaseComputeJob implements ShouldQueue
             }
         }
 
-        if (!empty($recordsToUpsert)) {
+        if (! empty($recordsToUpsert)) {
             $this->upsertBatch($recordsToUpsert);
         }
     }
@@ -93,7 +95,7 @@ abstract class BaseComputeJob implements ShouldQueue
         // Deduplicate records by site_id + month (keep last)
         $deduped = [];
         foreach ($records as $record) {
-            $key = $record['site_id'] . '|' . $record['month'];
+            $key = $record['site_id'].'|'.$record['month'];
             $deduped[$key] = $record;
         }
         $records = array_values($deduped);
@@ -145,6 +147,7 @@ abstract class BaseComputeJob implements ShouldQueue
             for ($m = 1; $m <= 12; $m++) {
                 $months->push(Carbon::create($this->year, $m, 1));
             }
+
             return $months;
         }
 

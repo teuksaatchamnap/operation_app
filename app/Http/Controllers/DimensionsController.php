@@ -11,8 +11,6 @@ class DimensionsController extends Controller
 {
     /**
      * Get all advisors.
-     *
-     * @return JsonResponse
      */
     public function getAdvisors(): JsonResponse
     {
@@ -21,8 +19,6 @@ class DimensionsController extends Controller
 
     /**
      * Get all platforms.
-     *
-     * @return JsonResponse
      */
     public function getPlatforms(): JsonResponse
     {
@@ -31,8 +27,6 @@ class DimensionsController extends Controller
 
     /**
      * Get all sites.
-     *
-     * @return JsonResponse
      */
     public function getSites(): JsonResponse
     {

@@ -14,7 +14,7 @@ class ComputeSalesVolume extends BaseComputeJob
         $to = $months->last()->copy()->endOfMonth();
 
         $sales = Sale::query()
-            ->select(['Id_Site', 'Month', 'Total_Sales', 'WiS_Sales', 'Bottle_Sales', 'Code_Sales', 'Number_Open_Days'])
+            ->select(['Id_Site', 'Month', 'Total_Sales', 'Total_Income', 'WiS_Sales', 'Bottle_Sales', 'Code_Sales', 'Number_Open_Days'])
             ->whereBetween('Month', [$from, $to])
             ->whereIn('Id_Site', $siteNames)
             ->orderBy('Code_Sales')
@@ -38,7 +38,7 @@ class ComputeSalesVolume extends BaseComputeJob
             $carbon = Carbon::parse($sale->Month)->startOfMonth();
             $monthKey = $carbon->format('Y-m-d');
             $site = trim($sale->Id_Site);
-            $key = $site . '|' . $monthKey;
+            $key = $site.'|'.$monthKey;
 
             if (! isset($map[$key])) {
                 $volume = ($sale->Total_Sales ?? 0) - ($sale->WiS_Sales ?? 0) - ($sale->Bottle_Sales ?? 0);
@@ -48,6 +48,7 @@ class ComputeSalesVolume extends BaseComputeJob
                         ? (int) round($volume)
                         : null,
                     'days_open' => $sale->Number_Open_Days !== null ? (int) $sale->Number_Open_Days : 0,
+                    'revenue' => (int) round($sale->Total_Income ?? 0),
                 ];
                 $map[$key]['active'] = $map[$key]['sales_volume'] > 0 ? 1 : 0;
                 $map[$key]['super_tier_1'] = 0;

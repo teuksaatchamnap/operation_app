@@ -19,7 +19,7 @@ class RunJob extends Command
     {
         $jobClass = $this->argument('job');
 
-        if (!class_exists($jobClass)) {
+        if (! class_exists($jobClass)) {
             $this->error("Class {$jobClass} does not exist.");
 
             return self::FAILURE;
