@@ -5,7 +5,7 @@
                 <div>
                     <v-card-title>
                         <span class="text-lg">{{
-                            kpi?.name || kpiColName
+                            kpi?.name || kpi?.col_name || ""
                         }}</span>
                     </v-card-title>
 
@@ -54,30 +54,50 @@
             <div class="text-h1 font-weight-bold text-primary kpi-value">
                 {{ formatValue(displayValue) }}
             </div>
-            <div class="text-subtitle-1 text-medium-emphasis mt-1">
+            <div class="text-subtitle-1 text-medium-emphasis mt-1 mb-2">
                 {{ kpi?.unit || "" }}
+            </div>
+            <div v-if="matchingObjective">
+                <v-chip
+                    size="small"
+                    :color="objectiveReached ? 'success' : 'error'"
+                    variant="tonal"
+                    class="ma-0"
+                >
+                    <v-icon start size="x-small">
+                        {{
+                            objectiveReached
+                                ? "mdi-check-circle"
+                                : "mdi-close-circle"
+                        }}
+                    </v-icon>
+                    Objective : {{ formatValue(matchingObjective.value) }}
+                </v-chip>
+                <div class="text-caption text-medium-emphasis pa-0 ma-0">
+                    <v-icon start size="x-small">mdi-delta</v-icon>
+                    {{ objectiveDelta >= 0 ? "+" : ""
+                    }}{{ formatValue(Math.abs(objectiveDelta)) }}
+                </div>
             </div>
         </v-card-text>
     </v-card>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import axios from "axios";
 
 const props = defineProps({
-    kpiColName: {
-        type: String,
-        required: true,
+    kpi: {
+        type: Object,
+        default: null,
     },
     yearToDate: {
         type: Number,
-        required: false,
         default: () => 0,
     },
     latestAvailable: {
         type: Number,
-        required: false,
         default: () => 0,
     },
     filters: {
@@ -86,16 +106,37 @@ const props = defineProps({
     },
 });
 
-const kpi = ref(null);
 const computedValue = ref(0);
 const loading = ref(false);
 const displayValue = ref(0);
 const randomInterval = ref(null);
 
+const matchingObjective = computed(() => {
+    if (!props.kpi?.objectives?.length || !props.filters.month) return null;
+
+    return (
+        props.kpi.objectives.find((obj) => {
+            return (
+                props.filters.month >= obj.start_date &&
+                (props.filters.month <= obj.end_date || obj.end_date == null)
+            );
+        }) || null
+    );
+});
+
+const objectiveDelta = computed(() => {
+    if (!matchingObjective.value) return null;
+    return computedValue.value - parseFloat(matchingObjective.value.value);
+});
+
+const objectiveReached = computed(() => {
+    if (!matchingObjective.value) return null;
+    return computedValue.value >= parseFloat(matchingObjective.value.value);
+});
+
 function formatValue(value) {
     if (value === null || value === undefined) return "-";
 
-    // Convert string to number if necessary
     const numValue = typeof value === "string" ? parseFloat(value) : value;
 
     if (!isNaN(numValue)) {
@@ -107,18 +148,12 @@ function formatValue(value) {
     return value;
 }
 
-async function fetchKpiDetails() {
-    try {
-        const response = await axios.get("/api/kpis");
-        const kpis = response.data;
-        kpi.value = kpis.find((k) => k.col_name === props.kpiColName) || null;
-    } catch (error) {
-        console.error("Failed to fetch KPI details:", error);
-    }
-}
-
 async function fetchComputedValue() {
-    if (!props.filters || Object.keys(props.filters).length === 0) {
+    if (
+        !props.kpi ||
+        !props.filters ||
+        Object.keys(props.filters).length === 0
+    ) {
         computedValue.value = 0;
         return;
     }
@@ -127,13 +162,13 @@ async function fetchComputedValue() {
 
     try {
         const params = {
-            kpis: props.kpiColName,
+            kpis: props.kpi.col_name,
             year_to_date: props.yearToDate,
             latest_available: props.latestAvailable,
         };
 
-        if (kpi.value?.aggregate) {
-            params.aggregate = kpi.value.aggregate;
+        if (props.kpi.aggregate) {
+            params.aggregate = props.kpi.aggregate;
         }
 
         if (props.filters.site_ids?.length > 0) {
@@ -156,7 +191,7 @@ async function fetchComputedValue() {
         const data = response.data;
 
         if (data && data.length > 0) {
-            computedValue.value = data[0][props.kpiColName] || 0;
+            computedValue.value = data[0][props.kpi.col_name] || 0;
         } else {
             computedValue.value = 0;
         }
@@ -169,9 +204,17 @@ async function fetchComputedValue() {
 }
 
 onMounted(async () => {
-    await fetchKpiDetails();
     await fetchComputedValue();
 });
+
+watch(
+    () => props.kpi,
+    async (newKpi) => {
+        if (newKpi) {
+            await fetchComputedValue();
+        }
+    },
+);
 
 onUnmounted(() => {
     if (randomInterval.value) {

@@ -1,5 +1,4 @@
 <template>
-    <!-- Filter Form -->
     <v-card class="mb-6 pa-4">
         <v-row align="center">
             <v-col>
@@ -50,40 +49,39 @@
         </v-row>
     </v-card>
 
-    <!-- KPI Cards -->
     <ScrollPanel class="mb-6">
         <KpiCard
-            kpi-col-name="sales_volume"
+            :kpi="findKpi('sales_volume')"
             :year-to-date="1"
             :filters="kpiFilters"
         />
         <KpiCard
-            kpi-col-name="sales_volume_lfl"
+            :kpi="findKpi('sales_volume_lfl')"
             :year-to-date="1"
             :filters="kpiFilters"
         />
-        <KpiCard kpi-col-name="sales_volume_lfl" :filters="kpiFilters" />
-        <KpiCard kpi-col-name="active" :filters="kpiFilters" />
+        <KpiCard :kpi="findKpi('sales_volume_lfl')" :filters="kpiFilters" />
+        <KpiCard :kpi="findKpi('active')" :filters="kpiFilters" />
         <KpiCard
-            kpi-col-name="super_tier_1"
+            :kpi="findKpi('super_tier_1')"
             :latest-available="1"
             :filters="kpiFilters"
         />
         <KpiCard
-            kpi-col-name="bottles_per_day"
+            :kpi="findKpi('bottles_per_day')"
             :year-to-date="1"
             :filters="kpiFilters"
         />
-        <KpiCard kpi-col-name="has_3_workers" :filters="kpiFilters" />
-        <KpiCard kpi-col-name="consumers" :filters="kpiFilters" />
+        <KpiCard :kpi="findKpi('has_3_workers')" :filters="kpiFilters" />
+        <KpiCard :kpi="findKpi('consumers')" :filters="kpiFilters" />
         <KpiCard
-            kpi-col-name="who_compliance"
+            :kpi="findKpi('who_compliance')"
             :filters="kpiFilters"
             :latest-available="1"
         />
-        <KpiCard kpi-col-name="is_profitable" :filters="kpiFilters" />
+        <KpiCard :kpi="findKpi('is_profitable')" :filters="kpiFilters" />
         <KpiCard
-            kpi-col-name="ec_collection"
+            :kpi="findKpi('ec_collection')"
             :filters="kpiFilters"
             :year-to-date="1"
         />
@@ -100,6 +98,7 @@ import ScrollPanel from "../components/ScrollPanel.vue";
 const now = new Date();
 const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
+const kpis = ref([]);
 const sites = ref([]);
 const advisors = ref([]);
 const platforms = ref([]);
@@ -115,13 +114,19 @@ const kpiFilters = computed(() => ({
     month: selectedMonth.value,
 }));
 
+function findKpi(colName) {
+    return kpis.value.find((k) => k.col_name === colName) || null;
+}
+
 onMounted(async () => {
     try {
-        const [sitesRes, advisorsRes, platformsRes] = await Promise.all([
+        const [kpisRes, sitesRes, advisorsRes, platformsRes] = await Promise.all([
+            axios.get("/api/kpis"),
             axios.get("/api/sites"),
             axios.get("/api/advisors"),
             axios.get("/api/platforms"),
         ]);
+        kpis.value = kpisRes.data;
         sites.value = sitesRes.data;
         advisors.value = advisorsRes.data;
         platforms.value = platformsRes.data;

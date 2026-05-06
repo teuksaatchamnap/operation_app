@@ -17,7 +17,7 @@ class KpiController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        return response()->json(Kpi::all());
+        return response()->json(Kpi::with(['objectives'])->get());
     }
 
     /**

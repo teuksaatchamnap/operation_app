@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Kpi;
+use App\Models\Objective;
+use Carbon\Carbon;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Artisan;
@@ -33,6 +35,7 @@ class KpiSeeder extends Seeder
                 'type' => 'quantitative',
                 'description' => 'This is the total sales excluding WiS and new bottles',
                 'aggregate' => 'sum',
+                'default_objective' => 1968988,
             ],
             [
                 'name' => 'Sales Volume LfL',
@@ -42,6 +45,7 @@ class KpiSeeder extends Seeder
                 'type' => 'quantitative',
                 'description' => 'Like to like sales, this is the total sales excluding WiS and new bottles for sites who were opened on january of the reference year',
                 'aggregate' => 'sum',
+                'default_objective' => 1834049,
             ],
             [
                 'name' => 'Days Open',
@@ -60,6 +64,7 @@ class KpiSeeder extends Seeder
                 'type' => 'quantitative',
                 'description' => 'The number of active sites (site reported at least one sale for the period)',
                 'aggregate' => 'sum',
+                'default_objective' => 372,
             ],
             [
                 'name' => 'Super Tier 1',
@@ -69,6 +74,7 @@ class KpiSeeder extends Seeder
                 'type' => 'quantitative',
                 'description' => 'The number of sites with more that 110 sales per day (exclude WinS and new bottles)',
                 'aggregate' => 'sum',
+                'default_objective' => 125,
             ],
             [
                 'name' => 'Bottles per day',
@@ -103,6 +109,7 @@ class KpiSeeder extends Seeder
                 'type' => 'quantitative',
                 'description' => 'True if the site has 3 or more operators, null if no data',
                 'aggregate' => 'sum',
+                'default_objective' => 347,
             ],
             [
                 'name' => 'Consumers',
@@ -112,24 +119,27 @@ class KpiSeeder extends Seeder
                 'type' => 'quantitative',
                 'description' => 'The number of consumers who bought from sites',
                 'aggregate' => 'sum',
+                'default_objective' => 1100100,
             ],
             [
                 'name' => 'WHO Compliance',
                 'col_name' => 'who_compliance',
-                'unit' => 'sites',
+                'unit' => '%',
                 'periodicity' => 'monthly',
                 'type' => 'qualitative',
                 'description' => 'WHO compliance E.Coli and Coliform 0 CFU/100ml',
-                'aggregate' => 'sum',
+                'aggregate' => 'pct_active',
+                'default_objective' => 99.5,
             ],
             [
                 'name' => 'Profitable',
                 'col_name' => 'is_profitable',
-                'unit' => 'sites',
+                'unit' => '%',
                 'periodicity' => 'monthly',
                 'type' => 'qualitative',
                 'description' => 'True if site revenue - site expense + salary entrepreneur >= 200',
-                'aggregate' => 'sum',
+                'aggregate' => 'pct_active',
+                'default_objective' => 100,
             ],
             [
                 'name' => 'EC Collection',
@@ -139,14 +149,26 @@ class KpiSeeder extends Seeder
                 'type' => 'qualitative',
                 'description' => 'Percentage of active sites where paid >= amount_expenses for entrepreneur_contribution expenses',
                 'aggregate' => 'pct_active',
+                'default_objective' => 100,
             ],
         ];
 
         foreach ($kpis as $kpi) {
-            Kpi::firstOrCreate(
+            $objective = null;
+            if (isset($kpi["default_objective"])) {
+                $objective = $kpi["default_objective"];
+                unset($kpi["default_objective"]);
+            }
+            $kpiModel = Kpi::firstOrCreate(
                 ['col_name' => $kpi['col_name']],
                 $kpi
             );
+            if ($objective) {
+                $kpiModel->objectives()->save(new Objective([
+                    "start_date" => Carbon::now()->addYears(-20),
+                    "value" => $objective
+                ]));
+            }
         }
 
         Artisan::call('sims3:import-dimensions');

@@ -43,6 +43,13 @@
                 value="settings"
                 disabled
             ></v-list-item>
+            <v-list-item
+                prepend-icon="mdi-bullseye-arrow"
+                title="Kpis"
+                value="kpis"
+                to="/kpis"
+                color="primary"
+            ></v-list-item>
         </v-list>
     </v-navigation-drawer>
 

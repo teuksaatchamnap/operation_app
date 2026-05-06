@@ -5,6 +5,7 @@ namespace App\Models;
 use Database\Factories\KpiFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Kpi extends Model
 {
@@ -22,4 +23,9 @@ class Kpi extends Model
         'description',
         'aggregate',
     ];
+
+    public function objectives(): HasMany
+    {
+        return $this->hasMany(Objective::class);
+    }
 }
