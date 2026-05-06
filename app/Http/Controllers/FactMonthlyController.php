@@ -81,6 +81,7 @@ class FactMonthlyController extends Controller
 
             $baseQuery = FactMonthly::query()
                 ->whereYear('month', '=', $year)
+                ->where('active', 1)
                 ->whereNotNull($kpi);
 
             if ($request->filled('site_ids')) {
@@ -157,6 +158,10 @@ class FactMonthlyController extends Controller
 
         if ($request->filled('aggregate')) {
             $aggregateFunc = $validated['aggregate'];
+
+            if ($aggregateFunc === 'pct_active') {
+                $query->where('active', 1);
+            }
 
             $rawExpr = $aggregateFunc === 'pct_active'
                 ? "SUM({$kpi}) / NULLIF(SUM(active), 0) * 100"

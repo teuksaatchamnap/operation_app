@@ -172,26 +172,31 @@ class FactMonthlyControllerTest extends TestCase
             'site_id' => $site1->id,
             'month' => '2025-01-01',
             'revenue' => 1000,
+            'active' => 1,
         ]);
         FactMonthly::factory()->create([
             'site_id' => $site1->id,
             'month' => '2025-02-01',
             'revenue' => 2000,
+            'active' => 1,
         ]);
         FactMonthly::factory()->create([
             'site_id' => $site1->id,
             'month' => '2025-03-01',
             'revenue' => null,
+            'active' => 1,
         ]);
         FactMonthly::factory()->create([
             'site_id' => $site2->id,
             'month' => '2025-01-01',
             'revenue' => null,
+            'active' => 1,
         ]);
         FactMonthly::factory()->create([
             'site_id' => $site2->id,
             'month' => '2025-02-01',
             'revenue' => 500,
+            'active' => 1,
         ]);
 
         $user = User::factory()->create();
@@ -211,6 +216,7 @@ class FactMonthlyControllerTest extends TestCase
             'site_id' => $site->id,
             'month' => '2025-03-01',
             'revenue' => 3000,
+            'active' => 1,
         ]);
 
         $user = User::factory()->create();
@@ -231,11 +237,13 @@ class FactMonthlyControllerTest extends TestCase
             'site_id' => $site1->id,
             'month' => '2025-02-01',
             'revenue' => 2000,
+            'active' => 1,
         ]);
         FactMonthly::factory()->create([
             'site_id' => $site2->id,
             'month' => '2025-01-01',
             'revenue' => 4000,
+            'active' => 1,
         ]);
 
         $user = User::factory()->create();
@@ -256,11 +264,13 @@ class FactMonthlyControllerTest extends TestCase
             'site_id' => $site1->id,
             'month' => '2025-01-01',
             'revenue' => 1000,
+            'active' => 1,
         ]);
         FactMonthly::factory()->create([
             'site_id' => $site2->id,
             'month' => '2025-01-01',
             'revenue' => null,
+            'active' => 1,
         ]);
 
         $user = User::factory()->create();
@@ -270,5 +280,125 @@ class FactMonthlyControllerTest extends TestCase
 
         $data = $response->json();
         $this->assertEquals(1000.0, $data[0]['revenue']);
+    }
+
+    // -- pct_active tests --
+
+    public function test_pct_active_returns_percentage_of_active_sites(): void
+    {
+        $site1 = Site::factory()->create();
+        $site2 = Site::factory()->create();
+        $site3 = Site::factory()->create();
+
+        // Site 1: active with who_compliance = 1
+        FactMonthly::factory()->create([
+            'site_id' => $site1->id,
+            'month' => '2025-01-01',
+            'who_compliance' => 1,
+            'active' => 1,
+        ]);
+
+        // Site 2: active with who_compliance = 0
+        FactMonthly::factory()->create([
+            'site_id' => $site2->id,
+            'month' => '2025-01-01',
+            'who_compliance' => 0,
+            'active' => 1,
+        ]);
+
+        // Site 3: not active (should be excluded from calculation)
+        FactMonthly::factory()->create([
+            'site_id' => $site3->id,
+            'month' => '2025-01-01',
+            'who_compliance' => 1,
+            'active' => null,
+        ]);
+
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)
+            ->getJson('/api/fact-monthly?kpis=who_compliance&aggregate=pct_active&month=2025-01')
+            ->assertSuccessful();
+
+        $data = $response->json();
+        // 1 out of 2 active sites has who_compliance = 1 -> 50%
+        $this->assertEquals(50.0, $data[0]['who_compliance']);
+    }
+
+    public function test_pct_active_with_latest_available_returns_percentage(): void
+    {
+        $site1 = Site::factory()->create();
+        $site2 = Site::factory()->create();
+        $site3 = Site::factory()->create();
+
+        // Site 1: active, latest who_compliance = 1 (in March)
+        FactMonthly::factory()->create([
+            'site_id' => $site1->id,
+            'month' => '2025-01-01',
+            'who_compliance' => 0,
+            'active' => 1,
+        ]);
+        FactMonthly::factory()->create([
+            'site_id' => $site1->id,
+            'month' => '2025-03-01',
+            'who_compliance' => 1,
+            'active' => 1,
+        ]);
+
+        // Site 2: active, latest who_compliance = 0 (in February)
+        FactMonthly::factory()->create([
+            'site_id' => $site2->id,
+            'month' => '2025-02-01',
+            'who_compliance' => 0,
+            'active' => 1,
+        ]);
+
+        // Site 3: has who_compliance but never active (should be excluded by the fix)
+        FactMonthly::factory()->create([
+            'site_id' => $site3->id,
+            'month' => '2025-01-01',
+            'who_compliance' => 1,
+            'active' => null,
+        ]);
+
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)
+            ->getJson('/api/fact-monthly?kpis=who_compliance&aggregate=pct_active&latest_available=1&year=2025')
+            ->assertSuccessful();
+
+        $data = $response->json();
+        // 1 out of 2 active sites has who_compliance = 1 (50%), site3 is excluded
+        $this->assertEquals(50.0, $data[0]['who_compliance']);
+    }
+
+    public function test_pct_active_excludes_sites_without_active_data(): void
+    {
+        $site1 = Site::factory()->create();
+        $site2 = Site::factory()->create();
+
+        // Site 1: active with is_profitable = 1
+        FactMonthly::factory()->create([
+            'site_id' => $site1->id,
+            'month' => '2025-06-01',
+            'is_profitable' => 1,
+            'active' => 1,
+        ]);
+
+        // Site 2: has is_profitable but no active data (would have caused 5200% before fix)
+        FactMonthly::factory()->create([
+            'site_id' => $site2->id,
+            'month' => '2025-06-01',
+            'is_profitable' => 1,
+            'active' => null,
+        ]);
+
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)
+            ->getJson('/api/fact-monthly?kpis=is_profitable&aggregate=pct_active&month=2025-06')
+            ->assertSuccessful();
+
+        $data = $response->json();
+        // Only site1 is active, it has is_profitable = 1 -> 100%
+        // Site2 is excluded because active is null
+        $this->assertEquals(100.0, $data[0]['is_profitable']);
     }
 }
