@@ -134,11 +134,11 @@ class KpiSeeder extends Seeder
             [
                 'name' => 'EC Collection',
                 'col_name' => 'ec_collection',
-                'unit' => 'sites',
+                'unit' => '%',
                 'periodicity' => 'monthly',
                 'type' => 'qualitative',
-                'description' => 'True if paid >= amount_expenses for entrepreneur_contribution expenses',
-                'aggregate' => 'sum',
+                'description' => 'Percentage of active sites where paid >= amount_expenses for entrepreneur_contribution expenses',
+                'aggregate' => 'pct_active',
             ],
         ];
 

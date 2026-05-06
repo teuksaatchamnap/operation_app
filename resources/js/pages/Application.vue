@@ -81,10 +81,12 @@
             :filters="kpiFilters"
             :latest-available="1"
         />
-        <KpiCard kpi-col-name="expenses" :filters="kpiFilters" />
-        <KpiCard kpi-col-name="revenue" :filters="kpiFilters" />
         <KpiCard kpi-col-name="is_profitable" :filters="kpiFilters" />
-        <KpiCard kpi-col-name="ec_collection" :filters="kpiFilters" />
+        <KpiCard
+            kpi-col-name="ec_collection"
+            :filters="kpiFilters"
+            :year-to-date="1"
+        />
     </ScrollPanel>
 </template>
 

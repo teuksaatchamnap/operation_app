@@ -26,7 +26,7 @@ class ComputeEcCollection extends BaseComputeJob
         foreach ($expenses as $expense) {
             $monthKey = Carbon::parse($expense->Month)->startOfMonth()->format('Y-m-d');
             $site = trim($expense->Id_Site);
-            $key = $site . '|' . $monthKey;
+            $key = $site.'|'.$monthKey;
 
             $paidBySiteMonth[$key] = ($paidBySiteMonth[$key] ?? 0) + (float) ($expense->Paid ?? 0);
             $amountBySiteMonth[$key] = ($amountBySiteMonth[$key] ?? 0) + (float) ($expense->Amount_expenses ?? 0);

@@ -22,7 +22,8 @@ class FactMonthlyController extends Controller
      * @queryParam kpis string required. Single KPI column name.
      *   Available: tier, sales_volume, days_open, active, super_tier_1, bottles_per_day, expenses, revenue, workers, consumers, who_compliance, profitable.
      *   Example: revenue
-     * @queryParam aggregate string Optional. Aggregate function to apply to KPI column. Options: sum, avg.
+     * @queryParam aggregate string Optional. Aggregate function to apply to KPI column. Options: sum, avg, count, pct_active.
+     *   pct_active returns SUM(kpi) / NULLIF(SUM(active), 0) * 100 (percentage of active sites).
      *   When provided, returns a single aggregated result instead of multiple rows.
      *   Required when using latest_available.
      * @queryParam year_to_date bool Optional. When true, aggregates values from January 1 to the selected month
@@ -50,7 +51,7 @@ class FactMonthlyController extends Controller
             'site_ids' => 'sometimes|array',
             'site_ids.*' => 'integer',
             'kpis' => 'required|string',
-            'aggregate' => 'sometimes|string|in:sum,avg,count',
+            'aggregate' => 'sometimes|string|in:sum,avg,count,pct_active',
             'year_to_date' => 'sometimes|boolean',
             'latest_available' => 'sometimes|boolean',
         ]);
@@ -101,13 +102,17 @@ class FactMonthlyController extends Controller
 
             $aggregateFunc = $validated['aggregate'];
 
+            $rawExpr = $aggregateFunc === 'pct_active'
+                ? "SUM(fm.{$kpi}) / NULLIF(SUM(fm.active), 0) * 100"
+                : "{$aggregateFunc}(fm.{$kpi})";
+
             $result = FactMonthly::query()
                 ->from(DB::raw("({$latestSubquery}) as latest"))
                 ->join('fact_monthly as fm', function ($join) {
                     $join->on('fm.site_id', '=', 'latest.site_id')
                         ->on('fm.month', '=', 'latest.latest_month');
                 })
-                ->selectRaw("{$aggregateFunc}(fm.{$kpi}) as {$kpi}")
+                ->selectRaw("{$rawExpr} as {$kpi}")
                 ->setBindings($bindings)
                 ->first();
 
@@ -153,7 +158,11 @@ class FactMonthlyController extends Controller
         if ($request->filled('aggregate')) {
             $aggregateFunc = $validated['aggregate'];
 
-            $query->selectRaw("{$aggregateFunc}({$kpi}) as {$kpi}");
+            $rawExpr = $aggregateFunc === 'pct_active'
+                ? "SUM({$kpi}) / NULLIF(SUM(active), 0) * 100"
+                : "{$aggregateFunc}({$kpi})";
+
+            $query->selectRaw("{$rawExpr} as {$kpi}");
             $result = $query->first();
 
             if (isset($result->$kpi)) {

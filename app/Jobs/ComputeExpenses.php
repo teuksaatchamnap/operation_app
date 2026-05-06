@@ -24,7 +24,7 @@ class ComputeExpenses extends BaseComputeJob
         foreach ($expenses as $expense) {
             $monthKey = Carbon::parse($expense->Month)->startOfMonth()->format('Y-m-d');
             $site = trim($expense->Id_Site);
-            $key = $site . '|' . $monthKey;
+            $key = $site.'|'.$monthKey;
 
             if (! isset($map[$key])) {
                 $map[$key] = ['expenses' => 0];
