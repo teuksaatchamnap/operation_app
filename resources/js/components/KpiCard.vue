@@ -57,7 +57,7 @@
             <div class="text-subtitle-1 text-medium-emphasis mt-1 mb-3">
                 {{ kpi?.unit || "" }}
             </div>
-            <div v-if="matchingObjective">
+            <div v-if="matchingObjective" class="text-left">
                 <v-chip
                     v-if="objectiveReached"
                     size="small"
@@ -65,9 +65,7 @@
                     variant="tonal"
                     class="ma-0"
                 >
-                    <v-icon start size="x-small">
-                        mdi-check-circle
-                    </v-icon>
+                    <v-icon start size="x-small"> mdi-check-circle </v-icon>
                     Objective : {{ formatValue(matchingObjective.value) }}
                 </v-chip>
                 <v-chip
@@ -77,13 +75,11 @@
                     variant="tonal"
                     class="ma-0"
                 >
-                    <v-icon start size="x-small">
-                        mdi-close-circle
-                    </v-icon>
+                    <v-icon start size="x-small"> mdi-close-circle </v-icon>
                     Objective : {{ formatValue(matchingObjective.value) }}
                 </v-chip>
-                <div class="text-caption text-medium-emphasis pa-0 ma-0">
-                    <v-icon start size="x-small">mdi-delta</v-icon>
+                <div class="text-caption text-medium-emphasis pa-0 ma-0 ml-2">
+                    <v-icon size="x-small">mdi-delta</v-icon>
                     {{ objectiveDelta >= 0 ? "+" : ""
                     }}{{ formatValue(Math.abs(objectiveDelta)) }}
                 </div>
