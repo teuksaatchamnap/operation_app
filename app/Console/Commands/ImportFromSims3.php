@@ -35,8 +35,15 @@ class ImportFromSims3 extends Command
 
         $this->info("Found {$distinctSites->count()} distinct sites");
 
+        // Fetch geolocation data for all sites from SIMS3 Sites table
+        $sitesGeo = Sims3Site::select(['Id_Site', 'Latitude', 'Longitude'])
+            ->whereIn('Id_Site', $distinctSites)
+            ->get()
+            ->keyBy('Id_Site');
+
         $created = 0;
         $skipped = 0;
+        $updated = 0;
 
         foreach ($distinctSites as $siteName) {
             $siteName = trim($siteName);
@@ -47,21 +54,47 @@ class ImportFromSims3 extends Command
                 continue;
             }
 
+            $geoData = $sitesGeo[$siteName] ?? null;
+            $siteAttributes = [
+                'name' => $siteName,
+                'latitude' => $geoData?->Latitude,
+                'longitude' => $geoData?->Longitude,
+            ];
+
             $site = Site::firstOrCreate(
                 ['name' => $siteName],
-                ['name' => $siteName]
+                $siteAttributes
             );
 
             if ($site->wasRecentlyCreated) {
                 $created++;
                 $this->info("  Created site: {$siteName}");
             } else {
-                $skipped++;
-                $this->line("  Skipped existing site: {$siteName}");
+                // Update geolocation for existing sites if available
+                $updatedGeo = false;
+                if ($geoData !== null) {
+                    $updateData = [];
+                    if ($geoData->Latitude !== null && $site->latitude !== $geoData->Latitude) {
+                        $updateData['latitude'] = $geoData->Latitude;
+                    }
+                    if ($geoData->Longitude !== null && $site->longitude !== $geoData->Longitude) {
+                        $updateData['longitude'] = $geoData->Longitude;
+                    }
+                    if (! empty($updateData)) {
+                        $site->update($updateData);
+                        $updated++;
+                        $updatedGeo = true;
+                        $this->info("  Updated geolocation: {$siteName}");
+                    }
+                }
+                if (! $updatedGeo) {
+                    $skipped++;
+                    $this->line("  Skipped existing site: {$siteName}");
+                }
             }
         }
 
-        $this->info("Sites import complete! Created: {$created}, Skipped: {$skipped}");
+        $this->info("Sites import complete! Created: {$created}, Updated: {$updated}, Skipped: {$skipped}");
     }
 
     private function importAdvisors(): void
