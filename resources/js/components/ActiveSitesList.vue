@@ -97,6 +97,7 @@
                         v-if="geojsonData"
                         :geojson="geojsonData"
                         :options-style="geoJsonStyleFn"
+                        :options="geoJsonOptions"
                     />
                     <l-circle-marker
                         v-for="site in sitesWithCoords"
@@ -259,6 +260,20 @@ const geoJsonStyleFn = () => ({
     color: "#bdbdbd",
     weight: 1,
 });
+
+const geoJsonOptions = computed(() => ({
+    onEachFeature: (feature, layer) => {
+        const name =
+            feature.properties?.ADM0_EN +
+            " > " +
+            feature.properties?.ADM1_EN +
+            " > " +
+            feature.properties?.ADM2_EN +
+            " > " +
+            feature.properties?.ADM3_EN;
+        layer.bindTooltip(name, { sticky: true });
+    },
+}));
 
 async function fetchFactMonthly() {
     loading.value = true;
