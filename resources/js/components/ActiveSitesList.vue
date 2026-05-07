@@ -264,14 +264,15 @@ const geoJsonStyleFn = () => ({
 const geoJsonOptions = computed(() => ({
     onEachFeature: (feature, layer) => {
         const name =
-            feature.properties?.ADM0_EN +
-            " > " +
             feature.properties?.ADM1_EN +
             " > " +
             feature.properties?.ADM2_EN +
             " > " +
             feature.properties?.ADM3_EN;
-        layer.bindTooltip(name, { sticky: true });
+        layer.bindTooltip(name, {
+            sticky: true,
+            className: "commune-tooltip",
+        });
     },
 }));
 
@@ -379,5 +380,47 @@ onMounted(() => {
 .map-container {
     border-radius: 8px;
     overflow: hidden;
+}
+
+.map-container :deep(.leaflet-tooltip) {
+    background-color: #424242;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.map-container :deep(.leaflet-tooltip-left:before),
+.map-container :deep(.leaflet-tooltip-right:before) {
+    border-left-color: #424242;
+    border-right-color: #424242;
+}
+
+.map-container :deep(.leaflet-tooltip-top:before),
+.map-container :deep(.leaflet-tooltip-bottom:before) {
+    border-top-color: #424242;
+    border-bottom-color: #424242;
+}
+
+.map-container :deep(.commune-tooltip) {
+    background-color: #1565c0;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.map-container :deep(.commune-tooltip.leaflet-tooltip-left:before),
+.map-container :deep(.commune-tooltip.leaflet-tooltip-right:before) {
+    border-left-color: #1565c0;
+    border-right-color: #1565c0;
+}
+
+.map-container :deep(.commune-tooltip.leaflet-tooltip-top:before),
+.map-container :deep(.commune-tooltip.leaflet-tooltip-bottom:before) {
+    border-top-color: #1565c0;
+    border-bottom-color: #1565c0;
 }
 </style>
