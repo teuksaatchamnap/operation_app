@@ -273,6 +273,22 @@ const geoJsonOptions = computed(() => ({
             sticky: true,
             className: "commune-tooltip",
         });
+        layer.on("mouseover", () => {
+            layer.setStyle({
+                fillColor: "#64B5F6",
+                fillOpacity: 0.5,
+                color: "#1565C0",
+                weight: 2,
+            });
+        });
+        layer.on("mouseout", () => {
+            layer.setStyle({
+                fillColor: "#e0e0e0",
+                fillOpacity: 0.25,
+                color: "#bdbdbd",
+                weight: 1,
+            });
+        });
     },
 }));
 
