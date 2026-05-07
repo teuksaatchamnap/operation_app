@@ -86,6 +86,13 @@
             :year-to-date="1"
         />
     </ScrollPanel>
+
+    <ActiveSitesList
+        :filters="kpiFilters"
+        :sites="sites"
+        :platforms="platforms"
+        :advisors="advisors"
+    />
 </template>
 
 <script setup>
@@ -94,6 +101,7 @@ import axios from "axios";
 import KpiCard from "../components/KpiCard.vue";
 import MonthPicker from "../components/MonthPicker.vue";
 import ScrollPanel from "../components/ScrollPanel.vue";
+import ActiveSitesList from "../components/ActiveSitesList.vue";
 
 const now = new Date();
 const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
