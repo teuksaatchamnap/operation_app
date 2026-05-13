@@ -61,18 +61,6 @@ L.Icon.Default.mergeOptions({
     shadowUrl: markerShadow,
 });
 
-const TIER_COLORS = {
-    Dead: "#616161",
-    Closed: "#795548",
-    Inactive: "#BDBDBD",
-    New: "#00BCD4",
-    Reopen: "#FF9800",
-    ST1: "#1B5E20",
-    "1": "#4CAF50",
-    "2": "#FFC107",
-    "3": "#F44336",
-};
-
 const props = defineProps({
     sites: {
         type: Array,
@@ -82,6 +70,18 @@ const props = defineProps({
         type: String,
         required: true,
     },
+    legend: {
+        type: Array,
+        default: () => [],
+    },
+});
+
+const legendMap = computed(() => {
+    const map = {};
+    for (const entry of props.legend) {
+        map[entry.value] = entry.color;
+    }
+    return map;
 });
 
 const geojsonData = ref(null);
@@ -128,18 +128,26 @@ const geoJsonOptions = computed(() => ({
     },
 }));
 
-function getTierColor(tier) {
-    return TIER_COLORS[tier] || "#E0E0E0";
+function getColor(value) {
+    return legendMap.value[value] || "#E0E0E0";
+}
+
+function darkenColor(hex, amount = 0.4) {
+    const num = parseInt(hex.slice(1), 16);
+    const r = Math.max(0, Math.floor(((num >> 16) & 0xff) * (1 - amount)));
+    const g = Math.max(0, Math.floor(((num >> 8) & 0xff) * (1 - amount)));
+    const b = Math.max(0, Math.floor((num & 0xff) * (1 - amount)));
+    return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
 }
 
 function markerColor(site, part) {
     if (props.dataMode === "active") {
-        if (site.active) {
-            return part === "fill" ? "#4CAF50" : "#2E7D32";
-        }
-        return part === "fill" ? "#9E9E9E" : "#757575";
+        const key = site.active ? "Active" : "Inactive";
+        const fill = getColor(key);
+        return part === "fill" ? fill : darkenColor(fill, 0.4);
     }
-    return getTierColor(site.tier);
+    const fill = getColor(site.tier);
+    return part === "fill" ? fill : darkenColor(fill, 0.4);
 }
 
 async function fetchGeoJson() {

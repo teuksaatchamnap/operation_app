@@ -92,6 +92,7 @@
         :sites="sites"
         :platforms="platforms"
         :advisors="advisors"
+        :kpis="kpis"
     />
 </template>
 

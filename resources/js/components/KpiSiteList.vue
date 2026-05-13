@@ -52,7 +52,7 @@
             >
                 <template #item.active="{ item }">
                     <v-chip
-                        :color="item.active ? 'success' : 'grey'"
+                        :color="getTierColor(item.active ? 'Active' : 'Inactive')"
                         size="small"
                         variant="flat"
                     >
@@ -75,12 +75,14 @@
             v-if="viewMode === 'kanban' && !loading"
             :sites="mergedSites"
             :data-mode="dataMode"
+            :legend="currentLegend"
         />
 
         <SiteMap
             v-if="viewMode === 'map' && !loading"
             :sites="mergedSites"
             :data-mode="dataMode"
+            :legend="currentLegend"
         />
 
         <div
@@ -115,20 +117,6 @@ import axios from "axios";
 import SiteKanban from "./SiteKanban.vue";
 import SiteMap from "./SiteMap.vue";
 
-const TIER_COLORS = {
-    Dead: "#616161",
-    Closed: "#795548",
-    Inactive: "#BDBDBD",
-    New: "#00BCD4",
-    Reopen: "#FF9800",
-    ST1: "#1B5E20",
-    "1": "#4CAF50",
-    "2": "#FFC107",
-    "3": "#F44336",
-};
-
-const TIER_ORDER = ["Dead", "Closed", "Inactive", "New", "Reopen", "ST1", "1", "2", "3"];
-
 const props = defineProps({
     filters: {
         type: Object,
@@ -146,6 +134,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    kpis: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const dataModeOptions = [
@@ -157,6 +149,19 @@ const factRows = ref([]);
 const loading = ref(false);
 const viewMode = ref("table");
 const dataMode = ref("active");
+
+const currentLegend = computed(() => {
+    const kpi = props.kpis.find((k) => k.col_name === dataMode.value);
+    return kpi?.legend || [];
+});
+
+const legendMap = computed(() => {
+    const map = {};
+    for (const entry of currentLegend.value) {
+        map[entry.value] = entry.color;
+    }
+    return map;
+});
 
 const platformMap = computed(() => {
     const map = {};
@@ -223,28 +228,14 @@ const mergedSites = computed(() => {
 });
 
 const legendItems = computed(() => {
-    if (dataMode.value === "active") {
-        return [
-            { label: "Active", color: "#4CAF50" },
-            { label: "Inactive", color: "#E0E0E0" },
-        ];
-    }
-    const tiers = [
-        ...new Set(mergedSites.value.map((s) => s.tier).filter((t) => t != null && t !== "")),
-    ];
-    tiers.sort((a, b) => {
-        const ia = TIER_ORDER.indexOf(a);
-        const ib = TIER_ORDER.indexOf(b);
-        return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
-    });
-    return tiers.map((tier) => ({
-        label: tier,
-        color: getTierColor(tier),
+    return currentLegend.value.map((entry) => ({
+        label: entry.value,
+        color: entry.color,
     }));
 });
 
 function getTierColor(tier) {
-    return TIER_COLORS[tier] || "#E0E0E0";
+    return legendMap.value[tier] || "#E0E0E0";
 }
 
 async function fetchFactMonthly() {

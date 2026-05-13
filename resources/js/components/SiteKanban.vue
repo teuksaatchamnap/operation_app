@@ -39,18 +39,6 @@
 <script setup>
 import { computed } from "vue";
 
-const TIER_COLORS = {
-    Dead: "#616161",
-    Closed: "#795548",
-    Inactive: "#BDBDBD",
-    New: "#00BCD4",
-    Reopen: "#FF9800",
-    ST1: "#1B5E20",
-    1: "#4CAF50",
-    2: "#FFC107",
-    3: "#F44336",
-};
-
 const props = defineProps({
     sites: {
         type: Array,
@@ -60,7 +48,21 @@ const props = defineProps({
         type: String,
         required: true,
     },
+    legend: {
+        type: Array,
+        default: () => [],
+    },
 });
+
+const legendMap = computed(() => {
+    const map = {};
+    for (const entry of props.legend) {
+        map[entry.value] = entry.color;
+    }
+    return map;
+});
+
+const legendOrder = computed(() => props.legend.map((entry) => entry.value));
 
 const kanbanGroups = computed(() => {
     const groups = {};
@@ -76,8 +78,8 @@ const kanbanGroups = computed(() => {
     );
 });
 
-function getTierColor(tier) {
-    return TIER_COLORS[tier] || "#E0E0E0";
+function getColor(value) {
+    return legendMap.value[value] || "#E0E0E0";
 }
 
 function isLightColor(hex) {
@@ -88,10 +90,7 @@ function isLightColor(hex) {
 }
 
 function getDataColor(value) {
-    if (props.dataMode === "active") {
-        return value === "Active" ? "#4CAF50" : "#E0E0E0";
-    }
-    return getTierColor(value);
+    return getColor(value);
 }
 
 function groupCounts(sites) {
@@ -107,30 +106,14 @@ function groupCounts(sites) {
     }
     const sorted = Object.entries(counts);
     if (props.dataMode === "tier") {
-        const order = [
-            "Dead",
-            "Closed",
-            "Inactive",
-            "New",
-            "Reopen",
-            "ST1",
-            "1",
-            "2",
-            "3",
-        ];
-        sorted.sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
+        sorted.sort((a, b) => legendOrder.value.indexOf(a[0]) - legendOrder.value.indexOf(b[0]));
     }
     return Object.fromEntries(sorted);
 }
 
 function circleStyle(site) {
-    if (props.dataMode === "active") {
-        return {
-            backgroundColor: site.active ? "#4CAF50" : "#E0E0E0",
-            color: site.active ? "#FFFFFF" : "#616161",
-        };
-    }
-    const bg = getTierColor(site.tier);
+    const key = props.dataMode === "active" ? (site.active ? "Active" : "Inactive") : site.tier;
+    const bg = getColor(key);
     return {
         backgroundColor: bg,
         color: isLightColor(bg) ? "#616161" : "#FFFFFF",
@@ -141,9 +124,20 @@ function circleStyle(site) {
 <style scoped>
 .kanban-container {
     display: flex;
-    gap: 16px;
+    gap: 0;
     overflow-x: auto;
     padding-bottom: 8px;
+}
+
+.kanban-column {
+    border-right: 1px solid #e0e0e0;
+    padding: 0 16px;
+    min-width: 160px;
+    text-align: center;
+}
+
+.kanban-column:last-child {
+    border-right: none;
 }
 
 .kanban-cards {
@@ -152,6 +146,7 @@ function circleStyle(site) {
     flex-wrap: wrap;
     gap: 12px;
     align-items: center;
+    justify-content: center;
     overflow-y: auto;
 }
 

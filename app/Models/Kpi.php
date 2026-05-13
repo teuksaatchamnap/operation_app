@@ -22,7 +22,15 @@ class Kpi extends Model
         'type',
         'description',
         'aggregate',
+        'legend',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'legend' => 'array',
+        ];
+    }
 
     public function objectives(): HasMany
     {

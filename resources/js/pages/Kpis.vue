@@ -135,6 +135,56 @@
                         variant="outlined"
                         density="compact"
                     ></v-select>
+
+                    <v-divider class="my-3" />
+
+                    <div class="d-flex align-center mb-2">
+                        <span class="text-subtitle-2">Legend</span>
+                        <v-spacer />
+                        <v-btn
+                            size="x-small"
+                            prepend-icon="mdi-plus"
+                            @click="addLegendEntry"
+                        >
+                            Add
+                        </v-btn>
+                    </div>
+
+                    <div
+                        v-for="(entry, i) in kpiForm.legend"
+                        :key="i"
+                        class="d-flex align-center ga-2 mb-2"
+                    >
+                        <v-text-field
+                            v-model="entry.value"
+                            label="Value"
+                            density="compact"
+                            variant="outlined"
+                            hide-details
+                        />
+                        <div
+                            class="legend-swatch"
+                            :style="{ backgroundColor: entry.color }"
+                        />
+                        <v-text-field
+                            v-model="entry.color"
+                            label="Color"
+                            density="compact"
+                            variant="outlined"
+                            hide-details
+                            class="flex-shrink-0"
+                            style="width: 130px"
+                        />
+                        <v-btn
+                            icon
+                            size="x-small"
+                            color="error"
+                            variant="text"
+                            @click="removeLegendEntry(i)"
+                        >
+                            <v-icon>mdi-close</v-icon>
+                        </v-btn>
+                    </div>
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer></v-spacer>
@@ -254,6 +304,7 @@ const kpiForm = ref({
     unit: "",
     periodicity: "monthly",
     type: "quantitative",
+    legend: [],
 });
 
 const objectiveDialog = ref(false);
@@ -292,6 +343,7 @@ function openKpiDialog(item = null) {
             unit: item.unit,
             periodicity: item.periodicity,
             type: item.type,
+            legend: item.legend ? JSON.parse(JSON.stringify(item.legend)) : [],
         };
     } else {
         editingKpi.value = null;
@@ -302,6 +354,7 @@ function openKpiDialog(item = null) {
             unit: "",
             periodicity: "monthly",
             type: "quantitative",
+            legend: [],
         };
     }
     kpiDialog.value = true;
@@ -325,6 +378,14 @@ function openObjectiveDialog(kpiId, item = null) {
         };
     }
     objectiveDialog.value = true;
+}
+
+function addLegendEntry() {
+    kpiForm.value.legend.push({ value: "", color: "#E0E0E0" });
+}
+
+function removeLegendEntry(index) {
+    kpiForm.value.legend.splice(index, 1);
 }
 
 function confirmDeleteKpi(item) {
@@ -435,3 +496,13 @@ onMounted(async () => {
     }
 });
 </script>
+
+<style scoped>
+.legend-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+    flex-shrink: 0;
+}
+</style>

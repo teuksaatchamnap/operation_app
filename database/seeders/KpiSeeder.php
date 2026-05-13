@@ -26,6 +26,17 @@ class KpiSeeder extends Seeder
                 'periodicity' => 'monthly',
                 'type' => 'qualitative',
                 'description' => '',
+                'legend' => [
+                    ['value' => 'Dead', 'color' => '#616161'],
+                    ['value' => 'Closed', 'color' => '#795548'],
+                    ['value' => 'Inactive', 'color' => '#BDBDBD'],
+                    ['value' => 'New', 'color' => '#00BCD4'],
+                    ['value' => 'Reopen', 'color' => '#FF9800'],
+                    ['value' => 'ST1', 'color' => '#1B5E20'],
+                    ['value' => '1', 'color' => '#4CAF50'],
+                    ['value' => '2', 'color' => '#FFC107'],
+                    ['value' => '3', 'color' => '#F44336'],
+                ],
             ],
             [
                 'name' => 'Sales Volume',
@@ -65,6 +76,10 @@ class KpiSeeder extends Seeder
                 'description' => 'The number of active sites (site reported at least one sale for the period)',
                 'aggregate' => 'sum',
                 'default_objective' => 372,
+                'legend' => [
+                    ['value' => 'Active', 'color' => '#4CAF50'],
+                    ['value' => 'Inactive', 'color' => '#E0E0E0'],
+                ],
             ],
             [
                 'name' => 'Super Tier 1',
@@ -159,11 +174,11 @@ class KpiSeeder extends Seeder
                 $objective = $kpi['default_objective'];
                 unset($kpi['default_objective']);
             }
-            $kpiModel = Kpi::firstOrCreate(
+            $kpiModel = Kpi::updateOrCreate(
                 ['col_name' => $kpi['col_name']],
                 $kpi
             );
-            if ($objective) {
+            if ($objective && !$kpiModel->objectives()->where('value', $objective)->exists()) {
                 $kpiModel->objectives()->save(new Objective([
                     'start_date' => Carbon::now()->addYears(-20),
                     'value' => $objective,
