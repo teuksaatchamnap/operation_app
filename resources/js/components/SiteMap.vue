@@ -27,7 +27,7 @@
             >
                 <l-tooltip
                     >{{ site.name }} :
-                    {{ props.dataMode === "active" ? (site.active ? "Active" : "Inactive") : site.tier || "N/A" }}</l-tooltip
+                    {{ getSiteValue(site) || "N/A" }}</l-tooltip
                 >
             </l-circle-marker>
         </l-map>
@@ -128,6 +128,16 @@ const geoJsonOptions = computed(() => ({
     },
 }));
 
+function getSiteValue(site) {
+    if (props.dataMode === "active") {
+        return site.active ? "Active" : "Inactive";
+    }
+    if (props.dataMode === "is_profitable") {
+        return site.is_profitable ? "Profitable" : "Not Profitable";
+    }
+    return site.tier;
+}
+
 function getColor(value) {
     return legendMap.value[value] || "#E0E0E0";
 }
@@ -141,12 +151,8 @@ function darkenColor(hex, amount = 0.4) {
 }
 
 function markerColor(site, part) {
-    if (props.dataMode === "active") {
-        const key = site.active ? "Active" : "Inactive";
-        const fill = getColor(key);
-        return part === "fill" ? fill : darkenColor(fill, 0.4);
-    }
-    const fill = getColor(site.tier);
+    const key = getSiteValue(site);
+    const fill = getColor(key);
     return part === "fill" ? fill : darkenColor(fill, 0.4);
 }
 

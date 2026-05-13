@@ -155,6 +155,10 @@ class KpiSeeder extends Seeder
                 'description' => 'True if site revenue - site expense + salary entrepreneur >= 200',
                 'aggregate' => 'pct_active',
                 'default_objective' => 100,
+                'legend' => [
+                    ['value' => 'Profitable', 'color' => '#4CAF50'],
+                    ['value' => 'Not Profitable', 'color' => '#F44336'],
+                ],
             ],
             [
                 'name' => 'EC Collection',

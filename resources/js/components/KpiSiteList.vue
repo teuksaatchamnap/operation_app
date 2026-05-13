@@ -52,7 +52,9 @@
             >
                 <template #item.active="{ item }">
                     <v-chip
-                        :color="getTierColor(item.active ? 'Active' : 'Inactive')"
+                        :color="
+                            getTierColor(item.active ? 'Active' : 'Inactive')
+                        "
                         size="small"
                         variant="flat"
                     >
@@ -66,6 +68,27 @@
                         variant="flat"
                     >
                         {{ item.tier }}
+                    </v-chip>
+                </template>
+                <template #item.is_profitable="{ item }">
+                    <v-chip
+                        :color="
+                            getTierColor(
+                                item.is_profitable
+                                    ? 'Profitable'
+                                    : 'Not Profitable',
+                            )
+                        "
+                        size="small"
+                        variant="flat"
+                    >
+                        {{
+                            item.is_profitable == null
+                                ? "N/A"
+                                : item.is_profitable
+                                  ? "Profitable"
+                                  : "Not Profitable"
+                        }}
                     </v-chip>
                 </template>
             </v-data-table>
@@ -143,6 +166,7 @@ const props = defineProps({
 const dataModeOptions = [
     { title: "Active Site", value: "active" },
     { title: "Tier", value: "tier" },
+    { title: "Profitable", value: "is_profitable" },
 ];
 
 const factRows = ref([]);
@@ -195,6 +219,12 @@ const tableHeaders = computed(() => {
     ];
     if (dataMode.value === "active") {
         headers.push({ title: "Active", key: "active", align: "center" });
+    } else if (dataMode.value === "is_profitable") {
+        headers.push({
+            title: "Profitable",
+            key: "is_profitable",
+            align: "center",
+        });
     } else {
         headers.push({ title: "Tier", key: "tier", align: "center" });
     }
@@ -221,6 +251,7 @@ const mergedSites = computed(() => {
             advisor_name: advisorMap.value[row.advisor_id] || "Unassigned",
             active: !!row.active,
             tier: row.tier,
+            is_profitable: row.is_profitable,
         });
     }
 

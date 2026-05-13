@@ -78,6 +78,16 @@ const kanbanGroups = computed(() => {
     );
 });
 
+function getSiteValue(site) {
+    if (props.dataMode === "active") {
+        return site.active ? "Active" : "Inactive";
+    }
+    if (props.dataMode === "is_profitable") {
+        return site.is_profitable ? "Profitable" : "Not Profitable";
+    }
+    return site.tier;
+}
+
 function getColor(value) {
     return legendMap.value[value] || "#E0E0E0";
 }
@@ -96,23 +106,22 @@ function getDataColor(value) {
 function groupCounts(sites) {
     const counts = {};
     for (const site of sites) {
-        const value =
-            props.dataMode === "active"
-                ? site.active
-                    ? "Active"
-                    : "Inactive"
-                : site.tier;
+        const value = getSiteValue(site);
         counts[value] = (counts[value] || 0) + 1;
     }
     const sorted = Object.entries(counts);
     if (props.dataMode === "tier") {
-        sorted.sort((a, b) => legendOrder.value.indexOf(a[0]) - legendOrder.value.indexOf(b[0]));
+        sorted.sort(
+            (a, b) =>
+                legendOrder.value.indexOf(a[0]) -
+                legendOrder.value.indexOf(b[0]),
+        );
     }
     return Object.fromEntries(sorted);
 }
 
 function circleStyle(site) {
-    const key = props.dataMode === "active" ? (site.active ? "Active" : "Inactive") : site.tier;
+    const key = getSiteValue(site);
     const bg = getColor(key);
     return {
         backgroundColor: bg,
@@ -151,8 +160,8 @@ function circleStyle(site) {
 }
 
 .kanban-circle {
-    width: 35px;
-    height: 35px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -164,5 +173,9 @@ function circleStyle(site) {
     word-break: keep-all;
     overflow: hidden;
     transition: transform 0.15s ease;
+}
+.kanban-circle:hover {
+    cursor: pointer;
+    border: 1px solid #e0e0e0;
 }
 </style>
