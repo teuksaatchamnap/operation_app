@@ -13,6 +13,7 @@ class ObjectiveController extends Controller
      * List all objectives.
      *
      * @authenticated
+     *
      * @response [{"id": 1, "kpi_id": 1, "start_date": "2026-01-01", "end_date": "2026-12-31", "value": "100.00"}]
      */
     public function index(): JsonResponse
@@ -24,6 +25,7 @@ class ObjectiveController extends Controller
      * Create a new objective for a KPI.
      *
      * @authenticated
+     *
      * @response status=201 {"id": 1, "kpi_id": 1, "start_date": "2026-01-01", "end_date": "2026-12-31", "value": "100.00"}
      * @response status=404 {"message": "No query results for model [App\\Models\\Kpi] 1"}
      * @response status=422 {"message": "The start date field is required.", "errors": {"start_date": ["The start date field is required."]}}
@@ -47,6 +49,7 @@ class ObjectiveController extends Controller
      * Update an existing objective.
      *
      * @authenticated
+     *
      * @response {"id": 1, "kpi_id": 1, "start_date": "2026-01-01", "end_date": "2026-12-31", "value": "150.00"}
      * @response status=404 {"message": "No query results for model [App\\Models\\Kpi] 1"}
      * @response status=422 {"message": "The value field is required.", "errors": {"value": ["The value field is required."]}}
@@ -72,6 +75,7 @@ class ObjectiveController extends Controller
      * Delete an objective.
      *
      * @authenticated
+     *
      * @response status=204
      * @response status=404 {"message": "No query results for model [App\\Models\\Kpi] 1"}
      */

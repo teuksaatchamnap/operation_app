@@ -155,9 +155,9 @@ class KpiSeeder extends Seeder
 
         foreach ($kpis as $kpi) {
             $objective = null;
-            if (isset($kpi["default_objective"])) {
-                $objective = $kpi["default_objective"];
-                unset($kpi["default_objective"]);
+            if (isset($kpi['default_objective'])) {
+                $objective = $kpi['default_objective'];
+                unset($kpi['default_objective']);
             }
             $kpiModel = Kpi::firstOrCreate(
                 ['col_name' => $kpi['col_name']],
@@ -165,8 +165,8 @@ class KpiSeeder extends Seeder
             );
             if ($objective) {
                 $kpiModel->objectives()->save(new Objective([
-                    "start_date" => Carbon::now()->addYears(-20),
-                    "value" => $objective
+                    'start_date' => Carbon::now()->addYears(-20),
+                    'value' => $objective,
                 ]));
             }
         }
