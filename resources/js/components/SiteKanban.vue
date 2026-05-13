@@ -5,10 +5,21 @@
             :key="group.platform"
             class="kanban-column"
         >
-            <div class="text-subtitle-2 font-weight-bold mb-3">
+            <div class="text-subtitle-2 font-weight-bold">
                 {{ group.platform }}
-                <v-chip size="x-small" variant="tonal" class="ml-2">
+            </div>
+            <div class="d-flex flex-wrap ga-1 mb-3">
+                <v-chip size="x-small" variant="tonal">
                     {{ group.sites.length }}
+                </v-chip>
+                <v-chip
+                    v-for="(count, value) in groupCounts(group.sites)"
+                    :key="value"
+                    size="x-small"
+                    variant="flat"
+                    :color="getDataColor(value)"
+                >
+                    {{ count }}
                 </v-chip>
             </div>
             <div class="kanban-cards">
@@ -35,9 +46,9 @@ const TIER_COLORS = {
     New: "#00BCD4",
     Reopen: "#FF9800",
     ST1: "#1B5E20",
-    "1": "#4CAF50",
-    "2": "#FFC107",
-    "3": "#F44336",
+    1: "#4CAF50",
+    2: "#FFC107",
+    3: "#F44336",
 };
 
 const props = defineProps({
@@ -74,6 +85,42 @@ function isLightColor(hex) {
     const g = parseInt(hex.slice(3, 5), 16);
     const b = parseInt(hex.slice(5, 7), 16);
     return r * 0.299 + g * 0.587 + b * 0.114 > 186;
+}
+
+function getDataColor(value) {
+    if (props.dataMode === "active") {
+        return value === "Active" ? "#4CAF50" : "#E0E0E0";
+    }
+    return getTierColor(value);
+}
+
+function groupCounts(sites) {
+    const counts = {};
+    for (const site of sites) {
+        const value =
+            props.dataMode === "active"
+                ? site.active
+                    ? "Active"
+                    : "Inactive"
+                : site.tier;
+        counts[value] = (counts[value] || 0) + 1;
+    }
+    const sorted = Object.entries(counts);
+    if (props.dataMode === "tier") {
+        const order = [
+            "Dead",
+            "Closed",
+            "Inactive",
+            "New",
+            "Reopen",
+            "ST1",
+            "1",
+            "2",
+            "3",
+        ];
+        sorted.sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
+    }
+    return Object.fromEntries(sorted);
 }
 
 function circleStyle(site) {
@@ -122,9 +169,5 @@ function circleStyle(site) {
     word-break: keep-all;
     overflow: hidden;
     transition: transform 0.15s ease;
-}
-
-.kanban-circle:hover {
-    transform: scale(1.08);
 }
 </style>

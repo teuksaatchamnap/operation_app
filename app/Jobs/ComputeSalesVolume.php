@@ -77,6 +77,29 @@ class ComputeSalesVolume extends BaseComputeJob
             }
         }
 
+        foreach ($months as $month) {
+            $monthKey = $month->format('Y-m-d');
+            foreach ($siteMap as $siteName => $siteId) {
+                $key = $siteName.'|'.$monthKey;
+                if (isset($map[$key])) {
+                    continue;
+                }
+                $carbon = $month->copy()->startOfMonth();
+                $map[$key] = [
+                    'sales_volume' => 0,
+                    'sales_volume_lfl' => null,
+                    'days_open' => 0,
+                    'revenue' => 0,
+                    'active' => 0,
+                    'super_tier_1' => 0,
+                    'bottles_per_day' => 0,
+                    'tier' => $this->computeTier(
+                        $siteName, $carbon, $allSales[$siteName] ?? collect(), $deadSites
+                    ),
+                ];
+            }
+        }
+
         return $map;
     }
 
