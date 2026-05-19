@@ -135,6 +135,13 @@ function getSiteValue(site) {
     if (props.dataMode === "is_profitable") {
         return site.is_profitable ? "Profitable" : "Not Profitable";
     }
+    if (props.dataMode === "contamination_level") {
+        return site.contamination_level === 0
+            ? "Safe"
+            : site.contamination_level == null
+              ? "N/A"
+              : String(site.contamination_level);
+    }
     return site.tier;
 }
 

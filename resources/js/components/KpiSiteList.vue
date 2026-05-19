@@ -91,6 +91,29 @@
                         }}
                     </v-chip>
                 </template>
+                <template #item.contamination_level="{ item }">
+                    <v-chip
+                        :color="
+                            getTierColor(
+                                item.contamination_level === 0
+                                    ? 'Safe'
+                                    : String(
+                                          item.contamination_level ?? 'N/A',
+                                      ),
+                            )
+                        "
+                        size="small"
+                        variant="flat"
+                    >
+                        {{
+                            item.contamination_level == null
+                                ? "N/A"
+                                : item.contamination_level === 0
+                                  ? "Safe"
+                                  : item.contamination_level
+                        }}
+                    </v-chip>
+                </template>
             </v-data-table>
         </template>
 
@@ -166,7 +189,8 @@ const props = defineProps({
 const dataModeOptions = [
     { title: "Active Site", value: "active" },
     { title: "Tier", value: "tier" },
-    { title: "Profitable", value: "is_profitable" },
+    { title: "Financial Sustainability", value: "is_profitable" },
+    { title: "Water Quality", value: "contamination_level" },
 ];
 
 const factRows = ref([]);
@@ -225,6 +249,12 @@ const tableHeaders = computed(() => {
             key: "is_profitable",
             align: "center",
         });
+    } else if (dataMode.value === "contamination_level") {
+        headers.push({
+            title: "Water Quality",
+            key: "contamination_level",
+            align: "center",
+        });
     } else {
         headers.push({ title: "Tier", key: "tier", align: "center" });
     }
@@ -252,6 +282,7 @@ const mergedSites = computed(() => {
             active: !!row.active,
             tier: row.tier,
             is_profitable: row.is_profitable,
+            contamination_level: row.contamination_level,
         });
     }
 

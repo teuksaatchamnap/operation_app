@@ -147,6 +147,21 @@ class KpiSeeder extends Seeder
                 'default_objective' => 99.5,
             ],
             [
+                'name' => 'Contamination level',
+                'col_name' => 'contamination_level',
+                'unit' => '%',
+                'periodicity' => 'monthly',
+                'type' => 'qualitative',
+                'description' => '0=safe, 1,2,3',
+                'aggregate' => 'pct_active',
+                'legend' => [
+                    ['value' => 'Safe', 'color' => '#4CAF50'],
+                    ['value' => '1', 'color' => '#f4f136'],
+                    ['value' => '2', 'color' => '#f4b836'],
+                    ['value' => '3', 'color' => '#F44336'],
+                ],
+            ],
+            [
                 'name' => 'Profitable',
                 'col_name' => 'is_profitable',
                 'unit' => '%',

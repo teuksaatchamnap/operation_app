@@ -34,6 +34,7 @@ class FactMonthly extends Model
         'has_3_workers',
         'consumers',
         'who_compliance',
+        'contamination_level',
         'ec_collection',
     ];
 

@@ -14,7 +14,7 @@ class ComputeWhoCompliance extends BaseComputeJob
         $to = $months->last()->copy()->endOfMonth();
 
         $samples = Sample::query()
-            ->select(['site', 'analysis_date', 'sample_date', 'escherichia', 'total_coliform'])
+            ->select(['site', 'analysis_date', 'sample_date', 'escherichia', 'total_coliform', 'contamination_level_bottle', 'contamination_level_machine'])
             ->whereBetween('sample_date', [$from, $to])
             ->whereIn('site', $siteNames)
             ->orderBy('analysis_date', 'desc')
@@ -24,7 +24,7 @@ class ComputeWhoCompliance extends BaseComputeJob
         foreach ($samples as $sample) {
             $site = trim($sample->site);
             $monthKey = Carbon::parse($sample->sample_date)->startOfMonth()->format('Y-m-d');
-            $key = $site.'|'.$monthKey;
+            $key = $site . '|' . $monthKey;
 
             if (! isset($latestBySiteMonth[$key])) {
                 $latestBySiteMonth[$key] = $sample;
@@ -39,6 +39,7 @@ class ComputeWhoCompliance extends BaseComputeJob
 
             $map[$key] = [
                 'who_compliance' => $compliant,
+                'contamination_level' => max($sample->contamination_level_bottle, $sample->contamination_level_machine),
             ];
         }
 
