@@ -31,6 +31,8 @@ class FactMonthlyFactory extends Factory
             'consumers' => fake()->randomNumber(),
             'who_compliance' => fake()->randomDigit(),
             'is_profitable' => fake()->randomDigit(),
+            'water_loss' => fake()->randomFloat(2, 0, 50),
+            'is_water_loss_ok' => fake()->randomDigit(),
         ];
     }
 }

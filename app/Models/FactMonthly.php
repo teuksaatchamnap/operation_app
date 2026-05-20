@@ -36,6 +36,8 @@ class FactMonthly extends Model
         'who_compliance',
         'contamination_level',
         'ec_collection',
+        'water_loss',
+        'is_water_loss_ok',
     ];
 
     protected function casts(): array

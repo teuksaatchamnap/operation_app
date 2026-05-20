@@ -33,6 +33,7 @@ CREATE TABLE `indicators` (
  * @property \DateTimeInterface|null $Month
  * @property string|null $Id_Site
  * @property int|null $Number_of_Operator
+ * @property float|null $Water_Consume
  */
 class Indicator extends Model
 {

@@ -97,9 +97,7 @@
                             getTierColor(
                                 item.contamination_level === 0
                                     ? 'Safe'
-                                    : String(
-                                          item.contamination_level ?? 'N/A',
-                                      ),
+                                    : String(item.contamination_level ?? 'N/A'),
                             )
                         "
                         size="small"
@@ -111,6 +109,29 @@
                                 : item.contamination_level === 0
                                   ? "Safe"
                                   : item.contamination_level
+                        }}
+                    </v-chip>
+                </template>
+                <template #item.is_water_loss_ok="{ item }">
+                    <v-chip
+                        :color="
+                            getTierColor(
+                                item.is_water_loss_ok === 0
+                                    ? 'OK'
+                                    : item.is_water_loss_ok == null
+                                      ? 'N/A'
+                                      : 'Not OK',
+                            )
+                        "
+                        size="small"
+                        variant="flat"
+                    >
+                        {{
+                            item.is_water_loss_ok == null
+                                ? "N/A"
+                                : item.is_water_loss_ok === 0
+                                  ? "OK"
+                                  : "Not OK"
                         }}
                     </v-chip>
                 </template>
@@ -191,11 +212,12 @@ const dataModeOptions = [
     { title: "Tier", value: "tier" },
     { title: "Financial Sustainability", value: "is_profitable" },
     { title: "Water Quality", value: "contamination_level" },
+    { title: "Water Loss", value: "is_water_loss_ok" },
 ];
 
 const factRows = ref([]);
 const loading = ref(false);
-const viewMode = ref("table");
+const viewMode = ref("kanban");
 const dataMode = ref("active");
 
 const currentLegend = computed(() => {
@@ -255,6 +277,12 @@ const tableHeaders = computed(() => {
             key: "contamination_level",
             align: "center",
         });
+    } else if (dataMode.value === "is_water_loss_ok") {
+        headers.push({
+            title: "Water Loss",
+            key: "is_water_loss_ok",
+            align: "center",
+        });
     } else {
         headers.push({ title: "Tier", key: "tier", align: "center" });
     }
@@ -283,6 +311,7 @@ const mergedSites = computed(() => {
             tier: row.tier,
             is_profitable: row.is_profitable,
             contamination_level: row.contamination_level,
+            is_water_loss_ok: row.is_water_loss_ok,
         });
     }
 

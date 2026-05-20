@@ -92,6 +92,13 @@ function getSiteValue(site) {
               ? "N/A"
               : String(site.contamination_level);
     }
+    if (props.dataMode === "is_water_loss_ok") {
+        return site.is_water_loss_ok === 0
+            ? "OK"
+            : site.is_water_loss_ok == null
+              ? "N/A"
+              : "Not OK";
+    }
     return site.tier;
 }
 

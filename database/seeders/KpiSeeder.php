@@ -185,6 +185,29 @@ class KpiSeeder extends Seeder
                 'aggregate' => 'pct_active',
                 'default_objective' => 100,
             ],
+            [
+                'name' => 'Water Loss',
+                'col_name' => 'water_loss',
+                'unit' => '%',
+                'periodicity' => 'monthly',
+                'type' => 'quantitative',
+                'description' => 'Water loss percentage: (Water_Consume - (Total_Sales * 20)) / Water_Consume * 100',
+                'aggregate' => 'avg',
+            ],
+            [
+                'name' => 'Water Loss OK',
+                'col_name' => 'is_water_loss_ok',
+                'unit' => '%',
+                'periodicity' => 'monthly',
+                'type' => 'qualitative',
+                'description' => '0 if water_loss is between 15-25%, 1 otherwise, null if no data',
+                'aggregate' => 'pct_active',
+                'default_objective' => 100,
+                'legend' => [
+                    ['value' => 'OK', 'color' => '#4CAF50'],
+                    ['value' => 'Not OK', 'color' => '#F44336'],
+                ],
+            ],
         ];
 
         foreach ($kpis as $kpi) {
@@ -197,7 +220,7 @@ class KpiSeeder extends Seeder
                 ['col_name' => $kpi['col_name']],
                 $kpi
             );
-            if ($objective && !$kpiModel->objectives()->where('value', $objective)->exists()) {
+            if ($objective && ! $kpiModel->objectives()->where('value', $objective)->exists()) {
                 $kpiModel->objectives()->save(new Objective([
                     'start_date' => Carbon::now()->addYears(-20),
                     'value' => $objective,
