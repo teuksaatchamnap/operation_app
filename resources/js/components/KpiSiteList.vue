@@ -170,6 +170,7 @@
             :sites="mergedSites"
             :data-mode="dataMode"
             :legend="currentLegend"
+            :hover-data="hoverData"
         />
 
         <SiteMap
@@ -177,6 +178,7 @@
             :sites="mergedSites"
             :data-mode="dataMode"
             :legend="currentLegend"
+            :hover-data="hoverData"
         />
 
         <div
@@ -210,6 +212,7 @@ import { ref, computed, watch, onMounted } from "vue";
 import axios from "axios";
 import SiteKanban from "./SiteKanban.vue";
 import SiteMap from "./SiteMap.vue";
+import SiteHoverCard from "./SiteHoverCard.vue";
 
 const props = defineProps({
     filters: {
@@ -246,6 +249,7 @@ const dataModeOptions = [
 ];
 
 const factRows = ref([]);
+const hoverData = ref({});
 const loading = ref(false);
 const viewMode = ref("kanban");
 const dataMode = ref("active");
@@ -406,10 +410,35 @@ async function fetchFactMonthly() {
     }
 }
 
+async function fetchHoverData() {
+    try {
+        const params = { month: props.filters.month };
+        if (props.filters.site_ids?.length) {
+            params.site_ids = props.filters.site_ids;
+        }
+        if (props.filters.advisor_ids?.length) {
+            params.advisor_ids = props.filters.advisor_ids;
+        }
+        if (props.filters.platform_ids?.length) {
+            params.platform_ids = props.filters.platform_ids;
+        }
+        const res = await axios.get("/api/sites/hover-data", { params });
+        const map = {};
+        for (const item of res.data) {
+            map[item.site_id] = item;
+        }
+        hoverData.value = map;
+    } catch (error) {
+        console.error("Failed to load hover data:", error);
+        hoverData.value = {};
+    }
+}
+
 watch(
     () => props.filters,
     () => {
         fetchFactMonthly();
+        fetchHoverData();
     },
     { deep: true },
 );
@@ -420,6 +449,7 @@ watch(dataMode, () => {
 
 onMounted(() => {
     fetchFactMonthly();
+    fetchHoverData();
 });
 </script>
 

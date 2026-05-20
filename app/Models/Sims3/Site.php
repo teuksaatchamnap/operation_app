@@ -130,9 +130,15 @@ CREATE TABLE `sites` (
 
 /**
  * @property string $Id_Site
+ * @property string|null $Site_Name
  * @property string|null $Platform
  * @property string|null $Advisor
  * @property string|null $Water_Source
+ * @property string|null $Status_Site
+ * @property string|null $Entrepreneur_English_Name
+ * @property string|null $technician_site
+ * @property string|null $Last_Tier
+ * @property string|null $Project_Date
  * @property float|null $Latitude
  * @property float|null $Longitude
  */

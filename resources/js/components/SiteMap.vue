@@ -24,12 +24,8 @@
                 :fill-color="markerColor(site, 'fill')"
                 :fill-opacity="0.85"
                 :weight="2"
-            >
-                <l-tooltip
-                    >{{ site.name }} :
-                    {{ getSiteValue(site) || "N/A" }}</l-tooltip
-                >
-            </l-circle-marker>
+                @ready="($event) => bindHoverTooltip($event, site)"
+            />
         </l-map>
     </div>
     <v-progress-linear
@@ -49,7 +45,6 @@ import {
     LTileLayer,
     LGeoJson,
     LCircleMarker,
-    LTooltip,
 } from "@vue-leaflet/vue-leaflet";
 
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -73,6 +68,10 @@ const props = defineProps({
     legend: {
         type: Array,
         default: () => [],
+    },
+    hoverData: {
+        type: Object,
+        default: () => ({}),
     },
 });
 
@@ -185,6 +184,35 @@ function markerColor(site, part) {
     return part === "fill" ? fill : darkenColor(fill, 0.4);
 }
 
+function bindHoverTooltip(marker, site) {
+    const h = props.hoverData[site.id];
+    if (!h) {
+        marker.bindTooltip(site.name, { sticky: true });
+        return;
+    }
+
+    function row(label, value) {
+        return value
+            ? `<div class="hover-row"><span>${label}</span><span class="hover-value">${value}</span></div>`
+            : "";
+    }
+
+    const html = `
+        <div class="site-hover-tooltip">
+            <div class="hover-title">${h.site_name || site.name}</div>
+            ${row("Site Status:", h.status)}
+            ${row("Platform:", h.platform)}
+            ${row("Entrepreneur:", h.entrepreneur)}
+            ${row("Advisor:", h.advisor)}
+            ${row("Technician:", h.technician)}
+            ${row("Tier:", h.tier)}
+            ${row("Year of Construction/Last Rehab:", h.year_construction)}
+        </div>
+    `;
+
+    marker.bindTooltip(html, { sticky: true, className: "site-hover-tooltip" });
+}
+
 async function fetchGeoJson() {
     try {
         const res = await fetch("/CambodiaCommuneBoundaries.geojson");
@@ -203,27 +231,6 @@ onMounted(() => {
 .map-container {
     border-radius: 8px;
     overflow: hidden;
-}
-
-.map-container :deep(.leaflet-tooltip) {
-    background-color: #424242;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 4px 8px;
-    font-size: 12px;
-}
-
-.map-container :deep(.leaflet-tooltip-left:before),
-.map-container :deep(.leaflet-tooltip-right:before) {
-    border-left-color: #424242;
-    border-right-color: #424242;
-}
-
-.map-container :deep(.leaflet-tooltip-top:before),
-.map-container :deep(.leaflet-tooltip-bottom:before) {
-    border-top-color: #424242;
-    border-bottom-color: #424242;
 }
 
 .map-container :deep(.commune-tooltip) {
@@ -245,5 +252,55 @@ onMounted(() => {
 .map-container :deep(.commune-tooltip.leaflet-tooltip-bottom:before) {
     border-top-color: #1565c0;
     border-bottom-color: #1565c0;
+}
+
+:deep(.leaflet-tooltip.site-hover-tooltip) {
+    background: #fff;
+    color: #212121;
+    border: none;
+    border-radius: 8px;
+    padding: 0;
+    font-size: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    min-width: 200px;
+    max-width: 260px;
+}
+
+:deep(.site-hover-tooltip .hover-title) {
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 10px 4px;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 4px;
+}
+
+:deep(.site-hover-tooltip .hover-row) {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 1px 10px;
+    line-height: 1.7;
+}
+
+:deep(.site-hover-tooltip .hover-row span:first-child) {
+    color: #757575;
+    white-space: nowrap;
+}
+
+:deep(.site-hover-tooltip .hover-row .hover-value) {
+    font-weight: 500;
+    text-align: right;
+}
+
+:deep(.leaflet-tooltip.site-hover-tooltip.leaflet-tooltip-top:before),
+:deep(.leaflet-tooltip.site-hover-tooltip.leaflet-tooltip-bottom:before) {
+    border-top-color: #fff;
+    border-bottom-color: #fff;
+}
+
+:deep(.leaflet-tooltip.site-hover-tooltip.leaflet-tooltip-left:before),
+:deep(.leaflet-tooltip.site-hover-tooltip.leaflet-tooltip-right:before) {
+    border-left-color: #fff;
+    border-right-color: #fff;
 }
 </style>

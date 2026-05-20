@@ -5,6 +5,7 @@ use App\Http\Controllers\DimensionsController;
 use App\Http\Controllers\FactMonthlyController;
 use App\Http\Controllers\KpiController;
 use App\Http\Controllers\ObjectiveController;
+use App\Http\Controllers\SiteHoverController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -19,4 +20,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/advisors', [DimensionsController::class, 'getAdvisors']);
     Route::get('/platforms', [DimensionsController::class, 'getPlatforms']);
     Route::get('/sites', [DimensionsController::class, 'getSites']);
+    Route::get('/sites/hover-data', [SiteHoverController::class, 'index']);
 });

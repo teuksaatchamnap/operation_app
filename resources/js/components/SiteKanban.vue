@@ -23,14 +23,32 @@
                 </v-chip>
             </div>
             <div class="kanban-cards">
-                <div
+                <v-tooltip
                     v-for="site in group.sites"
                     :key="site.id"
-                    class="kanban-circle"
-                    :style="circleStyle(site)"
+                    location="top"
+                    open-delay="150"
+                    content-class="kanban-hover-tooltip"
                 >
-                    {{ site.name }}
-                </div>
+                    <template #activator="{ props: tooltipProps }">
+                        <div
+                            v-bind="tooltipProps"
+                            class="kanban-circle"
+                            :style="circleStyle(site)"
+                        >
+                            {{ site.name }}
+                        </div>
+                    </template>
+                    <SiteHoverCard
+                        v-if="hoverData[site.id]"
+                        :site="hoverData[site.id]"
+                    />
+                    <template v-else>
+                        <v-card class="pa-2 text-caption">
+                            {{ site.name }}
+                        </v-card>
+                    </template>
+                </v-tooltip>
             </div>
         </div>
     </div>
@@ -38,6 +56,7 @@
 
 <script setup>
 import { computed } from "vue";
+import SiteHoverCard from "./SiteHoverCard.vue";
 
 const props = defineProps({
     sites: {
@@ -51,6 +70,10 @@ const props = defineProps({
     legend: {
         type: Array,
         default: () => [],
+    },
+    hoverData: {
+        type: Object,
+        default: () => ({}),
     },
 });
 
@@ -160,6 +183,11 @@ function circleStyle(site) {
 </script>
 
 <style scoped>
+:deep(.kanban-hover-tooltip) {
+    background: transparent !important;
+    opacity: 1 !important;
+}
+
 .kanban-container {
     display: flex;
     gap: 0;
