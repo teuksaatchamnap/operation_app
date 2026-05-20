@@ -249,6 +249,7 @@ class KpiSeeder extends Seeder
                     ['value' => 'Blue Tank', 'color' => '#2196F3'],
                     ['value' => 'Cement Tank', 'color' => '#795548'],
                     ['value' => 'Kiosk 2.0', 'color' => '#4CAF50'],
+                    ['value' => '600+', 'color' => '#009688'],
                 ],
             ],
         ];
