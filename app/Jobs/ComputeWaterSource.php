@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Models\Sims3\Site as Sims3Site;
-use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 class ComputeWaterSource extends BaseComputeJob
@@ -25,7 +24,7 @@ class ComputeWaterSource extends BaseComputeJob
         foreach ($months as $month) {
             $monthKey = $month->format('Y-m-d');
             foreach ($siteMap as $siteName => $siteId) {
-                $key = $siteName . '|' . $monthKey;
+                $key = $siteName.'|'.$monthKey;
                 $map[$key] = [
                     'water_source' => $sourceMap[$siteName] ?? null,
                 ];

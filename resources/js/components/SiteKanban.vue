@@ -111,6 +111,9 @@ function getSiteValue(site) {
     if (props.dataMode === "water_source") {
         return site.water_source || "N/A";
     }
+    if (props.dataMode === "treatment_process") {
+        return site.treatment_process || "N/A";
+    }
     return site.tier;
 }
 

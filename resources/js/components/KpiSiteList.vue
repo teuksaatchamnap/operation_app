@@ -242,6 +242,7 @@ const dataModeOptions = [
     { title: "Water Loss", value: "is_water_loss_ok" },
     { title: "Data collection status", value: "data_collection" },
     { title: "Water Source", value: "water_source" },
+    { title: "Treatment Process", value: "treatment_process" },
 ];
 
 const factRows = ref([]);
@@ -324,6 +325,12 @@ const tableHeaders = computed(() => {
             key: "water_source",
             align: "center",
         });
+    } else if (dataMode.value === "treatment_process") {
+        headers.push({
+            title: "Treatment Process",
+            key: "treatment_process",
+            align: "center",
+        });
     } else {
         headers.push({ title: "Tier", key: "tier", align: "center" });
     }
@@ -355,6 +362,7 @@ const mergedSites = computed(() => {
             is_water_loss_ok: row.is_water_loss_ok,
             data_collection: row.data_collection,
             water_source: row.water_source,
+            treatment_process: row.treatment_process,
         });
     }
 

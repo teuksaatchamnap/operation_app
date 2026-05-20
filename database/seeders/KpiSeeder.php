@@ -237,6 +237,20 @@ class KpiSeeder extends Seeder
                     ['value' => 'pond', 'color' => '#009688'],
                 ],
             ],
+            [
+                'name' => 'Treatment Process',
+                'col_name' => 'treatment_process',
+                'unit' => 'type',
+                'periodicity' => 'monthly',
+                'type' => 'qualitative',
+                'description' => 'Treatment process used at the site',
+                'aggregate' => 'avg',
+                'legend' => [
+                    ['value' => 'Blue Tank', 'color' => '#2196F3'],
+                    ['value' => 'Cement Tank', 'color' => '#795548'],
+                    ['value' => 'Kiosk 2.0', 'color' => '#4CAF50'],
+                ],
+            ],
         ];
 
         foreach ($kpis as $kpi) {
