@@ -3,6 +3,16 @@
         <div class="d-flex align-center mb-4">
             <div class="text-subtitle-1 font-weight-bold">Sites</div>
             <v-spacer />
+            <v-text-field
+                v-model="siteFilter"
+                density="compact"
+                hide-details
+                clearable
+                prepend-inner-icon="mdi-magnify"
+                placeholder="Search sites..."
+                class="mr-4"
+                style="max-width: 200px"
+            />
             <v-select
                 v-model="dataMode"
                 :items="dataModeOptions"
@@ -11,7 +21,7 @@
                 density="compact"
                 hide-details
                 class="mr-4"
-                style="max-width: 160px"
+                style="max-width: 260px"
             />
             <v-btn-toggle
                 v-model="viewMode"
@@ -253,6 +263,7 @@ const hoverData = ref({});
 const loading = ref(false);
 const viewMode = ref("kanban");
 const dataMode = ref("active");
+const siteFilter = ref("");
 
 const currentLegend = computed(() => {
     const kpi = props.kpis.find((k) => k.col_name === dataMode.value);
@@ -351,6 +362,7 @@ const mergedSites = computed(() => {
 
         const site = siteMap.value[row.site_id];
         if (!site) continue;
+        if (siteFilter.value && !site.name.toLowerCase().includes(siteFilter.value.toLowerCase())) continue;
 
         result.push({
             id: row.site_id,
