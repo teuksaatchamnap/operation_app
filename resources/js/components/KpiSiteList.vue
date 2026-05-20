@@ -135,6 +135,33 @@
                         }}
                     </v-chip>
                 </template>
+                <template #item.data_collection="{ item }">
+                    <v-chip
+                        :color="
+                            getTierColor(
+                                item.data_collection === 2
+                                    ? 'Complete'
+                                    : item.data_collection === 1
+                                      ? 'Partial'
+                                      : item.data_collection == null
+                                        ? 'N/A'
+                                        : 'None',
+                            )
+                        "
+                        size="small"
+                        variant="flat"
+                    >
+                        {{
+                            item.data_collection == null
+                                ? "N/A"
+                                : item.data_collection === 2
+                                  ? "Complete"
+                                  : item.data_collection === 1
+                                    ? "Partial"
+                                    : "None"
+                        }}
+                    </v-chip>
+                </template>
             </v-data-table>
         </template>
 
@@ -213,6 +240,7 @@ const dataModeOptions = [
     { title: "Financial Sustainability", value: "is_profitable" },
     { title: "Water Quality", value: "contamination_level" },
     { title: "Water Loss", value: "is_water_loss_ok" },
+    { title: "Data collection status", value: "data_collection" },
 ];
 
 const factRows = ref([]);
@@ -283,6 +311,12 @@ const tableHeaders = computed(() => {
             key: "is_water_loss_ok",
             align: "center",
         });
+    } else if (dataMode.value === "data_collection") {
+        headers.push({
+            title: "Data Collection",
+            key: "data_collection",
+            align: "center",
+        });
     } else {
         headers.push({ title: "Tier", key: "tier", align: "center" });
     }
@@ -312,6 +346,7 @@ const mergedSites = computed(() => {
             is_profitable: row.is_profitable,
             contamination_level: row.contamination_level,
             is_water_loss_ok: row.is_water_loss_ok,
+            data_collection: row.data_collection,
         });
     }
 

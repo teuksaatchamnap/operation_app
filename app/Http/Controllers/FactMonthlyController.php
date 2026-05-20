@@ -20,7 +20,7 @@ class FactMonthlyController extends Controller
      * @queryParam advisor_ids int[] Optional. Filter by advisor IDs (array). Example: [1, 2]
      * @queryParam site_ids int[] Optional. Filter by site IDs (array). Example: [5, 6]
      * @queryParam kpis string required. Single KPI column name.
-     *   Available: tier, sales_volume, days_open, active, super_tier_1, bottles_per_day, expenses, revenue, workers, consumers, who_compliance, profitable, water_loss, is_water_loss_ok.
+     *   Available: tier, sales_volume, days_open, active, super_tier_1, bottles_per_day, expenses, revenue, workers, consumers, who_compliance, profitable, water_loss, is_water_loss_ok, data_collection.
      *   Example: revenue
      * @queryParam aggregate string Optional. Aggregate function to apply to KPI column. Options: sum, avg, count, pct_active.
      *   pct_active returns SUM(kpi) / NULLIF(SUM(active), 0) * 100 (percentage of active sites).

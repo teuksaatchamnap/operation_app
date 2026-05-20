@@ -149,6 +149,15 @@ function getSiteValue(site) {
               ? "N/A"
               : "Not OK";
     }
+    if (props.dataMode === "data_collection") {
+        return site.data_collection === 2
+            ? "Complete"
+            : site.data_collection === 1
+              ? "Partial"
+              : site.data_collection == null
+                ? "N/A"
+                : "None";
+    }
     return site.tier;
 }
 

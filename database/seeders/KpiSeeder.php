@@ -208,6 +208,20 @@ class KpiSeeder extends Seeder
                     ['value' => 'Not OK', 'color' => '#F44336'],
                 ],
             ],
+            [
+                'name' => 'Data Collection Status',
+                'col_name' => 'data_collection',
+                'unit' => '%',
+                'periodicity' => 'monthly',
+                'type' => 'qualitative',
+                'description' => '0=no data, 1=partial (expense+sales+water), 2=all collected',
+                'aggregate' => 'avg',
+                'legend' => [
+                    ['value' => 'Complete', 'color' => '#4CAF50'],
+                    ['value' => 'Partial', 'color' => '#FFC107'],
+                    ['value' => 'None', 'color' => '#F44336'],
+                ],
+            ],
         ];
 
         foreach ($kpis as $kpi) {

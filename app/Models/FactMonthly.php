@@ -38,6 +38,7 @@ class FactMonthly extends Model
         'ec_collection',
         'water_loss',
         'is_water_loss_ok',
+        'data_collection',
     ];
 
     protected function casts(): array
