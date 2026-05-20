@@ -90,6 +90,8 @@ CREATE TABLE `samples` (
  * @property \DateTimeInterface|null $analysis_date
  * @property string|null $escherichia
  * @property string|null $total_coliform
+ * @property int|null $contamination_level_bottle
+ * @property int|null $contamination_level_machine
  */
 class Sample extends Model
 {
