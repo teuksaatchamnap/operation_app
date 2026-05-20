@@ -32,6 +32,7 @@ return new class extends Migration
             $table->integer('who_compliance')->nullable()->comment('0:no 1:yes');
             $table->integer('contamination_level')->nullable()->comment('0:safe,1,2,3');
             $table->integer('ec_collection')->nullable()->comment('0:no 1:yes, paid > amount_expenses for the Ref_expenses=entrepreneur_contribution');
+            $table->string('water_source')->nullable()->comment('Normalized: pond, river, well, pipe');
             $table->unique(['site_id', 'month']);
         });
     }

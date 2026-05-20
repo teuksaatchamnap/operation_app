@@ -132,6 +132,7 @@ CREATE TABLE `sites` (
  * @property string $Id_Site
  * @property string|null $Platform
  * @property string|null $Advisor
+ * @property string|null $Water_Source
  * @property float|null $Latitude
  * @property float|null $Longitude
  */

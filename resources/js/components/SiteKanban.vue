@@ -108,6 +108,9 @@ function getSiteValue(site) {
                 ? "N/A"
                 : "None";
     }
+    if (props.dataMode === "water_source") {
+        return site.water_source || "N/A";
+    }
     return site.tier;
 }
 

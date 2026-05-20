@@ -100,6 +100,18 @@ class ComputeDataCollection extends BaseComputeJob
             ];
         }
 
+        foreach ($months as $month) {
+            $monthKey = $month->format('Y-m-d');
+            foreach ($siteMap as $siteName => $siteId) {
+                $key = $siteName.'|'.$monthKey;
+                if (! isset($map[$key])) {
+                    $map[$key] = [
+                        'data_collection' => 0,
+                    ];
+                }
+            }
+        }
+
         return $map;
     }
 }

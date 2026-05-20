@@ -222,6 +222,21 @@ class KpiSeeder extends Seeder
                     ['value' => 'None', 'color' => '#F44336'],
                 ],
             ],
+            [
+                'name' => 'Water Source',
+                'col_name' => 'water_source',
+                'unit' => '%',
+                'periodicity' => 'monthly',
+                'type' => 'qualitative',
+                'description' => 'Normalized water source: pond, river, well, pipe',
+                'aggregate' => 'avg',
+                'legend' => [
+                    ['value' => 'pipe', 'color' => '#2196F3'],
+                    ['value' => 'well', 'color' => '#795548'],
+                    ['value' => 'river', 'color' => '#00BCD4'],
+                    ['value' => 'pond', 'color' => '#009688'],
+                ],
+            ],
         ];
 
         foreach ($kpis as $kpi) {

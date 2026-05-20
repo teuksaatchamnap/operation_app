@@ -241,6 +241,7 @@ const dataModeOptions = [
     { title: "Water Quality", value: "contamination_level" },
     { title: "Water Loss", value: "is_water_loss_ok" },
     { title: "Data collection status", value: "data_collection" },
+    { title: "Water Source", value: "water_source" },
 ];
 
 const factRows = ref([]);
@@ -317,6 +318,12 @@ const tableHeaders = computed(() => {
             key: "data_collection",
             align: "center",
         });
+    } else if (dataMode.value === "water_source") {
+        headers.push({
+            title: "Water Source",
+            key: "water_source",
+            align: "center",
+        });
     } else {
         headers.push({ title: "Tier", key: "tier", align: "center" });
     }
@@ -347,6 +354,7 @@ const mergedSites = computed(() => {
             contamination_level: row.contamination_level,
             is_water_loss_ok: row.is_water_loss_ok,
             data_collection: row.data_collection,
+            water_source: row.water_source,
         });
     }
 
