@@ -23,12 +23,17 @@ class SiteHoverController extends Controller
             'platform_ids.*' => 'integer',
             'advisor_ids' => 'sometimes|array',
             'advisor_ids.*' => 'integer',
+            'include_unassigned' => 'sometimes|boolean',
         ]);
 
         $month = $validated['month'];
 
         $factQuery = FactMonthly::whereYear('month', '=', substr($month, 0, 4))
             ->whereMonth('month', '=', substr($month, 5, 2));
+
+        if (! $request->boolean('include_unassigned')) {
+            $factQuery->whereNotNull('platform_id');
+        }
 
         if ($request->filled('site_ids')) {
             $factQuery->whereIn('site_id', $validated['site_ids']);

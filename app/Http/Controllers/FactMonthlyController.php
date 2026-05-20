@@ -19,6 +19,7 @@ class FactMonthlyController extends Controller
      * @queryParam platform_ids int[] Optional. Filter by platform IDs (array). Example: [1, 2, 3]
      * @queryParam advisor_ids int[] Optional. Filter by advisor IDs (array). Example: [1, 2]
      * @queryParam site_ids int[] Optional. Filter by site IDs (array). Example: [5, 6]
+     * @queryParam include_unassigned bool Optional. When true, includes sites with no platform assigned (platform_id IS NULL). Default: false. Example: true
      * @queryParam kpis string required. Single KPI column name.
      *   Available: tier, sales_volume, days_open, active, super_tier_1, bottles_per_day, expenses, revenue, workers, consumers, who_compliance, profitable, water_loss, is_water_loss_ok, data_collection, water_source.
      *   Example: revenue
@@ -50,6 +51,7 @@ class FactMonthlyController extends Controller
             'advisor_ids.*' => 'integer',
             'site_ids' => 'sometimes|array',
             'site_ids.*' => 'integer',
+            'include_unassigned' => 'sometimes|boolean',
             'kpis' => 'required|string',
             'aggregate' => 'sometimes|string|in:sum,avg,count,pct_active',
             'year_to_date' => 'sometimes|boolean',
@@ -74,6 +76,10 @@ class FactMonthlyController extends Controller
 
         $query = FactMonthly::query();
 
+        if (! $request->boolean('include_unassigned')) {
+            $query->whereNotNull('platform_id');
+        }
+
         if ($latestAvailable) {
             $year = $request->filled('month')
                 ? substr($validated['month'], 0, 4)
@@ -83,6 +89,10 @@ class FactMonthlyController extends Controller
                 ->whereYear('month', '=', $year)
                 ->where('active', 1)
                 ->whereNotNull($kpi);
+
+            if (! $request->boolean('include_unassigned')) {
+                $baseQuery->whereNotNull('platform_id');
+            }
 
             if ($request->filled('site_ids')) {
                 $baseQuery->whereIn('site_id', $validated['site_ids']);
