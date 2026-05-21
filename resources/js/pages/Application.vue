@@ -1,5 +1,5 @@
 <template>
-    <v-card class="mb-6 pa-4">
+    <v-card class="pa-4">
         <v-row align="center">
             <v-col>
                 <MonthPicker v-model="selectedMonth" />
@@ -49,7 +49,7 @@
         </v-row>
     </v-card>
 
-    <ScrollPanel class="mb-6">
+    <ScrollPanel class="my-2">
         <KpiCard
             :kpi="findKpi('sales_volume')"
             :year-to-date="1"
@@ -129,12 +129,13 @@ function findKpi(colName) {
 
 onMounted(async () => {
     try {
-        const [kpisRes, sitesRes, advisorsRes, platformsRes] = await Promise.all([
-            axios.get("/api/kpis"),
-            axios.get("/api/sites"),
-            axios.get("/api/advisors"),
-            axios.get("/api/platforms"),
-        ]);
+        const [kpisRes, sitesRes, advisorsRes, platformsRes] =
+            await Promise.all([
+                axios.get("/api/kpis"),
+                axios.get("/api/sites"),
+                axios.get("/api/advisors"),
+                axios.get("/api/platforms"),
+            ]);
         kpis.value = kpisRes.data;
         sites.value = sitesRes.data;
         advisors.value = advisorsRes.data;

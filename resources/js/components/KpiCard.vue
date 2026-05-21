@@ -50,11 +50,11 @@
             </div>
         </v-card-item>
 
-        <v-card-text class="text-center py-4">
+        <v-card-text class="text-center py-1">
             <div class="text-h1 font-weight-bold text-primary kpi-value">
                 {{ formatValue(displayValue) }}
             </div>
-            <div class="text-subtitle-1 text-medium-emphasis mt-1 mb-3">
+            <div class="text-subtitle-1 text-medium-emphasis mt-0 mb-3">
                 {{ kpi?.unit || "" }}
             </div>
             <div v-if="matchingObjective" class="text-left">
