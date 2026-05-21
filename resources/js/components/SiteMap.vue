@@ -25,6 +25,7 @@
                 :fill-opacity="0.85"
                 :weight="2"
                 @ready="($event) => bindHoverTooltip($event, site)"
+                @click="emit('site-click', site)"
             />
         </l-map>
     </div>
@@ -55,6 +56,8 @@ L.Icon.Default.mergeOptions({
     iconUrl: markerIcon,
     shadowUrl: markerShadow,
 });
+
+const emit = defineEmits(["site-click"]);
 
 const props = defineProps({
     sites: {

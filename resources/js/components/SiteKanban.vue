@@ -35,6 +35,7 @@
                             v-bind="tooltipProps"
                             class="kanban-circle"
                             :style="circleStyle(site)"
+                            @click.stop="emit('site-click', site)"
                         >
                             {{ site.name }}
                         </div>
@@ -57,6 +58,8 @@
 <script setup>
 import { computed } from "vue";
 import SiteHoverCard from "./SiteHoverCard.vue";
+
+const emit = defineEmits(["site-click"]);
 
 const props = defineProps({
     sites: {

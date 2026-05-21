@@ -59,6 +59,8 @@
                 :items-per-page="-1"
                 density="comfortable"
                 class="elevation-1 rounded"
+                hover
+                @click:row="onRowClick"
             >
                 <template #item.active="{ item }">
                     <v-chip
@@ -181,6 +183,7 @@
             :data-mode="dataMode"
             :legend="currentLegend"
             :hover-data="hoverData"
+            @site-click="openSiteDetail"
         />
 
         <SiteMap
@@ -189,6 +192,7 @@
             :data-mode="dataMode"
             :legend="currentLegend"
             :hover-data="hoverData"
+            @site-click="openSiteDetail"
         />
 
         <div
@@ -214,6 +218,11 @@
                 </div>
             </div>
         </template>
+
+        <SiteDetail
+            v-model="siteDetailDialog"
+            :site="selectedSite"
+        />
     </v-card>
 </template>
 
@@ -223,6 +232,7 @@ import axios from "axios";
 import SiteKanban from "./SiteKanban.vue";
 import SiteMap from "./SiteMap.vue";
 import SiteHoverCard from "./SiteHoverCard.vue";
+import SiteDetail from "./SiteDetail.vue";
 
 const props = defineProps({
     filters: {
@@ -264,6 +274,17 @@ const loading = ref(false);
 const viewMode = ref("kanban");
 const dataMode = ref("active");
 const siteFilter = ref("");
+const selectedSite = ref(null);
+const siteDetailDialog = ref(false);
+
+function openSiteDetail(site) {
+    selectedSite.value = site;
+    siteDetailDialog.value = true;
+}
+
+function onRowClick(event, { item }) {
+    openSiteDetail(item.value);
+}
 
 const currentLegend = computed(() => {
     const kpi = props.kpis.find((k) => k.col_name === dataMode.value);
@@ -466,6 +487,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
+:deep(.v-data-table tr) {
+    cursor: pointer;
+}
+
 .legend-swatch {
     width: 14px;
     height: 14px;

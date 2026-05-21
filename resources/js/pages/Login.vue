@@ -101,6 +101,15 @@
                             </span>
                         </v-btn>
                     </div>
+                    <v-alert
+                        v-if="isBrave"
+                        type="warning"
+                        density="compact"
+                        variant="tonal"
+                        class="mt-4 mb-4"
+                        title="Brave Shield Detected"
+                        text="Brave Shields may block the one-tap sign-in. If you experience issues, try disabling Shields for this site or use another browser."
+                    />
                 </div>
             </div>
         </v-sheet>
@@ -120,6 +129,7 @@ const authStore = useAuthStore();
 const theme = useTheme();
 const loading = ref(true);
 const manualOverride = ref(false);
+const isBrave = ref(false);
 
 const isDark = computed(() => theme.global.current.value.dark);
 
@@ -173,6 +183,11 @@ onMounted(() => {
     axios.get("/sanctum/csrf-cookie").then(() => {
         fetchAuth();
     });
+    if (navigator.brave?.isBrave) {
+        navigator.brave.isBrave().then((brave) => {
+            isBrave.value = brave;
+        });
+    }
 });
 
 onUnmounted(() => {
@@ -205,5 +220,30 @@ onUnmounted(() => {
 
 .google-btn-text {
     color: rgb(var(--v-theme-on-background));
+}
+
+:root {
+    --login-glow-color: 37, 99, 235;
+}
+
+:root.dark {
+    --login-glow-color: 99, 102, 241;
+}
+
+.login-card {
+    background-color: rgb(var(--v-theme-surface)) !important;
+    border: 1px solid transparent;
+    transition:
+        border-color 0.3s,
+        box-shadow 0.3s;
+}
+
+.dark .login-card,
+:root.dark .login-card {
+    border-color: rgba(var(--login-glow-color), 0.15);
+    box-shadow:
+        0 0 20px rgba(var(--login-glow-color), 0.08),
+        0 0 60px rgba(var(--login-glow-color), 0.04),
+        0 8px 32px rgba(0, 0, 0, 0.4);
 }
 </style>
