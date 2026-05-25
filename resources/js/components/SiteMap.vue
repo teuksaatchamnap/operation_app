@@ -207,16 +207,6 @@ const geoJsonStyleFn = () => ({
 
 const geoJsonOptions = computed(() => ({
     onEachFeature: (feature, layer) => {
-        const name =
-            feature.properties?.ADM1_EN +
-            " > " +
-            feature.properties?.ADM2_EN +
-            " > " +
-            feature.properties?.ADM3_EN;
-        layer.bindTooltip(name, {
-            sticky: true,
-            className: "commune-tooltip",
-        });
         layer.on("mouseover", () => {
             layer.setStyle({
                 fillColor: "#64B5F6",
@@ -363,27 +353,6 @@ onMounted(() => {
     top: 8px;
     right: 8px;
     z-index: 1000;
-}
-
-.map-container :deep(.commune-tooltip) {
-    background-color: #1565c0;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 4px 8px;
-    font-size: 12px;
-}
-
-.map-container :deep(.commune-tooltip.leaflet-tooltip-left:before),
-.map-container :deep(.commune-tooltip.leaflet-tooltip-right:before) {
-    border-left-color: #1565c0;
-    border-right-color: #1565c0;
-}
-
-.map-container :deep(.commune-tooltip.leaflet-tooltip-top:before),
-.map-container :deep(.commune-tooltip.leaflet-tooltip-bottom:before) {
-    border-top-color: #1565c0;
-    border-bottom-color: #1565c0;
 }
 
 :deep(.leaflet-tooltip.site-hover-tooltip) {
