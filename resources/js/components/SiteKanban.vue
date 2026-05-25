@@ -8,20 +8,6 @@
             <div class="text-subtitle-2 font-weight-bold">
                 {{ group.platform }}
             </div>
-            <div class="d-flex flex-wrap ga-1 mb-3">
-                <v-chip size="x-small" variant="tonal">
-                    {{ group.sites.length }}
-                </v-chip>
-                <v-chip
-                    v-for="(count, value) in groupCounts(group.sites)"
-                    :key="value"
-                    size="x-small"
-                    variant="flat"
-                    :color="getDataColor(value)"
-                >
-                    {{ count }}
-                </v-chip>
-            </div>
             <div class="kanban-cards">
                 <v-tooltip
                     v-for="site in group.sites"
@@ -50,6 +36,20 @@
                         </v-card>
                     </template>
                 </v-tooltip>
+            </div>
+            <div class="d-flex flex-wrap ga-1 mb-3 mt-4">
+                <v-chip size="x-small" variant="tonal">
+                    Total : {{ group.sites.length }}
+                </v-chip>
+                <v-chip
+                    v-for="(count, value) in groupCounts(group.sites)"
+                    :key="value"
+                    size="x-small"
+                    variant="flat"
+                    :color="getDataColor(value)"
+                >
+                    {{ value }} : {{ count }}
+                </v-chip>
             </div>
         </div>
     </div>
