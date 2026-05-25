@@ -1,9 +1,10 @@
 <template>
-    <div v-if="geojsonData" class="map-container">
+    <div v-if="geojsonData" ref="containerRef" class="map-container">
         <l-map
             :zoom="7"
             :center="[12.5, 104.9]"
             style="height: 500px; width: 100%"
+            @ready="onMapReady"
         >
             <l-tile-layer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -28,6 +29,15 @@
                 @click="emit('site-click', site)"
             />
         </l-map>
+        <v-btn
+            class="fullscreen-btn"
+            variant="flat"
+            density="compact"
+            icon
+            @click="toggleFullscreen"
+        >
+            <v-icon>{{ isFullscreen ? "mdi-fullscreen-exit" : "mdi-fullscreen" }}</v-icon>
+        </v-btn>
     </div>
     <v-progress-linear
         v-else
@@ -38,7 +48,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { useTheme } from "vuetify";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import {
@@ -87,6 +98,101 @@ const legendMap = computed(() => {
 });
 
 const geojsonData = ref(null);
+const mapInstance = ref(null);
+const containerRef = ref(null);
+const isFullscreen = ref(false);
+
+const theme = useTheme();
+const isDark = computed(() => theme.global.current.value.dark);
+const maskColor = computed(() => (isDark.value ? "#0f0f1a" : "#ffffff"));
+const maskPolygon = ref(null);
+
+function toggleFullscreen() {
+    if (!containerRef.value) return;
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } else {
+        containerRef.value.requestFullscreen();
+    }
+}
+
+function onFullscreenChange() {
+    isFullscreen.value = !!document.fullscreenElement;
+    if (mapInstance.value) {
+        mapInstance.value.invalidateSize();
+    }
+}
+
+watch(maskColor, (color) => {
+    if (maskPolygon.value) {
+        maskPolygon.value.setStyle({ fillColor: color, color });
+    }
+});
+
+onMounted(() => {
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+});
+
+onUnmounted(() => {
+    document.removeEventListener("fullscreenchange", onFullscreenChange);
+});
+
+function onMapReady(map) {
+    mapInstance.value = map;
+    if (geojsonData.value) {
+        applyCanvasMask();
+        clampMapView();
+    }
+}
+
+function applyCanvasMask() {
+    if (!mapInstance.value || !geojsonData.value) return;
+
+    const map = mapInstance.value;
+
+    map.createPane("maskPane");
+    map.getPane("maskPane").style.zIndex = 300;
+
+    const holes = [];
+
+    for (const feature of geojsonData.value.features) {
+        const geom = feature.geometry;
+        if (geom.type === "Polygon") {
+            const ring = geom.coordinates[0].map((c) => [c[1], c[0]]);
+            holes.push(ring);
+        } else if (geom.type === "MultiPolygon") {
+            for (const polyCoords of geom.coordinates) {
+                const ring = polyCoords[0].map((c) => [c[1], c[0]]);
+                holes.push(ring);
+            }
+        }
+    }
+
+    const worldRing = [
+        [-90, -180],
+        [90, -180],
+        [90, 180],
+        [-90, 180],
+        [-90, -180],
+    ];
+
+    const renderer = L.canvas({ pane: "maskPane", padding: 0.5 });
+
+    maskPolygon.value = L.polygon([worldRing, ...holes], {
+        renderer,
+        fillColor: maskColor.value,
+        fillOpacity: 0.95,
+        color: maskColor.value,
+        weight: 0,
+        interactive: false,
+    }).addTo(map);
+}
+
+function clampMapView() {
+    if (!mapInstance.value || !geojsonData.value) return;
+    const bounds = L.geoJSON(geojsonData.value).getBounds();
+    mapInstance.value.setMaxBounds(bounds.pad(0.1));
+}
 
 const sitesWithCoords = computed(() =>
     props.sites.filter((s) => s.latitude && s.longitude),
@@ -220,6 +326,10 @@ async function fetchGeoJson() {
     try {
         const res = await fetch("/CambodiaCommuneBoundaries.geojson");
         geojsonData.value = await res.json();
+        if (mapInstance.value) {
+            applyCanvasMask();
+            clampMapView();
+        }
     } catch (error) {
         console.error("Failed to load map boundaries:", error);
     }
@@ -234,6 +344,25 @@ onMounted(() => {
 .map-container {
     border-radius: 8px;
     overflow: hidden;
+    position: relative;
+}
+
+.map-container:fullscreen {
+    padding: 0;
+    border-radius: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
+.map-container:fullscreen :deep(.leaflet-container) {
+    height: 100% !important;
+}
+
+.fullscreen-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 1000;
 }
 
 .map-container :deep(.commune-tooltip) {
