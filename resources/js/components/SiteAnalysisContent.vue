@@ -327,6 +327,9 @@ const chartOptions = computed(() => ({
     chart: {
         foreColor: textColor.value,
         background: "transparent",
+        zoom: {
+            enabled: false,
+        },
         toolbar: {
             tools: {
                 download: false,
