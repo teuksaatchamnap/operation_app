@@ -5,6 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $kpi_id
+ * @property \Carbon\Carbon $start_date
+ * @property \Carbon\Carbon|null $end_date
+ * @property string $value
+ */
 class Objective extends Model
 {
     public $timestamps = false;
@@ -16,13 +23,6 @@ class Objective extends Model
         'value',
     ];
 
-    /**
-     * @property int $id
-     * @property int $kpi_id
-     * @property string $start_date
-     * @property string $end_date
-     * @property string $value
-     */
     protected function casts(): array
     {
         return [

@@ -146,6 +146,7 @@ CREATE TABLE `sites` (
  * @property string|null $Project_Date
  * @property float|null $Latitude
  * @property float|null $Longitude
+ * @property string|null $Advisor_email
  */
 class Site extends Model
 {
