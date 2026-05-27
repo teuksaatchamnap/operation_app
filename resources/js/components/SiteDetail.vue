@@ -2,8 +2,8 @@
     <v-dialog
         :model-value="modelValue"
         @update:model-value="$emit('update:modelValue', $event)"
-        fullscreen
         scrollable
+        max-width="90vw"
         transition="dialog-bottom-transition"
     >
         <v-card>
@@ -36,9 +36,7 @@
             <v-card-text class="pa-6">
                 <v-tabs-window v-model="tab">
                     <v-tabs-window-item value="site-analysis">
-                        <div class="text-medium-emphasis">
-                            Site analysis content
-                        </div>
+                        <SiteAnalysisContent :site="site" />
                     </v-tabs-window-item>
                     <v-tabs-window-item value="sales">
                         <div class="text-medium-emphasis">Sales content</div>
@@ -62,6 +60,7 @@
 
 <script setup>
 import { ref } from "vue";
+import SiteAnalysisContent from "./SiteAnalysisContent.vue";
 
 defineProps({
     modelValue: {
