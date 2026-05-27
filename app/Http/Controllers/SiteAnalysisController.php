@@ -33,28 +33,47 @@ class SiteAnalysisController extends Controller
             ->where('month', $month)
             ->first();
 
-        $kpis = Kpi::with('objectives')->get()->keyBy('col_name');
+        $kpiRows = Kpi::whereIn('col_name', [
+            'bottles_per_day', 'sales_volume', 'tier', 'days_open',
+            'water_loss', 'consumers', 'who_compliance',
+        ])->get()->keyBy('col_name');
 
-        $kpiDefinitions = [
-            ['key' => 'bottles_per_day_ytd', 'label' => 'bottles/day exc WinS (YTD)', 'col_name' => 'bottles_per_day', 'periodicity' => 'ytd'],
-            ['key' => 'bottles_per_day', 'label' => 'bottles/day exc WinS', 'col_name' => 'bottles_per_day', 'periodicity' => 'monthly'],
-            ['key' => 'bottles_per_day_incl', 'label' => 'bottles/day', 'col_name' => null, 'periodicity' => null],
-            ['key' => 'sales_volume', 'label' => 'Total sales (bot/month)', 'col_name' => 'sales_volume', 'periodicity' => 'monthly'],
-            ['key' => 'tier', 'label' => 'Tier', 'col_name' => 'tier', 'periodicity' => 'monthly'],
-            ['key' => 'days_open', 'label' => 'Days open', 'col_name' => 'days_open', 'periodicity' => 'monthly'],
-            ['key' => 'water_loss', 'label' => 'Over waste (%)', 'col_name' => 'water_loss', 'periodicity' => 'monthly'],
-            ['key' => 'has_3_workers', 'label' => 'Nb of Operator', 'col_name' => null, 'periodicity' => null],
-            ['key' => 'consumers', 'label' => 'Beneficiaries', 'col_name' => 'consumers', 'periodicity' => 'monthly'],
-            ['key' => 'penetration', 'label' => 'Penetration (%)', 'col_name' => null, 'periodicity' => null],
-            ['key' => 'water_quality', 'label' => 'Water Quality', 'col_name' => 'who_compliance', 'periodicity' => 'monthly'],
+        $kpiDefinitions = [];
+
+        if (isset($kpiRows['bottles_per_day'])) {
+            $kpiDefinitions[] = [
+                'key' => 'bottles_per_day_ytd',
+                'label' => $kpiRows['bottles_per_day']->name.' (YTD)',
+                'col_name' => 'bottles_per_day',
+                'periodicity' => 'ytd',
+            ];
+        }
+
+        $displayColNames = [
+            'bottles_per_day', 'sales_volume', 'tier', 'days_open',
+            'water_loss', 'consumers', 'who_compliance',
         ];
+
+        foreach ($displayColNames as $colName) {
+            $kpi = $kpiRows[$colName] ?? null;
+            if (! $kpi) {
+                continue;
+            }
+
+            $kpiDefinitions[] = [
+                'key' => $colName,
+                'label' => $kpi->name,
+                'col_name' => $colName,
+                'periodicity' => $kpi->periodicity === 'year to date' ? 'ytd' : 'monthly',
+            ];
+        }
 
         $kpiData = [];
         foreach ($kpiDefinitions as $def) {
             $value = null;
             $objective = null;
 
-            if ($def['col_name'] && $fact) {
+            if ($fact) {
                 if ($def['periodicity'] === 'ytd') {
                     $ytdRecords = FactMonthly::where('site_id', $site->id)
                         ->whereYear('month', $month->year)
@@ -69,7 +88,7 @@ class SiteAnalysisController extends Controller
                     $value = $fact->{$def['col_name']};
                 }
 
-                $kpi = $kpis->get($def['col_name']);
+                $kpi = $kpiRows[$def['col_name']] ?? null;
                 if ($kpi) {
                     $matchingObjective = Objective::where('kpi_id', $kpi->id)
                         ->where('start_date', '<=', $month)
