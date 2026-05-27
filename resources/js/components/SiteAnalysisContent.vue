@@ -21,12 +21,14 @@
                         General Details
                     </div>
                     <v-card-text>
-                        <v-row dense>
+                        <v-row density="comfortable">
                             <v-col cols="3">
                                 <div class="caption-label text-medium-emphasis">
                                     Platform
                                 </div>
-                                <div class="text-body-1">{{ data.platform ?? "-" }}</div>
+                                <div class="text-body-1">
+                                    {{ data.platform ?? "-" }}
+                                </div>
                             </v-col>
                             <v-col cols="3">
                                 <div class="caption-label text-medium-emphasis">
@@ -40,7 +42,9 @@
                                 <div class="caption-label text-medium-emphasis">
                                     Start Working Date
                                 </div>
-                                <div class="text-body-1">{{ formattedDate }}</div>
+                                <div class="text-body-1">
+                                    {{ formattedDate }}
+                                </div>
                             </v-col>
                             <v-col cols="3">
                                 <div class="caption-label text-medium-emphasis">
@@ -54,7 +58,9 @@
                                 <div class="caption-label text-medium-emphasis">
                                     ROM Name
                                 </div>
-                                <div class="text-body-1">{{ data.rom_name ?? "-" }}</div>
+                                <div class="text-body-1">
+                                    {{ data.rom_name ?? "-" }}
+                                </div>
                             </v-col>
                             <v-col cols="3">
                                 <div class="caption-label text-medium-emphasis">
@@ -68,13 +74,17 @@
                                 <div class="caption-label text-medium-emphasis">
                                     Population Commune
                                 </div>
-                                <div class="text-body-1">{{ formattedPopulation }}</div>
+                                <div class="text-body-1">
+                                    {{ formattedPopulation }}
+                                </div>
                             </v-col>
                             <v-col cols="3">
                                 <div class="caption-label text-medium-emphasis">
                                     Households
                                 </div>
-                                <div class="text-body-1">{{ formattedHouseholds }}</div>
+                                <div class="text-body-1">
+                                    {{ formattedHouseholds }}
+                                </div>
                             </v-col>
                         </v-row>
                     </v-card-text>
@@ -107,7 +117,7 @@
                         </div>
                     </div>
                     <v-card-text>
-                        <v-row dense>
+                        <v-row density="comfortable">
                             <v-col
                                 v-for="(kpi, key) in data.kpis"
                                 :key="key"
@@ -123,6 +133,57 @@
                         </v-row>
                     </v-card-text>
                 </v-card>
+
+                <v-card variant="outlined" class="subtle-border mt-4">
+                    <div class="text-body-1 font-weight-medium px-4 pt-4 pb-2">
+                        Monthly Sales Performance
+                    </div>
+                    <v-card-text>
+                        <div v-if="chartLoading" class="text-center pa-4">
+                            <v-progress-circular indeterminate />
+                        </div>
+                        <div
+                            v-else-if="chartError"
+                            class="text-medium-emphasis text-center pa-4"
+                        >
+                            Failed to load monthly performance
+                        </div>
+                        <apexchart
+                            v-else-if="chartData"
+                            ref="chartRef"
+                            type="line"
+                            height="350"
+                            :options="chartOptions"
+                            :series="chartData.series"
+                        />
+                        <div v-if="chartData" class="d-flex justify-end ga-1 mt-1">
+                            <v-btn
+                                variant="text"
+                                size="small"
+                                prepend-icon="mdi-file-image"
+                                @click="exportChart('png')"
+                            >
+                                PNG
+                            </v-btn>
+                            <v-btn
+                                variant="text"
+                                size="small"
+                                prepend-icon="mdi-file-document"
+                                @click="exportChart('svg')"
+                            >
+                                SVG
+                            </v-btn>
+                            <v-btn
+                                variant="text"
+                                size="small"
+                                prepend-icon="mdi-file-delimited"
+                                @click="exportChart('csv')"
+                            >
+                                CSV
+                            </v-btn>
+                        </div>
+                    </v-card-text>
+                </v-card>
             </template>
         </v-card-text>
     </v-card>
@@ -131,6 +192,7 @@
 <script setup>
 import axios from "axios";
 import { computed, ref, watchEffect } from "vue";
+import { useTheme } from "vuetify";
 
 const props = defineProps({
     site: {
@@ -148,8 +210,18 @@ const selectedMonth = ref(
 );
 
 const monthNames = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
 ];
 
 const displayMonth = computed(() => {
@@ -194,11 +266,11 @@ function formatKpiValue(kpi) {
     const val =
         typeof kpi.value === "number"
             ? Number(kpi.value).toLocaleString("en-US")
-            : kpi.value ?? "-";
+            : (kpi.value ?? "-");
     const obj =
         typeof kpi.objective === "number"
             ? Number(kpi.objective).toLocaleString("en-US")
-            : kpi.objective ?? "-";
+            : (kpi.objective ?? "-");
     return `${val} / ${obj}`;
 }
 
@@ -211,6 +283,108 @@ const formattedPopulation = computed(() =>
 const formattedHouseholds = computed(() =>
     formatNumber(data.value?.households),
 );
+
+const chartData = ref(null);
+const chartLoading = ref(false);
+const chartError = ref(false);
+const chartRef = ref(null);
+
+function exportChart(format) {
+    if (!chartRef.value) return;
+
+    if (format === "csv") {
+        chartRef.value.chart.exports.csv();
+        return;
+    }
+
+    const type = format === "svg" ? "svg" : undefined;
+    const filename = `monthly-sales-performance.${format}`;
+    chartRef.value.chart.dataURI({ scale: 1, type }).then(({ imgURI }) => {
+        const link = document.createElement("a");
+        link.href = imgURI;
+        link.download = filename;
+        link.click();
+    });
+}
+
+const theme = useTheme();
+const isDark = computed(() => theme.global.name.value === "dark");
+
+const textColor = computed(() =>
+    isDark.value ? "#e0e0e0" : "#333333",
+);
+
+const chartColors = [
+    "#FF6384",
+    "#36A2EB",
+    "#FFCE56",
+    "#4BC0C0",
+    "#9966FF",
+    "#FF9F40",
+];
+
+const chartOptions = computed(() => ({
+    chart: {
+        foreColor: textColor.value,
+        background: "transparent",
+        toolbar: {
+            tools: {
+                download: false,
+                selection: false,
+                zoom: false,
+                zoomin: false,
+                zoomout: false,
+                pan: false,
+                reset: false,
+            },
+        },
+    },
+    colors: chartColors,
+    xaxis: {
+        categories: chartData.value?.categories ?? [],
+        labels: {
+            style: {
+                colors: textColor.value,
+            },
+        },
+    },
+    yaxis: {
+        labels: {
+            style: {
+                colors: textColor.value,
+            },
+        },
+        title: {
+            text: "bottles/day",
+            style: {
+                color: textColor.value,
+            },
+        },
+    },
+    stroke: {
+        curve: "smooth",
+        width: 2,
+    },
+    legend: {
+        position: "bottom",
+        horizontalAlign: "center",
+        labels: {
+            colors: textColor.value,
+        },
+    },
+    tooltip: {
+        shared: true,
+        theme: isDark.value ? "dark" : "light",
+    },
+    responsive: [
+        {
+            breakpoint: 600,
+            options: {
+                chart: { height: 250 },
+            },
+        },
+    ],
+}));
 
 watchEffect(async () => {
     if (!props.site?.id) return;
@@ -228,6 +402,25 @@ watchEffect(async () => {
         data.value = null;
     } finally {
         loading.value = false;
+    }
+});
+
+watchEffect(async () => {
+    if (!props.site?.id) return;
+
+    chartLoading.value = true;
+    chartError.value = false;
+
+    try {
+        const res = await axios.get(
+            `/api/sites/${props.site.id}/monthly-performance`,
+        );
+        chartData.value = res.data;
+    } catch {
+        chartError.value = true;
+        chartData.value = null;
+    } finally {
+        chartLoading.value = false;
     }
 });
 </script>

@@ -104,4 +104,37 @@ class SiteAnalysisController extends Controller
             'kpis' => $kpiData,
         ]);
     }
+
+    public function monthlyPerformance(Site $site): JsonResponse
+    {
+        $currentYear = now()->year;
+        $years = range($currentYear - 5, $currentYear);
+
+        $records = FactMonthly::where('site_id', $site->id)
+            ->whereYear('month', '>=', $currentYear - 5)
+            ->whereNotNull('bottles_per_day')
+            ->orderBy('month')
+            ->get(['month', 'bottles_per_day']);
+
+        $series = [];
+        $monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        foreach ($years as $year) {
+            $data = array_fill(0, 12, null);
+            $yearRecords = $records->filter(fn ($r) => Carbon::parse($r->month)->year === $year);
+            foreach ($yearRecords as $r) {
+                $m = Carbon::parse($r->month);
+                $data[$m->month - 1] = round($r->bottles_per_day);
+            }
+            $series[] = [
+                'name' => (string) $year,
+                'data' => $data,
+            ];
+        }
+
+        return response()->json([
+            'categories' => $monthLabels,
+            'series' => $series,
+        ]);
+    }
 }
