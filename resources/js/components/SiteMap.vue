@@ -47,6 +47,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useTheme } from "vuetify";
+import union from "@turf/union";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import {
@@ -95,6 +96,7 @@ const legendMap = computed(() => {
 });
 
 const geojsonData = ref(null);
+const cambodiaOutline = ref(null);
 const mapInstance = ref(null);
 const containerRef = ref(null);
 const isFullscreen = ref(false);
@@ -152,7 +154,7 @@ function onMapReady(map) {
 }
 
 function applyCanvasMask() {
-    if (!mapInstance.value || !geojsonData.value) return;
+    if (!mapInstance.value || !cambodiaOutline.value) return;
 
     const map = mapInstance.value;
 
@@ -160,17 +162,13 @@ function applyCanvasMask() {
     map.getPane("maskPane").style.zIndex = 300;
 
     const holes = [];
+    const geom = cambodiaOutline.value.geometry;
 
-    for (const feature of geojsonData.value.features) {
-        const geom = feature.geometry;
-        if (geom.type === "Polygon") {
-            const ring = geom.coordinates[0].map((c) => [c[1], c[0]]);
-            holes.push(ring);
-        } else if (geom.type === "MultiPolygon") {
-            for (const polyCoords of geom.coordinates) {
-                const ring = polyCoords[0].map((c) => [c[1], c[0]]);
-                holes.push(ring);
-            }
+    if (geom.type === "Polygon") {
+        holes.push(geom.coordinates[0].map((c) => [c[1], c[0]]));
+    } else if (geom.type === "MultiPolygon") {
+        for (const polyCoords of geom.coordinates) {
+            holes.push(polyCoords[0].map((c) => [c[1], c[0]]));
         }
     }
 
@@ -195,8 +193,8 @@ function applyCanvasMask() {
 }
 
 function clampMapView() {
-    if (!mapInstance.value || !geojsonData.value) return;
-    const bounds = L.geoJSON(geojsonData.value).getBounds();
+    if (!mapInstance.value || !cambodiaOutline.value) return;
+    const bounds = L.geoJSON(cambodiaOutline.value).getBounds();
     mapInstance.value.setMaxBounds(bounds.pad(0.1));
 }
 
@@ -210,7 +208,7 @@ const geoJsonOptions = {
 
 const geoJsonStyleFn = () => ({
     fillColor: "#e0e0e0",
-    fillOpacity: 0.25,
+    fillOpacity: 0,
     color: "#bdbdbd",
     weight: 1,
 });
@@ -303,9 +301,19 @@ function bindHoverTooltip(marker, site) {
 
 async function fetchGeoJson() {
     try {
-        // const res = await fetch("/CambodiaCommuneBoundaries.geojson");
-        const res = await fetch("/CambodiaProvinceBoundaries.geojson");
-        geojsonData.value = await res.json();
+        const t0 = performance.now();
+        const res = await fetch("geoBoundaries-KHM-ADM1_simplified.geojson");
+        const data = await res.json();
+        const t1 = performance.now();
+        geojsonData.value = data;
+        console.log(`[SiteMap] Fetch + parse GeoJSON: ${(t1 - t0).toFixed(2)}ms`);
+
+        const t2 = performance.now();
+        cambodiaOutline.value = union(data);
+        const t3 = performance.now();
+        console.log(`[SiteMap] Union computation: ${(t3 - t2).toFixed(2)}ms`);
+        console.log(`[SiteMap] Total fetchGeoJson: ${(t3 - t0).toFixed(2)}ms`);
+
         if (mapInstance.value) {
             applyCanvasMask();
             clampMapView();

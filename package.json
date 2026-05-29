@@ -16,6 +16,7 @@
     },
     "dependencies": {
         "@mdi/font": "^7.4.47",
+        "@turf/union": "^7.3.5",
         "@vitejs/plugin-vue": "^6.0.6",
         "@vue-leaflet/vue-leaflet": "^0.10.1",
         "apexcharts": "^5.13.0",
