@@ -26,7 +26,7 @@
                 :fill-opacity="0.85"
                 :weight="2"
                 @ready="($event) => bindHoverTooltip($event, site)"
-                @click="emit('site-click', site)"
+                @click="onSiteClick(site)"
             />
         </l-map>
         <v-btn
@@ -36,15 +36,12 @@
             icon
             @click="toggleFullscreen"
         >
-            <v-icon>{{ isFullscreen ? "mdi-fullscreen-exit" : "mdi-fullscreen" }}</v-icon>
+            <v-icon>{{
+                isFullscreen ? "mdi-fullscreen-exit" : "mdi-fullscreen"
+            }}</v-icon>
         </v-btn>
     </div>
-    <v-progress-linear
-        v-else
-        indeterminate
-        color="primary"
-        class="mb-2"
-    />
+    <v-progress-linear v-else indeterminate color="primary" class="mb-2" />
 </template>
 
 <script setup>
@@ -106,6 +103,15 @@ const theme = useTheme();
 const isDark = computed(() => theme.global.current.value.dark);
 const maskColor = computed(() => (isDark.value ? "#0f0f1a" : "#ffffff"));
 const maskPolygon = ref(null);
+
+function onSiteClick(site) {
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+        setTimeout(() => emit("site-click", site), 50);
+    } else {
+        emit("site-click", site);
+    }
+}
 
 function toggleFullscreen() {
     if (!containerRef.value) return;
@@ -205,27 +211,6 @@ const geoJsonStyleFn = () => ({
     weight: 1,
 });
 
-const geoJsonOptions = computed(() => ({
-    onEachFeature: (feature, layer) => {
-        layer.on("mouseover", () => {
-            layer.setStyle({
-                fillColor: "#64B5F6",
-                fillOpacity: 0.5,
-                color: "#1565C0",
-                weight: 2,
-            });
-        });
-        layer.on("mouseout", () => {
-            layer.setStyle({
-                fillColor: "#e0e0e0",
-                fillOpacity: 0.25,
-                color: "#bdbdbd",
-                weight: 1,
-            });
-        });
-    },
-}));
-
 function getSiteValue(site) {
     if (props.dataMode === "active") {
         return site.active ? "Active" : "Inactive";
@@ -314,7 +299,8 @@ function bindHoverTooltip(marker, site) {
 
 async function fetchGeoJson() {
     try {
-        const res = await fetch("/CambodiaCommuneBoundaries.geojson");
+        // const res = await fetch("/CambodiaCommuneBoundaries.geojson");
+        const res = await fetch("/CambodiaProvinceBoundaries.geojson");
         geojsonData.value = await res.json();
         if (mapInstance.value) {
             applyCanvasMask();
