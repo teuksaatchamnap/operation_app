@@ -359,71 +359,107 @@ const chartColors = [
     "#FF9F40",
 ];
 
-const chartOptions = computed(() => ({
-    chart: {
-        foreColor: textColor.value,
-        background: "transparent",
-        zoom: {
-            enabled: false,
-        },
-        toolbar: {
-            tools: {
-                download: false,
-                selection: false,
-                zoom: false,
-                zoomin: false,
-                zoomout: false,
-                pan: false,
-                reset: false,
+const chartOptions = computed(() => {
+    const series = chartData.value?.series ?? [];
+    const categories = chartData.value?.categories ?? [];
+
+    const options = {
+        chart: {
+            foreColor: textColor.value,
+            background: "transparent",
+            zoom: {
+                enabled: false,
+            },
+            toolbar: {
+                tools: {
+                    download: false,
+                    selection: false,
+                    zoom: false,
+                    zoomin: false,
+                    zoomout: false,
+                    pan: false,
+                    reset: false,
+                },
             },
         },
-    },
-    colors: chartColors,
-    xaxis: {
-        categories: chartData.value?.categories ?? [],
-        labels: {
-            style: {
+        colors: chartColors,
+        xaxis: {
+            categories,
+            labels: {
+                style: {
+                    colors: textColor.value,
+                },
+            },
+        },
+        yaxis: {
+            labels: {
+                style: {
+                    colors: textColor.value,
+                },
+            },
+            title: {
+                text: "bottles/day",
+                style: {
+                    color: textColor.value,
+                },
+            },
+        },
+        stroke: {
+            curve: "smooth",
+            width: 2,
+        },
+        legend: {
+            position: "bottom",
+            horizontalAlign: "center",
+            labels: {
                 colors: textColor.value,
             },
         },
-    },
-    yaxis: {
-        labels: {
-            style: {
-                colors: textColor.value,
+        tooltip: {
+            shared: true,
+            theme: isDark.value ? "dark" : "light",
+        },
+        responsive: [
+            {
+                breakpoint: 600,
+                options: {
+                    chart: { height: 250 },
+                },
             },
-        },
-        title: {
-            text: "bottles/day",
-            style: {
-                color: textColor.value,
-            },
-        },
-    },
-    stroke: {
-        curve: "smooth",
-        width: 2,
-    },
-    legend: {
-        position: "bottom",
-        horizontalAlign: "center",
-        labels: {
-            colors: textColor.value,
-        },
-    },
-    tooltip: {
-        shared: true,
-        theme: isDark.value ? "dark" : "light",
-    },
-    responsive: [
-        {
-            breakpoint: 600,
-            options: {
-                chart: { height: 250 },
-            },
-        },
-    ],
-}));
+        ],
+    };
+
+    const [selYear, selMonthNum] = selectedMonth.value.split("-");
+    const selMonthIndex = parseInt(selMonthNum, 10) - 1;
+    const seriesIdx = series.findIndex((s) => s.name === selYear);
+
+    if (
+        seriesIdx >= 0
+        && series[seriesIdx].data[selMonthIndex] != null
+    ) {
+        const yVal = series[seriesIdx].data[selMonthIndex];
+        const color = chartColors[seriesIdx] || chartColors[0];
+
+        options.annotations = {
+            points: [
+                {
+                    x: categories[selMonthIndex],
+                    y: yVal,
+                    seriesIndex: seriesIdx,
+                    marker: {
+                        size: 8,
+                        fillColor: color,
+                        strokeColor: "#fff",
+                        strokeWidth: 2,
+                        shape: "circle",
+                    },
+                },
+            ],
+        };
+    }
+
+    return options;
+});
 
 watchEffect(async () => {
     if (!props.site?.id) return;
