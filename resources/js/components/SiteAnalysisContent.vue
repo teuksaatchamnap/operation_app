@@ -454,7 +454,15 @@ watchEffect(async () => {
         const res = await axios.get(
             `/api/sites/${props.site.id}/monthly-performance`,
         );
-        chartData.value = res.data;
+        const currentYear = String(now.getFullYear());
+        const currentMonth = now.getMonth();
+        const series = res.data.series.map((s) => {
+            if (s.name === currentYear) {
+                return { ...s, data: s.data.slice(0, currentMonth + 1) };
+            }
+            return s;
+        });
+        chartData.value = { ...res.data, series };
     } catch {
         chartError.value = true;
         chartData.value = null;
