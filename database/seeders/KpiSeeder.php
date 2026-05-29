@@ -66,6 +66,7 @@ class KpiSeeder extends Seeder
                 'type' => 'quantitative',
                 'description' => 'The number of days the site reported at least one sale',
                 'aggregate' => 'avg',
+                'default_objective' => 26,
             ],
             [
                 'name' => 'Active sites',
@@ -99,6 +100,7 @@ class KpiSeeder extends Seeder
                 'type' => 'quantitative',
                 'description' => 'The average number of bottles sold per days excluding WinS',
                 'aggregate' => 'avg',
+                'default_objective' => 101,
             ],
             [
                 'name' => 'Expenses',
@@ -135,6 +137,7 @@ class KpiSeeder extends Seeder
                 'description' => 'The number of consumers who bought from sites',
                 'aggregate' => 'sum',
                 'default_objective' => 1100100,
+                'individual_objective' => 3000,
             ],
             [
                 'name' => 'WHO Compliance',
@@ -160,6 +163,7 @@ class KpiSeeder extends Seeder
                     ['value' => '2', 'color' => '#f4b836'],
                     ['value' => '3', 'color' => '#F44336'],
                 ],
+                'individual_objective' => 0,
             ],
             [
                 'name' => 'Profitable',
@@ -193,6 +197,7 @@ class KpiSeeder extends Seeder
                 'type' => 'quantitative',
                 'description' => 'Water loss percentage: (Water_Consume - (Total_Sales * 20)) / Water_Consume * 100',
                 'aggregate' => 'avg',
+                'default_objective' => 20,
             ],
             [
                 'name' => 'Water Loss OK',
@@ -260,6 +265,11 @@ class KpiSeeder extends Seeder
                 $objective = $kpi['default_objective'];
                 unset($kpi['default_objective']);
             }
+            $individual_objective = null;
+            if (isset($kpi['individual_objective'])) {
+                $individual_objective = $kpi['individual_objective'];
+                unset($kpi['individual_objective']);
+            }
             $kpiModel = Kpi::updateOrCreate(
                 ['col_name' => $kpi['col_name']],
                 $kpi
@@ -268,6 +278,13 @@ class KpiSeeder extends Seeder
                 $kpiModel->objectives()->save(new Objective([
                     'start_date' => Carbon::now()->addYears(-20),
                     'value' => $objective,
+                ]));
+            }
+            if ($individual_objective && ! $kpiModel->objectives()->where('value', $individual_objective)->exists()) {
+                $kpiModel->objectives()->save(new Objective([
+                    'start_date' => Carbon::now()->addYears(-20),
+                    'value' => $individual_objective,
+                    'type' => 'individual',
                 ]));
             }
         }

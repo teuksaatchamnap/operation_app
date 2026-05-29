@@ -27,15 +27,20 @@ class SiteAnalysisController extends Controller
             : null;
 
         $monthStr = $request->query('month', now()->format('Y-m'));
-        $month = Carbon::parse($monthStr.'-01');
+        $month = Carbon::parse($monthStr . '-01');
 
         $fact = FactMonthly::where('site_id', $site->id)
             ->where('month', $month)
             ->first();
 
         $kpiRows = Kpi::whereIn('col_name', [
-            'bottles_per_day', 'sales_volume', 'tier', 'days_open',
-            'water_loss', 'consumers', 'who_compliance',
+            'bottles_per_day',
+            'sales_volume',
+            'tier',
+            'days_open',
+            'water_loss',
+            'consumers',
+            'who_compliance',
         ])->get()->keyBy('col_name');
 
         $kpiDefinitions = [];
@@ -43,15 +48,20 @@ class SiteAnalysisController extends Controller
         if (isset($kpiRows['bottles_per_day'])) {
             $kpiDefinitions[] = [
                 'key' => 'bottles_per_day_ytd',
-                'label' => $kpiRows['bottles_per_day']->name.' (YTD)',
+                'label' => $kpiRows['bottles_per_day']->name . ' (YTD)',
                 'col_name' => 'bottles_per_day',
                 'periodicity' => 'ytd',
             ];
         }
 
         $displayColNames = [
-            'bottles_per_day', 'sales_volume', 'tier', 'days_open',
-            'water_loss', 'consumers', 'who_compliance',
+            'bottles_per_day',
+            'sales_volume',
+            'tier',
+            'days_open',
+            'water_loss',
+            'consumers',
+            'who_compliance',
         ];
 
         foreach ($displayColNames as $colName) {
@@ -92,7 +102,8 @@ class SiteAnalysisController extends Controller
                 if ($kpi) {
                     $matchingObjective = Objective::where('kpi_id', $kpi->id)
                         ->where('start_date', '<=', $month)
-                        ->where(fn ($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', $month))
+                        ->where(fn($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', $month))
+                        ->orderByRaw("CASE WHEN type = 'individual' THEN 0 ELSE 1 END")
                         ->first();
                     $objective = $matchingObjective ? (float) $matchingObjective->value : null;
                 }
@@ -140,7 +151,7 @@ class SiteAnalysisController extends Controller
 
         foreach ($years as $year) {
             $data = array_fill(0, 12, null);
-            $yearRecords = $records->filter(fn ($r) => Carbon::parse($r->month)->year === $year);
+            $yearRecords = $records->filter(fn($r) => Carbon::parse($r->month)->year === $year);
             foreach ($yearRecords as $r) {
                 $m = Carbon::parse($r->month);
                 $data[$m->month - 1] = round($r->bottles_per_day);

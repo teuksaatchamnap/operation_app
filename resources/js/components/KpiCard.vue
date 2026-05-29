@@ -122,6 +122,7 @@ const matchingObjective = computed(() => {
     return (
         props.kpi.objectives.find((obj) => {
             return (
+                obj.type === "global" &&
                 props.filters.month >= obj.start_date &&
                 (props.filters.month <= obj.end_date || obj.end_date == null)
             );

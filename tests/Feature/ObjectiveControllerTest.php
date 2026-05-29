@@ -25,6 +25,7 @@ class ObjectiveControllerTest extends TestCase
             'start_date' => '2026-01-01',
             'end_date' => '2026-12-31',
             'value' => 100,
+            'type' => 'global',
         ])->assertUnauthorized();
     }
 
@@ -44,6 +45,7 @@ class ObjectiveControllerTest extends TestCase
             'start_date' => '2026-01-01',
             'end_date' => '2026-12-31',
             'value' => 100000,
+            'type' => 'global',
         ];
 
         $response = $this->actingAs($user)->postJson("/api/kpis/{$kpi->id}/objectives", $payload);
@@ -54,12 +56,14 @@ class ObjectiveControllerTest extends TestCase
             'start_date' => '2026-01-01T00:00:00.000000Z',
             'end_date' => '2026-12-31T00:00:00.000000Z',
             'value' => 100000,
+            'type' => 'global',
         ]);
         $this->assertDatabaseHas('objectives', [
             'kpi_id' => $kpi->id,
             'start_date' => '2026-01-01',
             'end_date' => '2026-12-31',
             'value' => '100000.00',
+            'type' => 'global',
         ]);
     }
 
@@ -92,6 +96,7 @@ class ObjectiveControllerTest extends TestCase
             'start_date' => '2026-12-31',
             'end_date' => '2026-01-01',
             'value' => 100,
+            'type' => 'global',
         ]);
 
         $response->assertStatus(422);
@@ -113,6 +118,7 @@ class ObjectiveControllerTest extends TestCase
             'start_date' => '2026-01-01',
             'end_date' => '2026-12-31',
             'value' => 100000,
+            'type' => 'global',
         ]);
 
         $response = $this->actingAs($user)->putJson("/api/kpis/{$kpi->id}/objectives/{$objective->id}", [
@@ -137,6 +143,7 @@ class ObjectiveControllerTest extends TestCase
 
         $response = $this->actingAs($user)->putJson('/api/kpis/999/objectives/1', [
             'value' => 200,
+            'type' => 'global',
         ]);
 
         $response->assertStatus(404);
@@ -158,6 +165,7 @@ class ObjectiveControllerTest extends TestCase
             'start_date' => '2026-01-01',
             'end_date' => '2026-12-31',
             'value' => 100000,
+            'type' => 'global',
         ]);
 
         $response = $this->actingAs($user)->deleteJson("/api/kpis/{$kpi->id}/objectives/{$objective->id}");

@@ -14,7 +14,7 @@ class ObjectiveController extends Controller
      *
      * @authenticated
      *
-     * @response [{"id": 1, "kpi_id": 1, "start_date": "2026-01-01", "end_date": "2026-12-31", "value": "100.00"}]
+     * @response [{"id": 1, "kpi_id": 1, "start_date": "2026-01-01", "end_date": "2026-12-31", "value": "100.00", "type": "global"}]
      */
     public function index(): JsonResponse
     {
@@ -26,7 +26,7 @@ class ObjectiveController extends Controller
      *
      * @authenticated
      *
-     * @response status=201 {"id": 1, "kpi_id": 1, "start_date": "2026-01-01", "end_date": "2026-12-31", "value": "100.00"}
+     * @response status=201 {"id": 1, "kpi_id": 1, "start_date": "2026-01-01", "end_date": "2026-12-31", "value": "100.00", "type": "global"}
      * @response status=404 {"message": "No query results for model [App\\Models\\Kpi] 1"}
      * @response status=422 {"message": "The start date field is required.", "errors": {"start_date": ["The start date field is required."]}}
      */
@@ -38,6 +38,7 @@ class ObjectiveController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'value' => 'required|numeric',
+            'type' => 'required|in:individual,global',
         ]);
 
         $objective = Objective::create(array_merge(['kpi_id' => $kpiId], $validated));
@@ -50,7 +51,7 @@ class ObjectiveController extends Controller
      *
      * @authenticated
      *
-     * @response {"id": 1, "kpi_id": 1, "start_date": "2026-01-01", "end_date": "2026-12-31", "value": "150.00"}
+     * @response {"id": 1, "kpi_id": 1, "start_date": "2026-01-01", "end_date": "2026-12-31", "value": "150.00", "type": "global"}
      * @response status=404 {"message": "No query results for model [App\\Models\\Kpi] 1"}
      * @response status=422 {"message": "The value field is required.", "errors": {"value": ["The value field is required."]}}
      */
@@ -64,6 +65,7 @@ class ObjectiveController extends Controller
             'start_date' => 'sometimes|required|date',
             'end_date' => 'sometimes|required|date|after:start_date',
             'value' => 'sometimes|required|numeric',
+            'type' => 'sometimes|required|in:individual,global',
         ]);
 
         $objective->update($validated);

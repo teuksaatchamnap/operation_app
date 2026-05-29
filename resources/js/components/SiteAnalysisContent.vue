@@ -17,7 +17,7 @@
 
             <template v-else-if="data">
                 <v-card variant="outlined" class="subtle-border">
-                    <div class="text-body-1 font-weight-medium px-4 pt-4 pb-2">
+                    <div class="text-body-1 font-weight-medium px-4 pt-2">
                         General Details
                     </div>
                     <v-card-text>
@@ -91,7 +91,7 @@
                 </v-card>
 
                 <v-card variant="outlined" class="subtle-border mt-4">
-                    <div class="d-flex align-center px-4 pt-4 pb-2">
+                    <div class="d-flex align-center px-4">
                         <div class="text-body-1 font-weight-medium">
                             Site KPI
                         </div>
@@ -135,7 +135,7 @@
                 </v-card>
 
                 <v-card variant="outlined" class="subtle-border mt-4">
-                    <div class="text-body-1 font-weight-medium px-4 pt-4 pb-2">
+                    <div class="text-body-1 font-weight-medium px-4 pt-2">
                         Monthly Sales Performance
                     </div>
                     <v-card-text>
@@ -156,7 +156,10 @@
                             :options="chartOptions"
                             :series="chartData.series"
                         />
-                        <div v-if="chartData" class="d-flex justify-end ga-1 mt-1">
+                        <div
+                            v-if="chartData"
+                            class="d-flex justify-end ga-1 mt-1"
+                        >
                             <v-btn
                                 variant="text"
                                 size="small"
@@ -310,9 +313,7 @@ function exportChart(format) {
 const theme = useTheme();
 const isDark = computed(() => theme.global.name.value === "dark");
 
-const textColor = computed(() =>
-    isDark.value ? "#e0e0e0" : "#333333",
-);
+const textColor = computed(() => (isDark.value ? "#e0e0e0" : "#333333"));
 
 const chartColors = [
     "#FF6384",

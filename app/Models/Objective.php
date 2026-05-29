@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Carbon\Carbon $start_date
  * @property \Carbon\Carbon|null $end_date
  * @property string $value
+ * @property string $type
  */
 class Objective extends Model
 {
@@ -21,6 +22,7 @@ class Objective extends Model
         'start_date',
         'end_date',
         'value',
+        'type',
     ];
 
     protected function casts(): array

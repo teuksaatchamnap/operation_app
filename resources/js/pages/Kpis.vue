@@ -229,6 +229,13 @@
                         variant="outlined"
                         density="compact"
                     ></v-text-field>
+                    <v-select
+                        v-model="objectiveForm.type"
+                        :items="['global', 'individual']"
+                        label="Type"
+                        variant="outlined"
+                        density="compact"
+                    ></v-select>
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer></v-spacer>
@@ -286,6 +293,7 @@ const objectiveHeaders = [
     { title: "Start Date", key: "start_date" },
     { title: "End Date", key: "end_date" },
     { title: "Value", key: "value" },
+    { title: "Type", key: "type" },
     { title: "", key: "actions", sortable: false, align: "end" },
 ];
 
@@ -314,6 +322,7 @@ const objectiveForm = ref({
     start_date: "",
     end_date: "",
     value: "",
+    type: "global",
 });
 
 const confirmDialog = ref(false);
@@ -368,6 +377,7 @@ function openObjectiveDialog(kpiId, item = null) {
             start_date: formatDate(item.start_date),
             end_date: formatDate(item.end_date),
             value: item.value,
+            type: item.type || "global",
         };
     } else {
         editingObjective.value = null;
@@ -375,6 +385,7 @@ function openObjectiveDialog(kpiId, item = null) {
             start_date: "",
             end_date: "",
             value: "",
+            type: "global",
         };
     }
     objectiveDialog.value = true;
@@ -460,6 +471,7 @@ async function saveObjective() {
             start_date: objectiveForm.value.start_date,
             end_date: objectiveForm.value.end_date,
             value: Number(objectiveForm.value.value),
+            type: objectiveForm.value.type,
         });
 
         if (editingObjective.value) {
