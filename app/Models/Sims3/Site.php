@@ -141,6 +141,7 @@ CREATE TABLE `sites` (
  * @property string|null $Last_Tier
  * @property string|null $Commune
  * @property float|null $Population
+ * @property float|null $Number_Population
  * @property float|null $Households
  * @property string|null $Date_start_working
  * @property string|null $Project_Date

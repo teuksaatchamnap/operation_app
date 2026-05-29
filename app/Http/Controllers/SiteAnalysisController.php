@@ -40,6 +40,7 @@ class SiteAnalysisController extends Controller
             'days_open',
             'water_loss',
             'consumers',
+            'penetration',
             'who_compliance',
         ])->get()->keyBy('col_name');
 
@@ -61,6 +62,7 @@ class SiteAnalysisController extends Controller
             'days_open',
             'water_loss',
             'consumers',
+            'penetration',
             'who_compliance',
         ];
 
@@ -111,6 +113,8 @@ class SiteAnalysisController extends Controller
 
             if ($def['col_name'] === 'who_compliance' && $value !== null) {
                 $value = $value ? 'Safe' : 'Unsafe';
+            } elseif ($def['col_name'] === 'penetration' && is_numeric($value)) {
+                $value = round((float) $value * 100);
             } elseif (is_numeric($value)) {
                 $value = round((float) $value);
             }

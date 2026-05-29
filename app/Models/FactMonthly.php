@@ -33,6 +33,7 @@ class FactMonthly extends Model
         'is_profitable',
         'has_3_workers',
         'consumers',
+        'penetration',
         'who_compliance',
         'contamination_level',
         'ec_collection',

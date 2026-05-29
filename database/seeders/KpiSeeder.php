@@ -140,6 +140,16 @@ class KpiSeeder extends Seeder
                 'individual_objective' => 3000,
             ],
             [
+                'name' => 'Penetration',
+                'col_name' => 'penetration',
+                'unit' => '%',
+                'periodicity' => 'monthly',
+                'type' => 'quantitative',
+                'description' => 'Market penetration: number of consumers divided by the total population of the commune',
+                'aggregate' => 'avg',
+                'default_objective' => 45,
+            ],
+            [
                 'name' => 'WHO Compliance',
                 'col_name' => 'who_compliance',
                 'unit' => '%',
