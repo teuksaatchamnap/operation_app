@@ -230,6 +230,10 @@ const props = defineProps({
         type: Object,
         default: null,
     },
+    initialMonth: {
+        type: String,
+        default: "",
+    },
 });
 
 const now = new Date();
@@ -237,7 +241,7 @@ const loading = ref(false);
 const error = ref(false);
 const data = ref(null);
 const selectedMonth = ref(
-    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
+    props.initialMonth || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
 );
 
 const monthNames = [

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Crontab entry (every day at 1:00 AM):
+#   0 1 * * * /path/to/command-center/scripts/synchronize-db.sh >> /var/log/synchronize-db.log 2>&1
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -50,6 +52,6 @@ rm -f "$BACKUP_FILE" "$SQL_FILE"
 
 echo "Refreshing local database and recomputing KPIs..."
 cd "$SCRIPT_DIR/.."
-php artisan migrate:fresh --seed && php artisan compute:all
+php artisan migrate:fresh --seed --force && php artisan compute:all
 
 echo "Done."

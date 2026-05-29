@@ -222,6 +222,7 @@
         <SiteDetail
             v-model="siteDetailDialog"
             :site="selectedSite"
+            :initial-month="filters.month"
         />
     </v-card>
 </template>
@@ -283,7 +284,7 @@ function openSiteDetail(site) {
 }
 
 function onRowClick(event, { item }) {
-    openSiteDetail(item.value);
+    openSiteDetail(item);
 }
 
 const currentLegend = computed(() => {

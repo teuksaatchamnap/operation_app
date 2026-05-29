@@ -36,7 +36,7 @@
             <v-card-text class="pa-6">
                 <v-tabs-window v-model="tab">
                     <v-tabs-window-item value="site-analysis">
-                        <SiteAnalysisContent :site="site" />
+                        <SiteAnalysisContent :site="site" :initial-month="initialMonth" />
                     </v-tabs-window-item>
                     <v-tabs-window-item value="sales">
                         <div class="text-medium-emphasis">Sales content</div>
@@ -70,6 +70,10 @@ defineProps({
     site: {
         type: Object,
         default: null,
+    },
+    initialMonth: {
+        type: String,
+        default: "",
     },
 });
 

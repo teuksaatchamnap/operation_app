@@ -204,6 +204,10 @@ const sitesWithCoords = computed(() =>
     props.sites.filter((s) => s.latitude && s.longitude),
 );
 
+const geoJsonOptions = {
+    interactive: false,
+};
+
 const geoJsonStyleFn = () => ({
     fillColor: "#e0e0e0",
     fillOpacity: 0.25,
