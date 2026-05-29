@@ -119,6 +119,7 @@ class SiteAnalysisController extends Controller
                 'label' => $def['label'],
                 'value' => $value ?? 0,
                 'objective' => $objective ?? 0,
+                'description' => $kpi?->description,
             ];
         }
 

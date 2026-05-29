@@ -124,9 +124,37 @@
                                 cols="3"
                             >
                                 <div class="caption-label text-medium-emphasis">
-                                    {{ kpi.label }}
+                                    <v-tooltip
+                                        v-if="kpi.description"
+                                        location="top"
+                                        max-width="300"
+                                    >
+                                        <template v-slot:activator="{ props: tooltipProps }">
+                                            <span
+                                                v-bind="tooltipProps"
+                                                class="d-inline-flex align-center ga-1"
+                                            >
+                                                {{ kpi.label }}
+                                                <v-icon
+                                                    size="x-small"
+                                                    color="info"
+                                                >
+                                                    mdi-help-circle
+                                                </v-icon>
+                                            </span>
+                                        </template>
+                                        <span>{{ kpi.description }}</span>
+                                    </v-tooltip>
+                                    <template v-else>{{ kpi.label }}</template>
                                 </div>
-                                <div class="text-body-1">
+                                <div class="text-body-1 d-flex align-center ga-1">
+                                    <v-icon
+                                        v-if="objectiveMetClass(kpi) !== null"
+                                        :color="objectiveMetClass(kpi) === true ? 'success' : 'error'"
+                                        size="x-small"
+                                    >
+                                        mdi-circle
+                                    </v-icon>
                                     {{ formatKpiValue(kpi) }}
                                 </div>
                             </v-col>
@@ -263,6 +291,13 @@ function formatDate(dateStr) {
 function formatNumber(num) {
     if (num === null || num === undefined) return "-";
     return Number(num).toLocaleString("en-US");
+}
+
+function objectiveMetClass(kpi) {
+    const val = typeof kpi.value === "number" ? kpi.value : parseFloat(kpi.value);
+    const obj = typeof kpi.objective === "number" ? kpi.objective : parseFloat(kpi.objective);
+    if (isNaN(val) || isNaN(obj)) return null;
+    return val >= obj;
 }
 
 function formatKpiValue(kpi) {
