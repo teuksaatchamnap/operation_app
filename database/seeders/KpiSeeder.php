@@ -129,6 +129,16 @@ class KpiSeeder extends Seeder
                 'default_objective' => 347,
             ],
             [
+                'name' => 'Number of Operators',
+                'col_name' => 'operators',
+                'unit' => 'operators',
+                'periodicity' => 'monthly',
+                'type' => 'quantitative',
+                'description' => 'The number of operators working at the site',
+                'aggregate' => 'avg',
+                'default_objective' => 3,
+            ],
+            [
                 'name' => 'Consumers',
                 'col_name' => 'consumers',
                 'unit' => 'consumers',

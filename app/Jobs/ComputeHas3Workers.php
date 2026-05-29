@@ -29,6 +29,7 @@ class ComputeHas3Workers extends BaseComputeJob
                 $operators = $indicator->Number_of_Operator;
                 $map[$key] = [
                     'has_3_workers' => $operators !== null ? ((int) $operators >= 3 ? 1 : 0) : null,
+                    'operators' => $operators !== null ? (int) $operators : null,
                 ];
             }
         }

@@ -32,6 +32,7 @@ class FactMonthly extends Model
         'revenue',
         'is_profitable',
         'has_3_workers',
+        'operators',
         'consumers',
         'penetration',
         'who_compliance',
