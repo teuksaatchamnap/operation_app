@@ -268,24 +268,12 @@ const selectedMonth = ref(
     props.initialMonth || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
 );
 
-const monthNames = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-];
-
 const displayMonth = computed(() => {
-    const [year, month] = selectedMonth.value.split("-");
-    return `${monthNames[parseInt(month) - 1]} ${year}`;
+    const [year, month] = selectedMonth.value.split("-").map(Number);
+    return new Date(year, month - 1, 1).toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+    });
 });
 
 function parseMonth(value) {
