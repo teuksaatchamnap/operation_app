@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\FactMonthly;
 use App\Models\Kpi;
 use App\Models\Objective;
+use App\Models\Sims3\Expense as Sims3Expense;
 use App\Models\Sims3\Platform as Sims3Platform;
 use App\Models\Sims3\Sale as Sims3Sale;
 use App\Models\Sims3\Site as Sims3Site;
@@ -28,7 +29,7 @@ class SiteAnalysisController extends Controller
             : null;
 
         $monthStr = $request->query('month', now()->format('Y-m'));
-        $month = Carbon::parse($monthStr . '-01');
+        $month = Carbon::parse($monthStr.'-01');
 
         $fact = FactMonthly::where('site_id', $site->id)
             ->where('month', $month)
@@ -51,7 +52,7 @@ class SiteAnalysisController extends Controller
         if (isset($kpiRows['bottles_per_day'])) {
             $kpiDefinitions[] = [
                 'key' => 'bottles_per_day_ytd',
-                'label' => $kpiRows['bottles_per_day']->name . ' (YTD)',
+                'label' => $kpiRows['bottles_per_day']->name.' (YTD)',
                 'col_name' => 'bottles_per_day',
                 'periodicity' => 'ytd',
             ];
@@ -107,7 +108,7 @@ class SiteAnalysisController extends Controller
                 if ($kpi) {
                     $matchingObjective = Objective::where('kpi_id', $kpi->id)
                         ->where('start_date', '<=', $month)
-                        ->where(fn($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', $month))
+                        ->where(fn ($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', $month))
                         ->orderByRaw("CASE WHEN type = 'individual' THEN 0 ELSE 1 END")
                         ->first();
                     $objective = $matchingObjective ? (float) $matchingObjective->value : null;
@@ -143,10 +144,64 @@ class SiteAnalysisController extends Controller
         ]);
     }
 
+    public function expenseBreakdown(Site $site, Request $request): JsonResponse
+    {
+        $monthStr = $request->query('month', now()->format('Y-m'));
+        $month = Carbon::parse($monthStr.'-01');
+
+        $sims3Site = Sims3Site::where('Id_Site', $site->name)->first();
+
+        if (! $sims3Site) {
+            return response()->json(['error' => 'Site not found in Sims3 database'], 404);
+        }
+
+        $categoryRefs = [
+            'Production' => ['consumable_production', 'stock_ts', 'bottle_invoice', 'electricity', 'gasoline_waterpump', 'raw_water'],
+            'Salary' => ['fix_salary_entrepreneurs', 'variable_salary_entrepreneurs', 'fix_salary_operators', 'variable_salary_operators'],
+            'Delivery' => ['maintenance_delivery', 'gasoline_delivery'],
+            'Contribution' => ['commune_contribution', 'entrepreneur_contribution'],
+            'Intervention' => ['technical intervention', 'water quality alert'],
+            'Investment' => ['investment'],
+        ];
+
+        $allRefs = collect($categoryRefs)->values()->flatten()->all();
+
+        $expensesToIgnore = ['WinS_invoice', 'debt', 'withdrawal', 'adjustment'];
+
+        $siteExpenses = Sims3Expense::where('Id_Site', $sims3Site->Id_Site)
+            ->whereYear('Month', $month->year)
+            ->whereMonth('Month', $month->month)
+            ->whereNotIn('Ref_expenses', $expensesToIgnore)
+            ->whereIn('Ref_expenses', $allRefs)
+            ->get(['Ref_expenses', 'Amount_expenses'])
+            ->groupBy(fn ($e) => collect($categoryRefs)->search(fn ($refs) => in_array($e->Ref_expenses, $refs)))
+            ->map(fn ($group) => round($group->sum('Amount_expenses')));
+
+        $allMonthly = Sims3Expense::whereYear('Month', $month->year)
+            ->whereMonth('Month', $month->month)
+            ->whereNotIn('Ref_expenses', $expensesToIgnore)
+            ->whereIn('Ref_expenses', $allRefs)
+            ->get(['Id_Site', 'Ref_expenses', 'Amount_expenses'])
+            ->groupBy(fn ($e) => collect($categoryRefs)->search(fn ($refs) => in_array($e->Ref_expenses, $refs)));
+
+        $expenses = [];
+        foreach ($categoryRefs as $category => $refs) {
+            $expenses[] = [
+                'category' => $category,
+                'site_amount' => $siteExpenses->get($category, 0),
+                'avg_amount' => $allMonthly->has($category)
+                    ? round($allMonthly->get($category)->avg('Amount_expenses'))
+                    : 0,
+            ];
+        }
+
+        return response()->json(['expenses' => $expenses]);
+    }
+
     public function monthlySalesBreakdown(Site $site, Request $request): JsonResponse
     {
         $monthStr = $request->query('month', now()->format('Y-m'));
-        $month = Carbon::parse($monthStr . '-01');
+        $month = Carbon::parse($monthStr.'-01');
 
         $sims3Site = Sims3Site::where('Id_Site', $site->name)->first();
 
@@ -171,7 +226,7 @@ class SiteAnalysisController extends Controller
         ];
 
         $breakdown = $sale
-            ? array_map(fn($c) => [
+            ? array_map(fn ($c) => [
                 'label' => $c['label'],
                 'value' => (float) ($sale->{$c['key']} ?? 0),
             ], $categories)
@@ -196,7 +251,7 @@ class SiteAnalysisController extends Controller
 
         foreach ($years as $year) {
             $data = array_fill(0, 12, null);
-            $yearRecords = $records->filter(fn($r) => Carbon::parse($r->month)->year === $year);
+            $yearRecords = $records->filter(fn ($r) => Carbon::parse($r->month)->year === $year);
             foreach ($yearRecords as $r) {
                 $m = Carbon::parse($r->month);
                 $data[$m->month - 1] = round($r->bottles_per_day);

@@ -216,29 +216,58 @@
                     </v-card-text>
                 </v-card>
 
-                <v-card variant="outlined" class="subtle-border mt-4">
-                    <div class="text-body-1 font-weight-medium px-4 pt-2">
-                        Monthly Sales Breakdown
-                    </div>
-                    <v-card-text>
-                        <div v-if="salesLoading" class="text-center pa-4">
-                            <v-progress-circular indeterminate />
-                        </div>
-                        <apexchart
-                            v-else-if="salesBreakdown.length"
-                            type="pie"
-                            height="350"
-                            :options="salesChartOptions"
-                            :series="salesSeries"
-                        />
-                        <div
-                            v-else
-                            class="text-medium-emphasis text-center pa-4"
-                        >
-                            No sales data for this month
-                        </div>
-                    </v-card-text>
-                </v-card>
+                <v-row class="mt-4">
+                    <v-col cols="6">
+                        <v-card variant="outlined" class="subtle-border h-100">
+                            <div class="text-body-1 font-weight-medium px-4 pt-2">
+                                Monthly Sales Breakdown
+                            </div>
+                            <v-card-text>
+                                <div v-if="salesLoading" class="text-center pa-4">
+                                    <v-progress-circular indeterminate />
+                                </div>
+                                <apexchart
+                                    v-else-if="salesBreakdown.length"
+                                    type="pie"
+                                    height="350"
+                                    :options="salesChartOptions"
+                                    :series="salesSeries"
+                                />
+                                <div
+                                    v-else
+                                    class="text-medium-emphasis text-center pa-4"
+                                >
+                                    No sales data for this month
+                                </div>
+                            </v-card-text>
+                        </v-card>
+                    </v-col>
+                    <v-col cols="6">
+                        <v-card variant="outlined" class="subtle-border h-100">
+                            <div class="text-body-1 font-weight-medium px-4 pt-2">
+                                Monthly Expenses Comparison
+                            </div>
+                            <v-card-text>
+                                <div v-if="expenseLoading" class="text-center pa-4">
+                                    <v-progress-circular indeterminate />
+                                </div>
+                                <apexchart
+                                    v-else-if="expenseData.length"
+                                    type="bar"
+                                    height="350"
+                                    :options="expenseChartOptions"
+                                    :series="expenseChartSeries"
+                                />
+                                <div
+                                    v-else
+                                    class="text-medium-emphasis text-center pa-4"
+                                >
+                                    No expense data for this month
+                                </div>
+                            </v-card-text>
+                        </v-card>
+                    </v-col>
+                </v-row>
             </template>
         </v-card-text>
     </v-card>
@@ -480,6 +509,62 @@ const chartOptions = computed(() => {
 const salesBreakdown = ref([]);
 const salesLoading = ref(false);
 
+const expenseData = ref([]);
+const expenseLoading = ref(false);
+
+const expenseChartSeries = computed(() => [
+    {
+        name: "This Site",
+        data: expenseData.value.map((i) => i.site_amount),
+    },
+    {
+        name: "Network Average",
+        data: expenseData.value.map((i) => i.avg_amount),
+    },
+]);
+
+const expenseChartOptions = computed(() => ({
+    chart: {
+        type: "bar",
+        foreColor: textColor.value,
+        background: "transparent",
+        toolbar: { show: false },
+    },
+    colors: ["#36A2EB", "#FFCE56"],
+    plotOptions: {
+        bar: {
+            horizontal: false,
+            columnWidth: "55%",
+        },
+    },
+    dataLabels: { enabled: false },
+    xaxis: {
+        categories: expenseData.value.map((i) => i.category),
+        labels: { style: { colors: textColor.value } },
+    },
+    yaxis: {
+        labels: { style: { colors: textColor.value } },
+        title: { text: "Amount ($)", style: { color: textColor.value } },
+    },
+    tooltip: {
+        y: {
+            formatter: (val) => Number(val).toLocaleString("en-US"),
+        },
+        theme: isDark.value ? "dark" : "light",
+    },
+    legend: {
+        position: "bottom",
+        horizontalAlign: "center",
+        labels: { colors: textColor.value },
+    },
+    responsive: [
+        {
+            breakpoint: 600,
+            options: { chart: { height: 250 } },
+        },
+    ],
+}));
+
 const salesSeries = computed(() =>
     salesBreakdown.value.map((i) => i.value),
 );
@@ -535,6 +620,20 @@ const salesChartOptions = computed(() => ({
 
 watchEffect(async () => {
     if (!props.site?.id) return;
+
+    expenseLoading.value = true;
+
+    try {
+        const res = await axios.get(
+            `/api/sites/${props.site.id}/expense-breakdown`,
+            { params: { month: selectedMonth.value } },
+        );
+        expenseData.value = res.data.expenses;
+    } catch {
+        expenseData.value = [];
+    } finally {
+        expenseLoading.value = false;
+    }
 
     salesLoading.value = true;
 
