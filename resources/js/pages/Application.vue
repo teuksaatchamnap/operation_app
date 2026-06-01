@@ -97,7 +97,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import axios from "axios";
 import KpiCard from "../components/KpiCard.vue";
 import MonthPicker from "../components/MonthPicker.vue";
@@ -116,6 +116,39 @@ const selectedAdvisors = ref([]);
 const selectedPlatforms = ref([]);
 const selectedMonth = ref(currentMonth);
 
+const STORAGE_KEY = "application_filters";
+
+function loadFilters() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            selectedMonth.value = parsed.month ?? currentMonth;
+            selectedSites.value = parsed.sites ?? [];
+            selectedAdvisors.value = parsed.advisors ?? [];
+            selectedPlatforms.value = parsed.platforms ?? [];
+        }
+    } catch {}
+}
+
+function saveFilters() {
+    localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+            month: selectedMonth.value,
+            sites: selectedSites.value,
+            advisors: selectedAdvisors.value,
+            platforms: selectedPlatforms.value,
+        })
+    );
+}
+
+watch(
+    [selectedMonth, selectedSites, selectedAdvisors, selectedPlatforms],
+    saveFilters,
+    { deep: true },
+);
+
 const kpiFilters = computed(() => ({
     site_ids: selectedSites.value,
     advisor_ids: selectedAdvisors.value,
@@ -128,6 +161,8 @@ function findKpi(colName) {
 }
 
 onMounted(async () => {
+    loadFilters();
+
     try {
         const [kpisRes, sitesRes, advisorsRes, platformsRes] =
             await Promise.all([
