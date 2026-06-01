@@ -47,6 +47,9 @@ mysql $MYSQL_OPTS -e "DROP DATABASE IF EXISTS \`${DB_NAME}\`; CREATE DATABASE \`
 echo "Importing..."
 mysql $MYSQL_OPTS "$DB_NAME" < "$SQL_FILE"
 
+echo "Deleting production Telegram groups"
+mysql $MYSQL_OPTS -e "USE \`${DB_NAME}\`; DELETE FROM telegram_groups WHERE id>1; UPDATE telegram_groups SET id=5049756594;"
+
 echo "Cleaning up..."
 rm -f "$BACKUP_FILE" "$SQL_FILE"
 
