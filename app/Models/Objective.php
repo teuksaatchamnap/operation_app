@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int $id
  * @property int $kpi_id
- * @property \Carbon\Carbon $start_date
- * @property \Carbon\Carbon|null $end_date
+ * @property Carbon $start_date
+ * @property Carbon|null $end_date
  * @property string $value
  * @property string $type
  */

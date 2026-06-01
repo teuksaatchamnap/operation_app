@@ -65,7 +65,7 @@ class ComputeTreatmentProcess extends BaseComputeJob
         }
 
         foreach ($siteHistory as &$entries) {
-            usort($entries, fn($a, $b) => $a['date']->timestamp <=> $b['date']->timestamp);
+            usort($entries, fn ($a, $b) => $a['date']->timestamp <=> $b['date']->timestamp);
         }
         unset($entries);
 
@@ -75,7 +75,7 @@ class ComputeTreatmentProcess extends BaseComputeJob
             $monthKey = $month->format('Y-m-d');
 
             foreach ($siteMap as $siteName => $siteId) {
-                $key = $siteName . '|' . $monthKey;
+                $key = $siteName.'|'.$monthKey;
 
                 $normalized = strtolower(trim($siteName));
                 $history = $siteHistory[$normalized] ?? [];
@@ -112,7 +112,7 @@ class ComputeTreatmentProcess extends BaseComputeJob
 
     private function fetchSheet(): ?string
     {
-        $url = 'https://docs.google.com/spreadsheets/d/' . self::SPREADSHEET_ID . '/export?format=csv&gid=' . self::GID;
+        $url = 'https://docs.google.com/spreadsheets/d/'.self::SPREADSHEET_ID.'/export?format=csv&gid='.self::GID;
 
         $context = stream_context_create([
             'http' => [
@@ -124,7 +124,7 @@ class ComputeTreatmentProcess extends BaseComputeJob
 
         $csvData = @file_get_contents($url, false, $context);
         if ($csvData === false) {
-            Log::warning(static::class . ': Failed to fetch Google Sheet');
+            Log::warning(static::class.': Failed to fetch Google Sheet');
 
             return null;
         }

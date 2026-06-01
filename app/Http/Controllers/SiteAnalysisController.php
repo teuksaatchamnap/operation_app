@@ -6,6 +6,7 @@ use App\Models\FactMonthly;
 use App\Models\Kpi;
 use App\Models\Objective;
 use App\Models\Sims3\Platform as Sims3Platform;
+use App\Models\Sims3\Sale as Sims3Sale;
 use App\Models\Sims3\Site as Sims3Site;
 use App\Models\Site;
 use Carbon\Carbon;
@@ -140,6 +141,43 @@ class SiteAnalysisController extends Controller
             'households' => $sims3Site->Households,
             'kpis' => $kpiData,
         ]);
+    }
+
+    public function monthlySalesBreakdown(Site $site, Request $request): JsonResponse
+    {
+        $monthStr = $request->query('month', now()->format('Y-m'));
+        $month = Carbon::parse($monthStr . '-01');
+
+        $sims3Site = Sims3Site::where('Id_Site', $site->name)->first();
+
+        if (! $sims3Site) {
+            return response()->json(['error' => 'Site not found in Sims3 database'], 404);
+        }
+
+        $sale = Sims3Sale::where('Id_Site', $sims3Site->Id_Site)
+            ->whereYear('Month', $month->year)
+            ->whereMonth('Month', $month->month)
+            ->first();
+
+        $categories = [
+            ['key' => 'Hod_Sales', 'label' => 'Home Delivery'],
+            ['key' => 'Shopkeeper_Sales', 'label' => 'Shopkeeper'],
+            ['key' => 'WiS_Sales', 'label' => 'Water in school'],
+            ['key' => 'Onsite_Sales', 'label' => 'On site'],
+            ['key' => 'Free_Sales', 'label' => 'Free'],
+            ['key' => 'Bottle_Sales', 'label' => 'Bottle'],
+            ['key' => 'Emergency_Sales', 'label' => 'Emergency'],
+            ['key' => 'Other_Sales', 'label' => 'Other'],
+        ];
+
+        $breakdown = $sale
+            ? array_map(fn($c) => [
+                'label' => $c['label'],
+                'value' => (float) ($sale->{$c['key']} ?? 0),
+            ], $categories)
+            : [];
+
+        return response()->json(['breakdown' => $breakdown]);
     }
 
     public function monthlyPerformance(Site $site): JsonResponse

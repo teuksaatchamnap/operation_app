@@ -24,4 +24,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/sites/hover-data', [SiteHoverController::class, 'index']);
     Route::get('/sites/{site}/analysis', [SiteAnalysisController::class, 'show']);
     Route::get('/sites/{site}/monthly-performance', [SiteAnalysisController::class, 'monthlyPerformance']);
+    Route::get('/sites/{site}/monthly-sales-breakdown', [SiteAnalysisController::class, 'monthlySalesBreakdown']);
 });

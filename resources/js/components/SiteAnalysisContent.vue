@@ -215,6 +215,30 @@
                         </div>
                     </v-card-text>
                 </v-card>
+
+                <v-card variant="outlined" class="subtle-border mt-4">
+                    <div class="text-body-1 font-weight-medium px-4 pt-2">
+                        Monthly Sales Breakdown
+                    </div>
+                    <v-card-text>
+                        <div v-if="salesLoading" class="text-center pa-4">
+                            <v-progress-circular indeterminate />
+                        </div>
+                        <apexchart
+                            v-else-if="salesBreakdown.length"
+                            type="pie"
+                            height="350"
+                            :options="salesChartOptions"
+                            :series="salesSeries"
+                        />
+                        <div
+                            v-else
+                            class="text-medium-emphasis text-center pa-4"
+                        >
+                            No sales data for this month
+                        </div>
+                    </v-card-text>
+                </v-card>
             </template>
         </v-card-text>
     </v-card>
@@ -463,6 +487,82 @@ const chartOptions = computed(() => {
     }
 
     return options;
+});
+
+const salesBreakdown = ref([]);
+const salesLoading = ref(false);
+
+const salesSeries = computed(() =>
+    salesBreakdown.value.map((i) => i.value),
+);
+
+const salesChartOptions = computed(() => ({
+    labels: salesBreakdown.value.map((i) => i.label),
+    chart: {
+        type: "pie",
+        foreColor: textColor.value,
+        background: "transparent",
+        toolbar: { show: false },
+    },
+    colors: chartColors,
+    dataLabels: {
+        enabled: true,
+        formatter(val) {
+            return val.toFixed(1) + "%";
+        },
+        style: {
+            colors: ["#fff"],
+            fontSize: "13px",
+            fontWeight: 600,
+        },
+        dropShadow: {
+            enabled: false,
+        },
+    },
+    tooltip: {
+        y: {
+            formatter(val) {
+                return Number(val).toLocaleString("en-US") + " bottles";
+            },
+        },
+        theme: isDark.value ? "dark" : "light",
+    },
+    legend: {
+        position: "bottom",
+        horizontalAlign: "center",
+        labels: {
+            colors: textColor.value,
+        },
+    },
+    responsive: [
+        {
+            breakpoint: 600,
+            options: {
+                chart: { height: 250 },
+                legend: { position: "bottom" },
+            },
+        },
+    ],
+}));
+
+watchEffect(async () => {
+    if (!props.site?.id) return;
+
+    salesLoading.value = true;
+
+    try {
+        const res = await axios.get(
+            `/api/sites/${props.site.id}/monthly-sales-breakdown`,
+            { params: { month: selectedMonth.value } },
+        );
+        salesBreakdown.value = res.data.breakdown.filter(
+            (i) => i.value > 0,
+        );
+    } catch {
+        salesBreakdown.value = [];
+    } finally {
+        salesLoading.value = false;
+    }
 });
 
 watchEffect(async () => {
