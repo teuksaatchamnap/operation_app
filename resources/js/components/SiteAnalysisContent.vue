@@ -1,11 +1,47 @@
 <template>
     <v-card flat>
         <v-card-text>
-            <v-row v-if="loading">
-                <v-col class="text-center">
-                    <v-progress-circular indeterminate />
-                </v-col>
-            </v-row>
+            <template v-if="loading">
+                <v-card variant="outlined" class="subtle-border">
+                    <v-card-title class="section-title d-flex align-center ga-2">
+                        <v-icon size="small" color="primary">mdi-store-outline</v-icon>
+                        General Details
+                    </v-card-title>
+                    <v-card-text>
+                        <v-row density="comfortable">
+                            <v-col v-for="i in 8" :key="i" cols="3">
+                                <div class="skeleton skeleton-label" />
+                                <div class="skeleton skeleton-value mt-1" />
+                            </v-col>
+                        </v-row>
+                    </v-card-text>
+                </v-card>
+
+                <v-card variant="outlined" class="subtle-border mt-4">
+                    <v-card-title class="section-title d-flex align-center ga-2">
+                        <v-icon size="small" color="primary">mdi-gauge</v-icon>
+                        Site KPI
+                    </v-card-title>
+                    <v-card-text>
+                        <v-row density="comfortable">
+                            <v-col v-for="i in 8" :key="i" cols="3">
+                                <div class="skeleton skeleton-label" />
+                                <div class="skeleton skeleton-value mt-1" />
+                            </v-col>
+                        </v-row>
+                    </v-card-text>
+                </v-card>
+
+                <v-card variant="outlined" class="subtle-border mt-4">
+                    <v-card-title class="section-title d-flex align-center ga-2">
+                        <v-icon size="small" color="primary">mdi-chart-line</v-icon>
+                        Monthly Sales Performance
+                    </v-card-title>
+                    <v-card-text>
+                        <div class="skeleton skeleton-chart" />
+                    </v-card-text>
+                </v-card>
+            </template>
 
             <v-row v-else-if="error" class="text-center">
                 <v-col>
@@ -1225,5 +1261,32 @@ watchEffect(async () => {
 
 .bottle-value {
     font-size: 1.1rem;
+}
+
+/* ========== Skeleton loading ========== */
+.skeleton {
+    background: rgba(var(--v-theme-on-surface), 0.08);
+    border-radius: 4px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-label {
+    height: 10px;
+    width: 55%;
+}
+
+.skeleton-value {
+    height: 18px;
+    width: 80%;
+}
+
+.skeleton-chart {
+    height: 350px;
+    width: 100%;
+}
+
+@keyframes skeleton-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
 }
 </style>

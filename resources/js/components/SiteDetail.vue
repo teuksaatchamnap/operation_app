@@ -11,7 +11,9 @@
                 <v-toolbar density="compact">
                     <v-toolbar-title>
                         <div class="d-flex align-center ga-3">
-                            <v-icon color="primary" size="28">mdi-store-outline</v-icon>
+                            <v-icon color="primary" size="28"
+                                >mdi-store-outline</v-icon
+                            >
                             <div>
                                 <div class="text-h6">
                                     {{ site?.name ?? "Site Detail" }}
@@ -32,8 +34,16 @@
                     </v-btn>
                 </v-toolbar>
 
-                <v-tabs v-model="tab" fixed-tabs density="compact" slider-color="primary">
-                    <v-tab value="site-analysis" prepend-icon="mdi-chart-box-outline">
+                <v-tabs
+                    v-model="tab"
+                    fixed-tabs
+                    density="compact"
+                    slider-color="primary"
+                >
+                    <v-tab
+                        value="site-analysis"
+                        prepend-icon="mdi-chart-box-outline"
+                    >
                         Analysis
                     </v-tab>
                     <v-tab value="sales" prepend-icon="mdi-chart-line">
@@ -53,10 +63,13 @@
                 <v-divider />
             </div>
 
-            <v-card-text class="pa-6">
+            <v-card-text class="pa-6" style="min-height: 85vh">
                 <v-tabs-window v-model="tab">
                     <v-tabs-window-item value="site-analysis">
-                        <SiteAnalysisContent :site="site" :initial-month="initialMonth" />
+                        <SiteAnalysisContent
+                            :site="site"
+                            :initial-month="initialMonth"
+                        />
                     </v-tabs-window-item>
                     <v-tabs-window-item value="sales">
                         <div class="text-medium-emphasis">Sales content</div>
