@@ -465,6 +465,49 @@
                         </v-table>
                     </v-card-text>
                 </v-card>
+
+                <v-card variant="outlined" class="subtle-border mt-4">
+                    <div class="text-body-1 font-weight-medium px-4 pt-2">
+                        Average Prices by Channel
+                    </div>
+                    <v-card-text>
+                        <div v-if="pricesLoading" class="text-center pa-4">
+                            <v-progress-circular indeterminate />
+                        </div>
+                        <v-table
+                            v-else-if="pricesData.length"
+                            density="compact"
+                        >
+                            <thead>
+                                <tr>
+                                    <th class="text-body-2 font-weight-medium">
+                                        Channel
+                                    </th>
+                                    <th class="text-body-2 font-weight-medium text-right">
+                                        Avg Price
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                    v-for="item in pricesData"
+                                    :key="item.label"
+                                >
+                                    <td>{{ item.label }}</td>
+                                    <td class="text-right">
+                                        {{ formatCurrency(item.price) }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </v-table>
+                        <div
+                            v-else
+                            class="text-medium-emphasis text-center pa-4"
+                        >
+                            No price data for this month
+                        </div>
+                    </v-card-text>
+                </v-card>
             </template>
         </v-card-text>
     </v-card>
@@ -931,7 +974,10 @@ function formatCurrency(value) {
             })
         );
     }
-    return "៛" + Number(value).toLocaleString("en-US");
+    return "៛" + Number(value).toLocaleString("en-US", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    });
 }
 
 watchEffect(async () => {
@@ -948,6 +994,27 @@ watchEffect(async () => {
         profitLossData.value = null;
     } finally {
         profitLossLoading.value = false;
+    }
+});
+
+const pricesData = ref([]);
+const pricesLoading = ref(false);
+
+watchEffect(async () => {
+    if (!props.site?.id) return;
+
+    pricesLoading.value = true;
+
+    try {
+        const res = await axios.get(
+            `/api/sites/${props.site.id}/channel-prices`,
+            { params: { month: selectedMonth.value } },
+        );
+        pricesData.value = res.data.prices;
+    } catch {
+        pricesData.value = [];
+    } finally {
+        pricesLoading.value = false;
     }
 });
 </script>

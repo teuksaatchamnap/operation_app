@@ -235,6 +235,39 @@ class SiteAnalysisController extends Controller
         return response()->json(['breakdown' => $breakdown]);
     }
 
+    public function channelPrices(Site $site, Request $request): JsonResponse
+    {
+        $monthStr = $request->query('month', now()->format('Y-m'));
+        $month = Carbon::parse($monthStr.'-01');
+
+        $sims3Site = Sims3Site::where('Id_Site', $site->name)->first();
+
+        if (! $sims3Site) {
+            return response()->json(['error' => 'Site not found in Sims3 database'], 404);
+        }
+
+        $sale = Sims3Sale::where('Id_Site', $sims3Site->Id_Site)
+            ->whereYear('Month', $month->year)
+            ->whereMonth('Month', $month->month)
+            ->first();
+
+        $channels = [
+            ['key' => 'Hod_Price', 'label' => 'Home Delivery'],
+            ['key' => 'Shopkeeper_Price', 'label' => 'Shopkeeper'],
+            ['key' => 'Onsite_Price', 'label' => 'On site'],
+            ['key' => 'WiS_Price', 'label' => 'Water in school'],
+        ];
+
+        $prices = $sale
+            ? array_map(fn ($c) => [
+                'label' => $c['label'],
+                'price' => round((float) ($sale->{$c['key']} ?? 0), 2),
+            ], $channels)
+            : [];
+
+        return response()->json(['prices' => $prices]);
+    }
+
     public function profitLoss(Site $site, Request $request): JsonResponse
     {
         $monthStr = $request->query('month', now()->format('Y-m'));
