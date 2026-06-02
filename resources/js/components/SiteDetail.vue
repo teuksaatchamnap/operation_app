@@ -9,8 +9,18 @@
         <v-card>
             <div class="flex-shrink-0">
                 <v-toolbar density="compact">
-                    <v-toolbar-title class="text-h6">
-                        {{ site?.name ?? "Site Detail" }}
+                    <v-toolbar-title>
+                        <div class="d-flex align-center ga-3">
+                            <v-icon color="primary" size="28">mdi-store-outline</v-icon>
+                            <div>
+                                <div class="text-h6">
+                                    {{ site?.name ?? "Site Detail" }}
+                                </div>
+                                <div class="text-caption text-medium-emphasis">
+                                    {{ site?.platform ?? "" }}
+                                </div>
+                            </div>
+                        </div>
                     </v-toolbar-title>
                     <v-spacer />
                     <v-btn
@@ -22,12 +32,22 @@
                     </v-btn>
                 </v-toolbar>
 
-                <v-tabs v-model="tab" fixed-tabs density="compact" class="">
-                    <v-tab value="site-analysis">Site analysis</v-tab>
-                    <v-tab value="sales">Sales</v-tab>
-                    <v-tab value="pnl">P&L</v-tab>
-                    <v-tab value="technical">Technical</v-tab>
-                    <v-tab value="site">Site</v-tab>
+                <v-tabs v-model="tab" fixed-tabs density="compact" slider-color="primary">
+                    <v-tab value="site-analysis" prepend-icon="mdi-chart-box-outline">
+                        Analysis
+                    </v-tab>
+                    <v-tab value="sales" prepend-icon="mdi-chart-line">
+                        Sales
+                    </v-tab>
+                    <v-tab value="pnl" prepend-icon="mdi-cash-multiple">
+                        P&amp;L
+                    </v-tab>
+                    <v-tab value="technical" prepend-icon="mdi-tune-variant">
+                        Technical
+                    </v-tab>
+                    <v-tab value="site" prepend-icon="mdi-information-outline">
+                        Site
+                    </v-tab>
                 </v-tabs>
 
                 <v-divider />
