@@ -5,13 +5,34 @@
                 :model-value="modelValue"
                 :label="label"
                 placeholder="YYYY-MM"
-                prepend-inner-icon="mdi-calendar"
                 readonly
-                clearable
-                v-bind="props"
-                @click:clear="$emit('update:modelValue', null)"
                 hide-details
-            />
+                v-bind="props"
+            >
+                <template v-slot:prepend-inner>
+                    <div class="d-flex align-center ga-1">
+                        <v-btn
+                            icon
+                            variant="text"
+                            size="x-small"
+                            @click.stop="navigateMonth(-1)"
+                        >
+                            <v-icon>mdi-chevron-left</v-icon>
+                        </v-btn>
+                        <v-icon>mdi-calendar</v-icon>
+                    </div>
+                </template>
+                <template v-slot:append-inner>
+                    <v-btn
+                        icon
+                        variant="text"
+                        size="x-small"
+                        @click.stop="navigateMonth(1)"
+                    >
+                        <v-icon>mdi-chevron-right</v-icon>
+                    </v-btn>
+                </template>
+            </v-text-field>
         </template>
         <v-card min-width="280">
             <v-card-text>
@@ -44,7 +65,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref } from "vue";
 
 const props = defineProps({
     modelValue: {
@@ -97,5 +118,17 @@ function selectMonth(monthIndex) {
     const month = String(monthIndex + 1).padStart(2, "0");
     emit("update:modelValue", `${pickerYear.value}-${month}`);
     menu.value = false;
+}
+
+function navigateMonth(delta) {
+    const value = props.modelValue;
+    const [y, m] = value
+        ? [parseInt(value.split("-")[0]), parseInt(value.split("-")[1])]
+        : [now.getFullYear(), now.getMonth() + 1];
+
+    const d = new Date(y, m - 1 + delta, 1);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    emit("update:modelValue", `${year}-${month}`);
 }
 </script>

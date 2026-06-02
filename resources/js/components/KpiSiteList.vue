@@ -44,12 +44,16 @@
             </v-btn-toggle>
         </div>
 
-        <v-progress-linear
-            v-if="loading"
-            indeterminate
-            color="primary"
-            class="mb-2"
-        />
+        <template v-if="loading">
+            <div class="skeleton-table-wrapper">
+                <div class="skeleton skeleton-table-header" />
+                <div
+                    v-for="i in 6"
+                    :key="i"
+                    class="skeleton skeleton-table-row"
+                />
+            </div>
+        </template>
 
         <template v-if="viewMode === 'table' && !loading">
             <v-data-table
@@ -384,7 +388,11 @@ const mergedSites = computed(() => {
 
         const site = siteMap.value[row.site_id];
         if (!site) continue;
-        if (siteFilter.value && !site.name.toLowerCase().includes(siteFilter.value.toLowerCase())) continue;
+        if (
+            siteFilter.value &&
+            !site.name.toLowerCase().includes(siteFilter.value.toLowerCase())
+        )
+            continue;
 
         result.push({
             id: row.site_id,
@@ -497,5 +505,38 @@ onMounted(() => {
     height: 14px;
     border-radius: 3px;
     flex-shrink: 0;
+}
+
+/* ========== Skeleton loading ========== */
+.skeleton-table-wrapper {
+    padding: 4px 0;
+}
+
+.skeleton {
+    background: rgba(var(--v-theme-on-surface), 0.08);
+    border-radius: 4px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-table-header {
+    height: 56px;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.skeleton-table-row {
+    height: 48px;
+    width: 100%;
+    margin-bottom: 4px;
+}
+
+@keyframes skeleton-pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.35;
+    }
 }
 </style>
