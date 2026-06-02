@@ -1,0 +1,661 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\FactMonthly;
+use App\Models\Kpi;
+use App\Models\Site;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Mockery;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use Tests\TestCase;
+
+#[RunTestsInSeparateProcesses]
+#[PreserveGlobalState(false)]
+class SiteAnalysisControllerTest extends TestCase
+{
+    use RefreshDatabase;
+
+    /**
+     * Set up a Sims3Site overload mock and return the data mock that
+     * handles both static ::where() calls and instance getAttribute() calls.
+     */
+    private function mockSims3Site(string $siteName, array $attributes = []): object
+    {
+        $defaults = [
+            'Id_Site' => $siteName,
+            'Platform' => 'SW',
+            'Entrepreneur_English_Name' => 'John Doe',
+            'Date_start_working' => '2020-01-15',
+            'Advisor_email' => 'advisor@test.com',
+            'Commune' => 'Test Commune',
+            'Population' => 5000,
+            'Households' => 1000,
+        ];
+        $attrs = array_merge($defaults, $attributes);
+
+        $mock = Mockery::mock('overload:App\Models\Sims3\Site');
+
+        foreach ($attrs as $key => $value) {
+            $mock->{$key} = $value;
+        }
+
+        $builderMock = Mockery::mock(Builder::class);
+        $builderMock->shouldReceive('first')->andReturn($mock);
+        $mock->shouldReceive('where')->with('Id_Site', $siteName)->andReturn($builderMock);
+
+        return $mock;
+    }
+
+    // ------------------------------------------------------------------
+    //  show()
+    // ------------------------------------------------------------------
+
+    public function test_show_unauthenticated(): void
+    {
+        $site = Site::factory()->create();
+
+        $this->getJson("/api/sites/{$site->id}/analysis")->assertUnauthorized();
+    }
+
+    public function test_show_site_not_found_returns_404(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'NONEXISTENT']);
+
+        $builderMock = Mockery::mock(Builder::class);
+        $builderMock->shouldReceive('first')->andReturn(null);
+        Mockery::mock('overload:App\Models\Sims3\Site')
+            ->shouldReceive('where')->with('Id_Site', 'NONEXISTENT')->andReturn($builderMock);
+
+        $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/analysis?month=2025-01")
+            ->assertStatus(404)
+            ->assertJson(['error' => 'Site not found in Sims3 database']);
+    }
+
+    public function test_show_returns_site_analysis_structure(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE01']);
+
+        FactMonthly::factory()->create([
+            'site_id' => $site->id,
+            'month' => '2025-01-01',
+            'sales_volume' => 50000,
+            'tier' => 'Gold',
+            'days_open' => 26,
+            'water_loss' => 5.0,
+            'operators' => 2,
+            'consumers' => 300,
+            'penetration' => 0.45,
+            'who_compliance' => 1,
+        ]);
+
+        Kpi::factory()->create(['col_name' => 'sales_volume', 'name' => 'Sales Volume', 'periodicity' => 'monthly']);
+        Kpi::factory()->create(['col_name' => 'tier', 'name' => 'Tier', 'periodicity' => 'monthly']);
+        Kpi::factory()->create(['col_name' => 'days_open', 'name' => 'Days Open', 'periodicity' => 'monthly']);
+        Kpi::factory()->create(['col_name' => 'water_loss', 'name' => 'Water Loss', 'periodicity' => 'monthly']);
+        Kpi::factory()->create(['col_name' => 'operators', 'name' => 'Operators', 'periodicity' => 'monthly']);
+        Kpi::factory()->create(['col_name' => 'consumers', 'name' => 'Consumers', 'periodicity' => 'monthly']);
+        Kpi::factory()->create(['col_name' => 'penetration', 'name' => 'Penetration', 'periodicity' => 'monthly']);
+        Kpi::factory()->create(['col_name' => 'who_compliance', 'name' => 'WHO Compliance', 'periodicity' => 'monthly']);
+        Kpi::factory()->create(['col_name' => 'bottles_per_day', 'name' => 'Bottles Per Day', 'periodicity' => 'year to date']);
+
+        $this->mockSims3Site('SITE01');
+
+        $platformBuilderMock = Mockery::mock(Builder::class);
+        $platformBuilderMock->shouldReceive('value')->with('Mail_ROM')->andReturn('test@rom.com');
+        Mockery::mock('overload:App\Models\Sims3\Platform')
+            ->shouldReceive('where')->with('Code_Platform', 'SW')->andReturn($platformBuilderMock);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/analysis?month=2025-01");
+
+        $response->assertSuccessful();
+        $response->assertJsonStructure([
+            'platform', 'entrepreneur_name', 'start_working_date', 'advisor_name',
+            'rom_name', 'commune_name', 'population_commune', 'households', 'kpis',
+        ]);
+        $this->assertEquals('SW', $response->json('platform'));
+        $this->assertEquals('John Doe', $response->json('entrepreneur_name'));
+        $this->assertEquals('test@rom.com', $response->json('rom_name'));
+        $this->assertEquals(5000, $response->json('population_commune'));
+        $this->assertEquals(1000, $response->json('households'));
+        $this->assertArrayHasKey('bottles_per_day_ytd', $response->json('kpis'));
+        $this->assertArrayHasKey('sales_volume', $response->json('kpis'));
+        $this->assertEquals(50000, $response->json('kpis.sales_volume.value'));
+    }
+
+    public function test_show_formats_who_compliance_as_safe_unsafe(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE02']);
+
+        FactMonthly::factory()->create([
+            'site_id' => $site->id,
+            'month' => '2025-01-01',
+            'who_compliance' => 0,
+        ]);
+        Kpi::factory()->create(['col_name' => 'who_compliance', 'name' => 'WHO', 'periodicity' => 'monthly']);
+
+        $this->mockSims3Site('SITE02', ['Platform' => null]);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/analysis?month=2025-01");
+
+        $response->assertSuccessful();
+        $this->assertEquals('Unsafe', $response->json('kpis.who_compliance.value'));
+    }
+
+    public function test_show_converts_penetration_to_percentage(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE03']);
+
+        FactMonthly::factory()->create([
+            'site_id' => $site->id,
+            'month' => '2025-01-01',
+            'penetration' => 0.35,
+        ]);
+        Kpi::factory()->create(['col_name' => 'penetration', 'name' => 'Pen', 'periodicity' => 'monthly']);
+
+        $this->mockSims3Site('SITE03', ['Platform' => null]);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/analysis?month=2025-01");
+
+        $response->assertSuccessful();
+        $this->assertEquals(35, $response->json('kpis.penetration.value'));
+    }
+
+    public function test_show_ytd_bottles_per_day_averages_year_to_date(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE04']);
+
+        FactMonthly::factory()->create(['site_id' => $site->id, 'month' => '2025-01-01', 'bottles_per_day' => 100]);
+        FactMonthly::factory()->create(['site_id' => $site->id, 'month' => '2025-02-01', 'bottles_per_day' => 110]);
+        FactMonthly::factory()->create(['site_id' => $site->id, 'month' => '2025-03-01', 'bottles_per_day' => 120]);
+        Kpi::factory()->create(['col_name' => 'bottles_per_day', 'name' => 'BPD', 'periodicity' => 'year to date']);
+
+        $this->mockSims3Site('SITE04', ['Platform' => null]);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/analysis?month=2025-03");
+
+        $response->assertSuccessful();
+        $this->assertEquals(110, $response->json('kpis.bottles_per_day_ytd.value'));
+    }
+
+    public function test_show_objective_individual_takes_priority(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE05']);
+
+        FactMonthly::factory()->create([
+            'site_id' => $site->id,
+            'month' => '2025-01-01',
+            'sales_volume' => 50000,
+        ]);
+        $kpi = Kpi::factory()->create(['col_name' => 'sales_volume', 'name' => 'SV', 'periodicity' => 'monthly']);
+        $kpi->objectives()->create(['start_date' => '2025-01-01', 'end_date' => null, 'value' => '45000', 'type' => 'general']);
+        $kpi->objectives()->create(['start_date' => '2025-01-01', 'end_date' => null, 'value' => '48000', 'type' => 'individual']);
+
+        $this->mockSims3Site('SITE05', ['Platform' => null]);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/analysis?month=2025-01");
+
+        $response->assertSuccessful();
+        $this->assertEquals(48000, $response->json('kpis.sales_volume.objective'));
+    }
+
+    // ------------------------------------------------------------------
+    //  expenseBreakdown()
+    // ------------------------------------------------------------------
+
+    public function test_expense_breakdown_unauthenticated(): void
+    {
+        $site = Site::factory()->create();
+
+        $this->getJson("/api/sites/{$site->id}/expense-breakdown")->assertUnauthorized();
+    }
+
+    public function test_expense_breakdown_site_not_found_returns_404(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'MISSING']);
+
+        $builderMock = Mockery::mock(Builder::class);
+        $builderMock->shouldReceive('first')->andReturn(null);
+        Mockery::mock('overload:App\Models\Sims3\Site')
+            ->shouldReceive('where')->with('Id_Site', 'MISSING')->andReturn($builderMock);
+
+        $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/expense-breakdown?month=2025-01")
+            ->assertStatus(404)
+            ->assertJson(['error' => 'Site not found in Sims3 database']);
+    }
+
+    public function test_expense_breakdown_returns_all_categories(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE10']);
+
+        $this->mockSims3Site('SITE10');
+
+        $expenseCollection = collect([
+            (object) ['Ref_expenses' => 'electricity', 'Amount_expenses' => 100],
+            (object) ['Ref_expenses' => 'raw_water', 'Amount_expenses' => 50],
+            (object) ['Ref_expenses' => 'fix_salary_entrepreneurs', 'Amount_expenses' => 200],
+        ]);
+
+        $allExpenseCollection = collect([
+            (object) ['Id_Site' => 'SITE10', 'Ref_expenses' => 'electricity', 'Amount_expenses' => 100],
+            (object) ['Id_Site' => 'SITE10', 'Ref_expenses' => 'raw_water', 'Amount_expenses' => 50],
+            (object) ['Id_Site' => 'SITE10', 'Ref_expenses' => 'fix_salary_entrepreneurs', 'Amount_expenses' => 200],
+            (object) ['Id_Site' => 'OTHER', 'Ref_expenses' => 'electricity', 'Amount_expenses' => 80],
+        ]);
+
+        $expenseBuilder = Mockery::mock(Builder::class);
+        $expenseBuilder->shouldReceive('whereYear')->andReturnSelf();
+        $expenseBuilder->shouldReceive('whereMonth')->andReturnSelf();
+        $expenseBuilder->shouldReceive('whereNotIn')->andReturnSelf();
+        $expenseBuilder->shouldReceive('whereIn')->andReturnSelf();
+        $expenseBuilder->shouldReceive('get')->andReturn($expenseCollection, $allExpenseCollection);
+
+        $expenseMock = Mockery::mock('overload:App\Models\Sims3\Expense');
+        $expenseMock->shouldReceive('where')->with('Id_Site', 'SITE10')->andReturn($expenseBuilder);
+        $expenseMock->shouldReceive('whereYear')->andReturn($expenseBuilder);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/expense-breakdown?month=2025-01");
+
+        $response->assertSuccessful();
+        $response->assertJsonStructure(['expenses' => [['category', 'site_amount', 'avg_amount']]]);
+
+        $categories = array_column($response->json('expenses'), 'category');
+        $this->assertContains('Production', $categories);
+        $this->assertContains('Salary', $categories);
+        $this->assertContains('Delivery', $categories);
+        $this->assertContains('Contribution', $categories);
+        $this->assertContains('Intervention', $categories);
+        $this->assertContains('Investment', $categories);
+    }
+
+    // ------------------------------------------------------------------
+    //  monthlySalesBreakdown()
+    // ------------------------------------------------------------------
+
+    public function test_monthly_sales_breakdown_unauthenticated(): void
+    {
+        $site = Site::factory()->create();
+        $this->getJson("/api/sites/{$site->id}/monthly-sales-breakdown")->assertUnauthorized();
+    }
+
+    public function test_monthly_sales_breakdown_site_not_found_returns_404(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'MISSING']);
+
+        $builderMock = Mockery::mock(Builder::class);
+        $builderMock->shouldReceive('first')->andReturn(null);
+        Mockery::mock('overload:App\Models\Sims3\Site')
+            ->shouldReceive('where')->with('Id_Site', 'MISSING')->andReturn($builderMock);
+
+        $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/monthly-sales-breakdown")
+            ->assertStatus(404);
+    }
+
+    public function test_monthly_sales_breakdown_returns_all_channels(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE20']);
+
+        $this->mockSims3Site('SITE20');
+
+        $saleMock = Mockery::mock('overload:App\Models\Sims3\Sale');
+        $saleMock->Hod_Sales = 100;
+        $saleMock->Shopkeeper_Sales = 200;
+        $saleMock->WiS_Sales = 50;
+        $saleMock->Onsite_Sales = 75;
+        $saleMock->Free_Sales = 10;
+        $saleMock->Bottle_Sales = 300;
+        $saleMock->Emergency_Sales = 25;
+        $saleMock->Other_Sales = 5;
+
+        $saleBuilder = Mockery::mock(Builder::class);
+        $saleBuilder->shouldReceive('whereYear')->andReturnSelf();
+        $saleBuilder->shouldReceive('whereMonth')->andReturnSelf();
+        $saleBuilder->shouldReceive('first')->andReturn($saleMock);
+
+        $saleMock->shouldReceive('where')->with('Id_Site', 'SITE20')->andReturn($saleBuilder);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/monthly-sales-breakdown?month=2025-01");
+
+        $response->assertSuccessful();
+        $response->assertJsonStructure(['breakdown' => [['label', 'value']]]);
+        $this->assertCount(8, $response->json('breakdown'));
+        $labels = array_column($response->json('breakdown'), 'label');
+        $this->assertContains('Home Delivery', $labels);
+        $this->assertContains('Shopkeeper', $labels);
+        $this->assertContains('Bottle', $labels);
+    }
+
+    public function test_monthly_sales_breakdown_no_sale_returns_empty(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE21']);
+
+        $this->mockSims3Site('SITE21');
+
+        $saleBuilder = Mockery::mock(Builder::class);
+        $saleBuilder->shouldReceive('whereYear')->andReturnSelf();
+        $saleBuilder->shouldReceive('whereMonth')->andReturnSelf();
+        $saleBuilder->shouldReceive('first')->andReturnNull();
+
+        Mockery::mock('overload:App\Models\Sims3\Sale')
+            ->shouldReceive('where')->with('Id_Site', 'SITE21')->andReturn($saleBuilder);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/monthly-sales-breakdown?month=2025-01");
+
+        $response->assertSuccessful();
+        $this->assertEquals([], $response->json('breakdown'));
+    }
+
+    // ------------------------------------------------------------------
+    //  channelPrices()
+    // ------------------------------------------------------------------
+
+    public function test_channel_prices_unauthenticated(): void
+    {
+        $site = Site::factory()->create();
+        $this->getJson("/api/sites/{$site->id}/channel-prices")->assertUnauthorized();
+    }
+
+    public function test_channel_prices_site_not_found_returns_404(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'MISSING']);
+
+        $builderMock = Mockery::mock(Builder::class);
+        $builderMock->shouldReceive('first')->andReturn(null);
+        Mockery::mock('overload:App\Models\Sims3\Site')
+            ->shouldReceive('where')->with('Id_Site', 'MISSING')->andReturn($builderMock);
+
+        $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/channel-prices")
+            ->assertStatus(404);
+    }
+
+    public function test_channel_prices_returns_prices(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE30']);
+
+        $this->mockSims3Site('SITE30');
+
+        $saleMock = Mockery::mock('overload:App\Models\Sims3\Sale');
+        $saleMock->Hod_Price = 1.25;
+        $saleMock->Shopkeeper_Price = 2.50;
+        $saleMock->Onsite_Price = 1.00;
+        $saleMock->WiS_Price = 0.75;
+
+        $saleBuilder = Mockery::mock(Builder::class);
+        $saleBuilder->shouldReceive('whereYear')->andReturnSelf();
+        $saleBuilder->shouldReceive('whereMonth')->andReturnSelf();
+        $saleBuilder->shouldReceive('first')->andReturn($saleMock);
+
+        $saleMock->shouldReceive('where')->with('Id_Site', 'SITE30')->andReturn($saleBuilder);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/channel-prices?month=2025-01");
+
+        $response->assertSuccessful();
+        $response->assertJsonStructure(['prices' => [['label', 'price']]]);
+        $this->assertCount(4, $response->json('prices'));
+        $this->assertEquals(1.25, $response->json('prices')[0]['price']);
+        $this->assertEquals(2.50, $response->json('prices')[1]['price']);
+    }
+
+    public function test_channel_prices_no_sale_returns_empty(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE31']);
+
+        $this->mockSims3Site('SITE31');
+
+        $saleBuilder = Mockery::mock(Builder::class);
+        $saleBuilder->shouldReceive('whereYear')->andReturnSelf();
+        $saleBuilder->shouldReceive('whereMonth')->andReturnSelf();
+        $saleBuilder->shouldReceive('first')->andReturnNull();
+
+        Mockery::mock('overload:App\Models\Sims3\Sale')
+            ->shouldReceive('where')->with('Id_Site', 'SITE31')->andReturn($saleBuilder);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/channel-prices?month=2025-01");
+
+        $response->assertSuccessful();
+        $this->assertEquals([], $response->json('prices'));
+    }
+
+    // ------------------------------------------------------------------
+    //  bottlePurchases()
+    // ------------------------------------------------------------------
+
+    public function test_bottle_purchases_unauthenticated(): void
+    {
+        $site = Site::factory()->create();
+        $this->getJson("/api/sites/{$site->id}/bottle-purchases")->assertUnauthorized();
+    }
+
+    public function test_bottle_purchases_site_not_found_returns_404(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'MISSING']);
+
+        $builderMock = Mockery::mock(Builder::class);
+        $builderMock->shouldReceive('first')->andReturn(null);
+        Mockery::mock('overload:App\Models\Sims3\Site')
+            ->shouldReceive('where')->with('Id_Site', 'MISSING')->andReturn($builderMock);
+
+        $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/bottle-purchases")
+            ->assertStatus(404);
+    }
+
+    public function test_bottle_purchases_returns_ytd_and_last_year(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE40']);
+
+        $this->mockSims3Site('SITE40');
+
+        $saleBuilder = Mockery::mock(Builder::class);
+        $saleBuilder->shouldReceive('where')->with(Mockery::any(), Mockery::any(), Mockery::any())->andReturnSelf();
+        $saleBuilder->shouldReceive('sum')->with('Bottle_Sales')->andReturn(1500, 1200);
+
+        Mockery::mock('overload:App\Models\Sims3\Sale')
+            ->shouldReceive('where')->with('Id_Site', 'SITE40')->andReturn($saleBuilder);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/bottle-purchases?month=2025-01");
+
+        $response->assertSuccessful();
+        $this->assertEquals(1500, $response->json('ytd'));
+        $this->assertEquals(1200, $response->json('last_year'));
+    }
+
+    // ------------------------------------------------------------------
+    //  profitLoss()
+    // ------------------------------------------------------------------
+
+    public function test_profit_loss_unauthenticated(): void
+    {
+        $site = Site::factory()->create();
+        $this->getJson("/api/sites/{$site->id}/profit-loss")->assertUnauthorized();
+    }
+
+    public function test_profit_loss_site_not_found_returns_404(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'MISSING']);
+
+        $builderMock = Mockery::mock(Builder::class);
+        $builderMock->shouldReceive('first')->andReturn(null);
+        Mockery::mock('overload:App\Models\Sims3\Site')
+            ->shouldReceive('where')->with('Id_Site', 'MISSING')->andReturn($builderMock);
+
+        $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/profit-loss")
+            ->assertStatus(404);
+    }
+
+    public function test_profit_loss_returns_all_periods(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE50']);
+
+        $this->mockSims3Site('SITE50');
+
+        // Revenue builder: called via Sims3Sale::where('Id_Site', ..)->where(Month>=)->where(Month<=)
+        $revenueBuilder = Mockery::mock(Builder::class);
+        $revenueBuilder->shouldReceive('where')->andReturnSelf();
+        $revenueBuilder->shouldReceive('sum')->with('Total_Income')->andReturn(10000, 9000, 50000, 48000);
+        $revenueBuilder->shouldReceive('sum')->with('WiS_Income')->andReturn(1000, 800, 5000, 4000);
+
+        // Expense builder: called via Sims3Expense::where('Id_Site', ..)->where(Month>=)->where(Month<=)
+        $expenseBuilder = Mockery::mock(Builder::class);
+        $expenseBuilder->shouldReceive('where')->andReturnSelf();
+        $expenseBuilder->shouldReceive('whereNotIn')->andReturnSelf();
+        $expenseBuilder->shouldReceive('whereIn')->andReturnSelf();
+        $expenseBuilder->shouldReceive('get')->andReturn(collect([
+            (object) ['Ref_expenses' => 'electricity', 'Amount_expenses' => 500],
+            (object) ['Ref_expenses' => 'fix_salary_entrepreneurs', 'Amount_expenses' => 1000],
+        ]));
+
+        // Sale: two where() calls per period (Month>=, Month<=) after initial Id_Site where
+        Mockery::mock('overload:App\Models\Sims3\Sale')
+            ->shouldReceive('where')->with('Id_Site', 'SITE50')->andReturn($revenueBuilder);
+
+        // Expense: whereNotIn/whereIn after Id_Site where and Month range wheres
+        $expenseMock = Mockery::mock('overload:App\Models\Sims3\Expense');
+        $expenseMock->shouldReceive('where')->with('Id_Site', 'SITE50')->andReturn($expenseBuilder);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/profit-loss?month=2025-03");
+
+        $response->assertSuccessful();
+        $response->assertJsonStructure([
+            'labels' => ['current', 'previous', 'ytd', 'last_year'],
+            'revenue' => ['sales', 'water_in_school', 'sub_total'],
+            'expenses' => ['categories', 'sub_total'],
+            'result',
+            'entrepreneur_salary',
+        ]);
+
+        $data = $response->json();
+        $this->assertArrayHasKey('current', $data['labels']);
+        $this->assertArrayHasKey('current', $data['revenue']['sales']);
+        $this->assertArrayHasKey('current', $data['revenue']['water_in_school']);
+        $this->assertArrayHasKey('current', $data['revenue']['sub_total']);
+        $this->assertArrayHasKey('current', $data['expenses']['sub_total']);
+        $this->assertArrayHasKey('current', $data['result']);
+        $this->assertArrayHasKey('current', $data['entrepreneur_salary']);
+
+        $categories = array_column($data['expenses']['categories'], 'category');
+        $this->assertContains('Production', $categories);
+        $this->assertContains('Salary', $categories);
+        $this->assertContains('Delivery', $categories);
+    }
+
+    // ------------------------------------------------------------------
+    //  monthlyPerformance()
+    // ------------------------------------------------------------------
+
+    public function test_monthly_performance_unauthenticated(): void
+    {
+        $site = Site::factory()->create();
+        $this->getJson("/api/sites/{$site->id}/monthly-performance")->assertUnauthorized();
+    }
+
+    public function test_monthly_performance_returns_6_year_series(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create();
+
+        $currentYear = now()->year;
+
+        FactMonthly::factory()->create([
+            'site_id' => $site->id,
+            'month' => "{$currentYear}-06-01",
+            'bottles_per_day' => 150,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/monthly-performance");
+
+        $response->assertSuccessful();
+        $response->assertJsonStructure(['categories' => [], 'series' => [['name', 'data']]]);
+
+        $series = $response->json('series');
+        $this->assertCount(6, $series);
+        $this->assertEquals(12, count($series[0]['data']));
+        $this->assertEquals((string) $currentYear, end($series)['name']);
+    }
+
+    public function test_monthly_performance_fills_gaps_with_null(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create();
+
+        $currentYear = now()->year;
+
+        FactMonthly::factory()->create([
+            'site_id' => $site->id,
+            'month' => "{$currentYear}-01-01",
+            'bottles_per_day' => 100,
+        ]);
+        FactMonthly::factory()->create([
+            'site_id' => $site->id,
+            'month' => "{$currentYear}-03-01",
+            'bottles_per_day' => 200,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/monthly-performance");
+
+        $response->assertSuccessful();
+        $series = $response->json('series');
+        $currentYearSeries = end($series);
+        $this->assertEquals(100, $currentYearSeries['data'][0]);
+        $this->assertNull($currentYearSeries['data'][1]);
+        $this->assertEquals(200, $currentYearSeries['data'][2]);
+    }
+
+    public function test_monthly_performance_no_data_returns_empty_series(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/monthly-performance");
+
+        $response->assertSuccessful();
+        $this->assertCount(6, $response->json('series'));
+
+        foreach ($response->json('series') as $yearSeries) {
+            $this->assertCount(12, $yearSeries['data']);
+            $this->assertContainsOnly('null', $yearSeries['data']);
+        }
+    }
+}

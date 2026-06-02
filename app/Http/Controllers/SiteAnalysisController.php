@@ -18,18 +18,17 @@ class SiteAnalysisController extends Controller
 {
     public function show(Site $site, Request $request): JsonResponse
     {
-        $sims3Site = Sims3Site::where('Id_Site', $site->name)->first();
+        $sims3Site = $this->resolveSims3Site($site);
 
         if (! $sims3Site) {
             return response()->json(['error' => 'Site not found in Sims3 database'], 404);
         }
 
+        $month = $this->resolveMonth($request);
+
         $romName = $sims3Site->Platform
             ? Sims3Platform::where('Code_Platform', $sims3Site->Platform)->value('Mail_ROM')
             : null;
-
-        $monthStr = $request->query('month', now()->format('Y-m'));
-        $month = Carbon::parse($monthStr.'-01');
 
         $fact = FactMonthly::where('site_id', $site->id)
             ->where('month', $month)
@@ -146,27 +145,17 @@ class SiteAnalysisController extends Controller
 
     public function expenseBreakdown(Site $site, Request $request): JsonResponse
     {
-        $monthStr = $request->query('month', now()->format('Y-m'));
-        $month = Carbon::parse($monthStr.'-01');
-
-        $sims3Site = Sims3Site::where('Id_Site', $site->name)->first();
+        $sims3Site = $this->resolveSims3Site($site);
 
         if (! $sims3Site) {
             return response()->json(['error' => 'Site not found in Sims3 database'], 404);
         }
 
-        $categoryRefs = [
-            'Production' => ['consumable_production', 'stock_ts', 'bottle_invoice', 'electricity', 'gasoline_waterpump', 'raw_water'],
-            'Salary' => ['fix_salary_entrepreneurs', 'variable_salary_entrepreneurs', 'fix_salary_operators', 'variable_salary_operators'],
-            'Delivery' => ['maintenance_delivery', 'gasoline_delivery'],
-            'Contribution' => ['commune_contribution', 'entrepreneur_contribution'],
-            'Intervention' => ['technical intervention', 'water quality alert'],
-            'Investment' => ['investment'],
-        ];
+        $month = $this->resolveMonth($request);
 
+        $categoryRefs = $this->getExpenseCategories();
         $allRefs = collect($categoryRefs)->values()->flatten()->all();
-
-        $expensesToIgnore = ['WinS_invoice', 'debt', 'withdrawal', 'adjustment'];
+        $expensesToIgnore = $this->getExpensesToIgnore();
 
         $siteExpenses = Sims3Expense::where('Id_Site', $sims3Site->Id_Site)
             ->whereYear('Month', $month->year)
@@ -200,19 +189,15 @@ class SiteAnalysisController extends Controller
 
     public function monthlySalesBreakdown(Site $site, Request $request): JsonResponse
     {
-        $monthStr = $request->query('month', now()->format('Y-m'));
-        $month = Carbon::parse($monthStr.'-01');
-
-        $sims3Site = Sims3Site::where('Id_Site', $site->name)->first();
+        $sims3Site = $this->resolveSims3Site($site);
 
         if (! $sims3Site) {
             return response()->json(['error' => 'Site not found in Sims3 database'], 404);
         }
 
-        $sale = Sims3Sale::where('Id_Site', $sims3Site->Id_Site)
-            ->whereYear('Month', $month->year)
-            ->whereMonth('Month', $month->month)
-            ->first();
+        $month = $this->resolveMonth($request);
+
+        $sale = $this->resolveSale($sims3Site, $month);
 
         $categories = [
             ['key' => 'Hod_Sales', 'label' => 'Home Delivery'],
@@ -237,19 +222,15 @@ class SiteAnalysisController extends Controller
 
     public function channelPrices(Site $site, Request $request): JsonResponse
     {
-        $monthStr = $request->query('month', now()->format('Y-m'));
-        $month = Carbon::parse($monthStr.'-01');
-
-        $sims3Site = Sims3Site::where('Id_Site', $site->name)->first();
+        $sims3Site = $this->resolveSims3Site($site);
 
         if (! $sims3Site) {
             return response()->json(['error' => 'Site not found in Sims3 database'], 404);
         }
 
-        $sale = Sims3Sale::where('Id_Site', $sims3Site->Id_Site)
-            ->whereYear('Month', $month->year)
-            ->whereMonth('Month', $month->month)
-            ->first();
+        $month = $this->resolveMonth($request);
+
+        $sale = $this->resolveSale($sims3Site, $month);
 
         $channels = [
             ['key' => 'Hod_Price', 'label' => 'Home Delivery'],
@@ -270,14 +251,13 @@ class SiteAnalysisController extends Controller
 
     public function bottlePurchases(Site $site, Request $request): JsonResponse
     {
-        $monthStr = $request->query('month', now()->format('Y-m'));
-        $month = Carbon::parse($monthStr.'-01');
-
-        $sims3Site = Sims3Site::where('Id_Site', $site->name)->first();
+        $sims3Site = $this->resolveSims3Site($site);
 
         if (! $sims3Site) {
             return response()->json(['error' => 'Site not found in Sims3 database'], 404);
         }
+
+        $month = $this->resolveMonth($request);
 
         $ytdStart = $month->copy()->startOfYear();
         $ytdEnd = $month->copy()->endOfMonth();
@@ -302,27 +282,15 @@ class SiteAnalysisController extends Controller
 
     public function profitLoss(Site $site, Request $request): JsonResponse
     {
-        $monthStr = $request->query('month', now()->format('Y-m'));
-        $month = Carbon::parse($monthStr.'-01');
-
-        $sims3Site = Sims3Site::where('Id_Site', $site->name)->first();
+        $sims3Site = $this->resolveSims3Site($site);
 
         if (! $sims3Site) {
             return response()->json(['error' => 'Site not found in Sims3 database'], 404);
         }
 
-        $categories = [
-            'Production' => ['consumable_production', 'stock_ts', 'bottle_invoice', 'electricity', 'gasoline_waterpump', 'raw_water'],
-            'Salary' => ['fix_salary_entrepreneurs', 'variable_salary_entrepreneurs', 'fix_salary_operators', 'variable_salary_operators'],
-            'Delivery' => ['maintenance_delivery', 'gasoline_delivery'],
-            'Contribution' => ['commune_contribution', 'entrepreneur_contribution'],
-            'Intervention' => ['technical intervention', 'water quality alert'],
-            'Investment' => ['investment'],
-        ];
+        $month = $this->resolveMonth($request);
 
-        $expensesToIgnore = ['WinS_invoice', 'debt', 'withdrawal', 'adjustment'];
-
-        $allRefs = collect($categories)->values()->flatten()->all();
+        $categories = $this->getExpenseCategories();
 
         $currentStart = $month->copy()->startOfMonth();
         $currentEnd = $month->copy()->endOfMonth();
@@ -340,55 +308,16 @@ class SiteAnalysisController extends Controller
             'last_year' => [$lastYearStart, $lastYearEnd],
         ];
 
-        $getRevenue = function ($start, $end) use ($sims3Site) {
-            $query = Sims3Sale::where('Id_Site', $sims3Site->Id_Site)
-                ->where('Month', '>=', $start)
-                ->where('Month', '<=', $end);
-
-            $totalIncome = (float) $query->sum('Total_Income');
-            $wisIncome = (float) $query->sum('WiS_Income');
-
-            return [
-                'sales' => round($totalIncome - $wisIncome),
-                'water_in_school' => round($wisIncome),
-                'sub_total' => round($totalIncome),
-            ];
-        };
-
-        $getExpenses = function ($start, $end) use ($sims3Site, $categories, $expensesToIgnore, $allRefs) {
-            $rows = Sims3Expense::where('Id_Site', $sims3Site->Id_Site)
-                ->where('Month', '>=', $start)
-                ->where('Month', '<=', $end)
-                ->whereNotIn('Ref_expenses', $expensesToIgnore)
-                ->whereIn('Ref_expenses', $allRefs)
-                ->get(['Ref_expenses', 'Amount_expenses']);
-
-            $categoryAmounts = [];
-            foreach ($categories as $cat => $refs) {
-                $total = round($rows->filter(fn ($r) => in_array($r->Ref_expenses, $refs))->sum('Amount_expenses'));
-                $categoryAmounts[$cat] = $total;
-            }
-
-            $entrepreneurSalaryRefs = ['fix_salary_entrepreneurs', 'variable_salary_entrepreneurs'];
-            $entrepreneurSalary = round($rows->filter(fn ($r) => in_array($r->Ref_expenses, $entrepreneurSalaryRefs))->sum('Amount_expenses'));
-
-            return [
-                'categoryAmounts' => $categoryAmounts,
-                'sub_total' => round($rows->sum('Amount_expenses')),
-                'entrepreneur_salary' => $entrepreneurSalary,
-            ];
-        };
-
         $revenue = [];
         $expenseCategories = [];
         $expenseSubTotals = [];
         $entrepreneurSalaries = [];
 
         foreach ($periods as $key => [$start, $end]) {
-            $rev = $getRevenue($start, $end);
+            $rev = $this->getRevenueForPeriod($sims3Site, $start, $end);
             $revenue[$key] = $rev;
 
-            $exp = $getExpenses($start, $end);
+            $exp = $this->getExpensesForPeriod($sims3Site, $start, $end);
             $expenseSubTotals[$key] = $exp['sub_total'];
             $entrepreneurSalaries[$key] = $exp['entrepreneur_salary'];
             foreach ($exp['categoryAmounts'] as $cat => $amt) {
@@ -491,5 +420,83 @@ class SiteAnalysisController extends Controller
             'categories' => $monthLabels,
             'series' => $series,
         ]);
+    }
+
+    private function getExpenseCategories(): array
+    {
+        return [
+            'Production' => ['consumable_production', 'stock_ts', 'bottle_invoice', 'electricity', 'gasoline_waterpump', 'raw_water'],
+            'Salary' => ['fix_salary_entrepreneurs', 'variable_salary_entrepreneurs', 'fix_salary_operators', 'variable_salary_operators'],
+            'Delivery' => ['maintenance_delivery', 'gasoline_delivery'],
+            'Contribution' => ['commune_contribution', 'entrepreneur_contribution'],
+            'Intervention' => ['technical intervention', 'water quality alert'],
+            'Investment' => ['investment'],
+        ];
+    }
+
+    private function getExpensesToIgnore(): array
+    {
+        return ['WinS_invoice', 'debt', 'withdrawal', 'adjustment'];
+    }
+
+    private function resolveMonth(Request $request): Carbon
+    {
+        return Carbon::parse($request->query('month', now()->format('Y-m')).'-01');
+    }
+
+    private function resolveSims3Site(Site $site): ?Sims3Site
+    {
+        return Sims3Site::where('Id_Site', $site->name)->first();
+    }
+
+    private function resolveSale(Sims3Site $sims3Site, Carbon $month): ?Sims3Sale
+    {
+        return Sims3Sale::where('Id_Site', $sims3Site->Id_Site)
+            ->whereYear('Month', $month->year)
+            ->whereMonth('Month', $month->month)
+            ->first();
+    }
+
+    private function getRevenueForPeriod(Sims3Site $sims3Site, Carbon $start, Carbon $end): array
+    {
+        $query = Sims3Sale::where('Id_Site', $sims3Site->Id_Site)
+            ->where('Month', '>=', $start)
+            ->where('Month', '<=', $end);
+
+        $totalIncome = (float) $query->sum('Total_Income');
+        $wisIncome = (float) $query->sum('WiS_Income');
+
+        return [
+            'sales' => round($totalIncome - $wisIncome),
+            'water_in_school' => round($wisIncome),
+            'sub_total' => round($totalIncome),
+        ];
+    }
+
+    private function getExpensesForPeriod(Sims3Site $sims3Site, Carbon $start, Carbon $end): array
+    {
+        $categories = $this->getExpenseCategories();
+        $allRefs = collect($categories)->values()->flatten()->all();
+
+        $rows = Sims3Expense::where('Id_Site', $sims3Site->Id_Site)
+            ->where('Month', '>=', $start)
+            ->where('Month', '<=', $end)
+            ->whereNotIn('Ref_expenses', $this->getExpensesToIgnore())
+            ->whereIn('Ref_expenses', $allRefs)
+            ->get(['Ref_expenses', 'Amount_expenses']);
+
+        $categoryAmounts = [];
+        foreach ($categories as $cat => $refs) {
+            $categoryAmounts[$cat] = round($rows->filter(fn ($r) => in_array($r->Ref_expenses, $refs))->sum('Amount_expenses'));
+        }
+
+        $entrepreneurSalaryRefs = ['fix_salary_entrepreneurs', 'variable_salary_entrepreneurs'];
+        $entrepreneurSalary = round($rows->filter(fn ($r) => in_array($r->Ref_expenses, $entrepreneurSalaryRefs))->sum('Amount_expenses'));
+
+        return [
+            'categoryAmounts' => $categoryAmounts,
+            'sub_total' => round($rows->sum('Amount_expenses')),
+            'entrepreneur_salary' => $entrepreneurSalary,
+        ];
     }
 }
