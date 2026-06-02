@@ -129,7 +129,11 @@
                                         location="top"
                                         max-width="300"
                                     >
-                                        <template v-slot:activator="{ props: tooltipProps }">
+                                        <template
+                                            v-slot:activator="{
+                                                props: tooltipProps,
+                                            }"
+                                        >
                                             <span
                                                 v-bind="tooltipProps"
                                                 class="d-inline-flex align-center ga-1"
@@ -147,10 +151,16 @@
                                     </v-tooltip>
                                     <template v-else>{{ kpi.label }}</template>
                                 </div>
-                                <div class="text-body-1 d-flex align-center ga-1">
+                                <div
+                                    class="text-body-1 d-flex align-center ga-1"
+                                >
                                     <v-icon
                                         v-if="objectiveMetClass(kpi) !== null"
-                                        :color="objectiveMetClass(kpi) === true ? 'success' : 'error'"
+                                        :color="
+                                            objectiveMetClass(kpi) === true
+                                                ? 'success'
+                                                : 'error'
+                                        "
                                         size="x-small"
                                     >
                                         mdi-circle
@@ -219,11 +229,16 @@
                 <v-row class="mt-4">
                     <v-col cols="6">
                         <v-card variant="outlined" class="subtle-border h-100">
-                            <div class="text-body-1 font-weight-medium px-4 pt-2">
+                            <div
+                                class="text-body-1 font-weight-medium px-4 pt-2"
+                            >
                                 Monthly Sales Breakdown
                             </div>
                             <v-card-text>
-                                <div v-if="salesLoading" class="text-center pa-4">
+                                <div
+                                    v-if="salesLoading"
+                                    class="text-center pa-4"
+                                >
                                     <v-progress-circular indeterminate />
                                 </div>
                                 <apexchart
@@ -244,11 +259,16 @@
                     </v-col>
                     <v-col cols="6">
                         <v-card variant="outlined" class="subtle-border h-100">
-                            <div class="text-body-1 font-weight-medium px-4 pt-2">
+                            <div
+                                class="text-body-1 font-weight-medium px-4 pt-2"
+                            >
                                 Monthly Expenses Comparison
                             </div>
                             <v-card-text>
-                                <div v-if="expenseLoading" class="text-center pa-4">
+                                <div
+                                    v-if="expenseLoading"
+                                    class="text-center pa-4"
+                                >
                                     <v-progress-circular indeterminate />
                                 </div>
                                 <apexchart
@@ -268,6 +288,183 @@
                         </v-card>
                     </v-col>
                 </v-row>
+
+                <v-card variant="outlined" class="subtle-border mt-4">
+                    <div class="d-flex align-center px-4 pt-2">
+                        <div class="text-body-1 font-weight-medium">
+                            Profit &amp; Loss Details
+                        </div>
+                        <v-spacer />
+                        <span class="text-caption font-weight-medium mr-2">
+                            USD
+                        </span>
+                        <v-switch
+                            v-model="currency"
+                            true-value="riel"
+                            false-value="usd"
+                            color="primary"
+                            hide-details
+                            density="compact"
+                            class="pl-currency-switch"
+                        />
+                        <span class="text-caption font-weight-medium ml-2">
+                            KHR
+                        </span>
+                    </div>
+                    <v-card-text>
+                        <div v-if="profitLossLoading" class="text-center pa-4">
+                            <v-progress-circular indeterminate />
+                        </div>
+                        <v-table
+                            v-else-if="profitLossData"
+                            density="compact"
+                            class="pl-table"
+                        >
+                            <thead>
+                                <tr>
+                                    <th class="text-body-2 font-weight-medium">
+                                        Category
+                                    </th>
+                                    <th
+                                        v-for="col in profitLossColumns"
+                                        :key="col.key"
+                                        class="text-body-2 font-weight-medium text-right"
+                                    >
+                                        {{ col.label }}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="pl-section-header pl-revenue-header">
+                                    <td colspan="5">Revenue</td>
+                                </tr>
+                                <tr>
+                                    <td class="pl-indent">
+                                        Revenue from sales
+                                    </td>
+                                    <td
+                                        v-for="col in profitLossColumns"
+                                        :key="col.key"
+                                        class="text-right"
+                                    >
+                                        {{
+                                            formatCurrency(
+                                                profitLossData.revenue.sales[
+                                                    col.key
+                                                ],
+                                            )
+                                        }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="pl-indent">
+                                        Revenue from water in school
+                                    </td>
+                                    <td
+                                        v-for="col in profitLossColumns"
+                                        :key="col.key"
+                                        class="text-right"
+                                    >
+                                        {{
+                                            formatCurrency(
+                                                profitLossData.revenue
+                                                    .water_in_school[col.key],
+                                            )
+                                        }}
+                                    </td>
+                                </tr>
+                                <tr class="pl-sub-total pl-revenue-subtotal">
+                                    <td>Sub Total Revenue</td>
+                                    <td
+                                        v-for="col in profitLossColumns"
+                                        :key="col.key"
+                                        class="text-right"
+                                    >
+                                        {{
+                                            formatCurrency(
+                                                profitLossData.revenue
+                                                    .sub_total[col.key],
+                                            )
+                                        }}
+                                    </td>
+                                </tr>
+                                <tr
+                                    class="pl-section-header pl-expenses-header"
+                                >
+                                    <td colspan="5">Expenses</td>
+                                </tr>
+                                <tr
+                                    v-for="cat in profitLossData.expenses
+                                        .categories"
+                                    :key="cat.category"
+                                >
+                                    <td class="pl-indent">
+                                        {{ cat.category }}
+                                    </td>
+                                    <td
+                                        v-for="col in profitLossColumns"
+                                        :key="col.key"
+                                        class="text-right"
+                                    >
+                                        {{ formatCurrency(cat[col.key]) }}
+                                    </td>
+                                </tr>
+                                <tr class="pl-sub-total pl-expenses-subtotal">
+                                    <td>Sub Total Expenses</td>
+                                    <td
+                                        v-for="col in profitLossColumns"
+                                        :key="col.key"
+                                        class="text-right"
+                                    >
+                                        {{
+                                            formatCurrency(
+                                                profitLossData.expenses
+                                                    .sub_total[col.key],
+                                            )
+                                        }}
+                                    </td>
+                                </tr>
+                                <tr
+                                    class="pl-result"
+                                    :class="
+                                        profitLossData.result.current >= 0
+                                            ? 'text-success'
+                                            : 'text-error'
+                                    "
+                                >
+                                    <td>Result (Revenue - Expenses)</td>
+                                    <td
+                                        v-for="col in profitLossColumns"
+                                        :key="col.key"
+                                        class="text-right"
+                                    >
+                                        {{
+                                            formatCurrency(
+                                                profitLossData.result[col.key],
+                                            )
+                                        }}
+                                    </td>
+                                </tr>
+                                <tr class="pl-entrepreneur-income">
+                                    <td>
+                                        Entrepreneur Income (Salary + Profit)
+                                    </td>
+                                    <td
+                                        v-for="col in profitLossColumns"
+                                        :key="col.key"
+                                        class="text-right"
+                                    >
+                                        {{
+                                            formatCurrency(
+                                                entrepreneurIncome[col.key],
+                                            )
+                                        }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </v-table>
+                    </v-card-text>
+                </v-card>
             </template>
         </v-card-text>
     </v-card>
@@ -294,7 +491,8 @@ const loading = ref(false);
 const error = ref(false);
 const data = ref(null);
 const selectedMonth = ref(
-    props.initialMonth || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
+    props.initialMonth ||
+        `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
 );
 
 const displayMonth = computed(() => {
@@ -339,8 +537,12 @@ function formatNumber(num) {
 }
 
 function objectiveMetClass(kpi) {
-    const val = typeof kpi.value === "number" ? kpi.value : parseFloat(kpi.value);
-    const obj = typeof kpi.objective === "number" ? kpi.objective : parseFloat(kpi.objective);
+    const val =
+        typeof kpi.value === "number" ? kpi.value : parseFloat(kpi.value);
+    const obj =
+        typeof kpi.objective === "number"
+            ? kpi.objective
+            : parseFloat(kpi.objective);
     if (isNaN(val) || isNaN(obj)) return null;
     return val >= obj;
 }
@@ -478,10 +680,7 @@ const chartOptions = computed(() => {
     const selMonthIndex = parseInt(selMonthNum, 10) - 1;
     const seriesIdx = series.findIndex((s) => s.name === selYear);
 
-    if (
-        seriesIdx >= 0
-        && series[seriesIdx].data[selMonthIndex] != null
-    ) {
+    if (seriesIdx >= 0 && series[seriesIdx].data[selMonthIndex] != null) {
         const yVal = series[seriesIdx].data[selMonthIndex];
         const color = chartColors[seriesIdx] || chartColors[0];
 
@@ -565,9 +764,7 @@ const expenseChartOptions = computed(() => ({
     ],
 }));
 
-const salesSeries = computed(() =>
-    salesBreakdown.value.map((i) => i.value),
-);
+const salesSeries = computed(() => salesBreakdown.value.map((i) => i.value));
 
 const salesChartOptions = computed(() => ({
     labels: salesBreakdown.value.map((i) => i.label),
@@ -642,9 +839,7 @@ watchEffect(async () => {
             `/api/sites/${props.site.id}/monthly-sales-breakdown`,
             { params: { month: selectedMonth.value } },
         );
-        salesBreakdown.value = res.data.breakdown.filter(
-            (i) => i.value > 0,
-        );
+        salesBreakdown.value = res.data.breakdown.filter((i) => i.value > 0);
     } catch {
         salesBreakdown.value = [];
     } finally {
@@ -697,6 +892,64 @@ watchEffect(async () => {
         chartLoading.value = false;
     }
 });
+
+const profitLossData = ref(null);
+const profitLossLoading = ref(false);
+const currency = ref("riel");
+const KHR_TO_USD = 4000;
+
+const profitLossColumns = computed(() => {
+    if (!profitLossData.value?.labels) return [];
+    return [
+        { key: "current", label: profitLossData.value.labels.current },
+        { key: "previous", label: profitLossData.value.labels.previous },
+        { key: "ytd", label: profitLossData.value.labels.ytd },
+        { key: "last_year", label: profitLossData.value.labels.last_year },
+    ];
+});
+
+const entrepreneurIncome = computed(() => {
+    if (!profitLossData.value) return {};
+    const { result, entrepreneur_salary } = profitLossData.value;
+    return {
+        current: result.current + entrepreneur_salary.current,
+        previous: result.previous + entrepreneur_salary.previous,
+        ytd: result.ytd + entrepreneur_salary.ytd,
+        last_year: result.last_year + entrepreneur_salary.last_year,
+    };
+});
+
+function formatCurrency(value) {
+    if (value === null || value === undefined) return "-";
+    if (currency.value === "usd") {
+        const converted = value / KHR_TO_USD;
+        return (
+            "$" +
+            converted.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            })
+        );
+    }
+    return "៛" + Number(value).toLocaleString("en-US");
+}
+
+watchEffect(async () => {
+    if (!props.site?.id) return;
+
+    profitLossLoading.value = true;
+
+    try {
+        const res = await axios.get(`/api/sites/${props.site.id}/profit-loss`, {
+            params: { month: selectedMonth.value },
+        });
+        profitLossData.value = res.data;
+    } catch {
+        profitLossData.value = null;
+    } finally {
+        profitLossLoading.value = false;
+    }
+});
 </script>
 
 <style scoped>
@@ -706,5 +959,47 @@ watchEffect(async () => {
 
 .subtle-border {
     border-color: rgba(var(--v-theme-on-surface), 0.12) !important;
+}
+
+.pl-section-header td {
+    font-weight: 600;
+    padding-top: 16px !important;
+    border-bottom: 2px solid rgba(var(--v-theme-on-surface), 0.12);
+}
+
+.pl-revenue-header td {
+    background-color: rgba(76, 175, 80, 0.1);
+}
+
+.pl-revenue-subtotal td {
+    background-color: rgba(76, 175, 80, 0.18);
+}
+
+.pl-expenses-header td {
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+.pl-expenses-subtotal td {
+    background-color: rgba(244, 67, 54, 0.18);
+}
+
+.pl-indent {
+    padding-left: 32px !important;
+}
+
+.pl-sub-total td {
+    font-weight: 600;
+    border-top: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+}
+
+.pl-result td {
+    font-weight: 700;
+    font-size: 1rem;
+    border-top: 2px solid rgba(var(--v-theme-on-surface), 0.12);
+}
+
+.pl-entrepreneur-income td {
+    background-color: rgba(33, 150, 243, 0.12);
+    font-weight: 600;
 }
 </style>

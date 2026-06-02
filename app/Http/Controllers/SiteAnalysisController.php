@@ -235,6 +235,166 @@ class SiteAnalysisController extends Controller
         return response()->json(['breakdown' => $breakdown]);
     }
 
+    public function profitLoss(Site $site, Request $request): JsonResponse
+    {
+        $monthStr = $request->query('month', now()->format('Y-m'));
+        $month = Carbon::parse($monthStr.'-01');
+
+        $sims3Site = Sims3Site::where('Id_Site', $site->name)->first();
+
+        if (! $sims3Site) {
+            return response()->json(['error' => 'Site not found in Sims3 database'], 404);
+        }
+
+        $categories = [
+            'Production' => ['consumable_production', 'stock_ts', 'bottle_invoice', 'electricity', 'gasoline_waterpump', 'raw_water'],
+            'Salary' => ['fix_salary_entrepreneurs', 'variable_salary_entrepreneurs', 'fix_salary_operators', 'variable_salary_operators'],
+            'Delivery' => ['maintenance_delivery', 'gasoline_delivery'],
+            'Contribution' => ['commune_contribution', 'entrepreneur_contribution'],
+            'Intervention' => ['technical intervention', 'water quality alert'],
+            'Investment' => ['investment'],
+        ];
+
+        $expensesToIgnore = ['WinS_invoice', 'debt', 'withdrawal', 'adjustment'];
+
+        $allRefs = collect($categories)->values()->flatten()->all();
+
+        $currentStart = $month->copy()->startOfMonth();
+        $currentEnd = $month->copy()->endOfMonth();
+        $previousStart = $month->copy()->subMonth()->startOfMonth();
+        $previousEnd = $month->copy()->subMonth()->endOfMonth();
+        $ytdStart = $month->copy()->startOfYear();
+        $ytdEnd = $month->copy()->endOfMonth();
+        $lastYearStart = $month->copy()->subYear()->startOfMonth();
+        $lastYearEnd = $month->copy()->subYear()->endOfMonth();
+
+        $periods = [
+            'current' => [$currentStart, $currentEnd],
+            'previous' => [$previousStart, $previousEnd],
+            'ytd' => [$ytdStart, $ytdEnd],
+            'last_year' => [$lastYearStart, $lastYearEnd],
+        ];
+
+        $getRevenue = function ($start, $end) use ($sims3Site) {
+            $query = Sims3Sale::where('Id_Site', $sims3Site->Id_Site)
+                ->where('Month', '>=', $start)
+                ->where('Month', '<=', $end);
+
+            $totalIncome = (float) $query->sum('Total_Income');
+            $wisIncome = (float) $query->sum('WiS_Income');
+
+            return [
+                'sales' => round($totalIncome - $wisIncome),
+                'water_in_school' => round($wisIncome),
+                'sub_total' => round($totalIncome),
+            ];
+        };
+
+        $getExpenses = function ($start, $end) use ($sims3Site, $categories, $expensesToIgnore, $allRefs) {
+            $rows = Sims3Expense::where('Id_Site', $sims3Site->Id_Site)
+                ->where('Month', '>=', $start)
+                ->where('Month', '<=', $end)
+                ->whereNotIn('Ref_expenses', $expensesToIgnore)
+                ->whereIn('Ref_expenses', $allRefs)
+                ->get(['Ref_expenses', 'Amount_expenses']);
+
+            $categoryAmounts = [];
+            foreach ($categories as $cat => $refs) {
+                $total = round($rows->filter(fn ($r) => in_array($r->Ref_expenses, $refs))->sum('Amount_expenses'));
+                $categoryAmounts[$cat] = $total;
+            }
+
+            $entrepreneurSalaryRefs = ['fix_salary_entrepreneurs', 'variable_salary_entrepreneurs'];
+            $entrepreneurSalary = round($rows->filter(fn ($r) => in_array($r->Ref_expenses, $entrepreneurSalaryRefs))->sum('Amount_expenses'));
+
+            return [
+                'categoryAmounts' => $categoryAmounts,
+                'sub_total' => round($rows->sum('Amount_expenses')),
+                'entrepreneur_salary' => $entrepreneurSalary,
+            ];
+        };
+
+        $revenue = [];
+        $expenseCategories = [];
+        $expenseSubTotals = [];
+        $entrepreneurSalaries = [];
+
+        foreach ($periods as $key => [$start, $end]) {
+            $rev = $getRevenue($start, $end);
+            $revenue[$key] = $rev;
+
+            $exp = $getExpenses($start, $end);
+            $expenseSubTotals[$key] = $exp['sub_total'];
+            $entrepreneurSalaries[$key] = $exp['entrepreneur_salary'];
+            foreach ($exp['categoryAmounts'] as $cat => $amt) {
+                $expenseCategories[$cat][$key] = $amt;
+            }
+        }
+
+        $expenseCategoriesList = [];
+        foreach ($categories as $cat => $refs) {
+            $expenseCategoriesList[] = [
+                'category' => $cat,
+                'current' => $expenseCategories[$cat]['current'] ?? 0,
+                'previous' => $expenseCategories[$cat]['previous'] ?? 0,
+                'ytd' => $expenseCategories[$cat]['ytd'] ?? 0,
+                'last_year' => $expenseCategories[$cat]['last_year'] ?? 0,
+            ];
+        }
+
+        $periodLabels = [
+            'current' => $currentStart->format('M Y'),
+            'previous' => $previousStart->format('M Y'),
+            'ytd' => $ytdStart->format('Y').' YTD',
+            'last_year' => $lastYearStart->format('M Y'),
+        ];
+
+        return response()->json([
+            'labels' => $periodLabels,
+            'revenue' => [
+                'sales' => [
+                    'current' => $revenue['current']['sales'],
+                    'previous' => $revenue['previous']['sales'],
+                    'ytd' => $revenue['ytd']['sales'],
+                    'last_year' => $revenue['last_year']['sales'],
+                ],
+                'water_in_school' => [
+                    'current' => $revenue['current']['water_in_school'],
+                    'previous' => $revenue['previous']['water_in_school'],
+                    'ytd' => $revenue['ytd']['water_in_school'],
+                    'last_year' => $revenue['last_year']['water_in_school'],
+                ],
+                'sub_total' => [
+                    'current' => $revenue['current']['sub_total'],
+                    'previous' => $revenue['previous']['sub_total'],
+                    'ytd' => $revenue['ytd']['sub_total'],
+                    'last_year' => $revenue['last_year']['sub_total'],
+                ],
+            ],
+            'expenses' => [
+                'categories' => $expenseCategoriesList,
+                'sub_total' => [
+                    'current' => $expenseSubTotals['current'],
+                    'previous' => $expenseSubTotals['previous'],
+                    'ytd' => $expenseSubTotals['ytd'],
+                    'last_year' => $expenseSubTotals['last_year'],
+                ],
+            ],
+            'result' => [
+                'current' => $revenue['current']['sub_total'] - $expenseSubTotals['current'],
+                'previous' => $revenue['previous']['sub_total'] - $expenseSubTotals['previous'],
+                'ytd' => $revenue['ytd']['sub_total'] - $expenseSubTotals['ytd'],
+                'last_year' => $revenue['last_year']['sub_total'] - $expenseSubTotals['last_year'],
+            ],
+            'entrepreneur_salary' => [
+                'current' => $entrepreneurSalaries['current'],
+                'previous' => $entrepreneurSalaries['previous'],
+                'ytd' => $entrepreneurSalaries['ytd'],
+                'last_year' => $entrepreneurSalaries['last_year'],
+            ],
+        ]);
+    }
+
     public function monthlyPerformance(Site $site): JsonResponse
     {
         $currentYear = now()->year;
