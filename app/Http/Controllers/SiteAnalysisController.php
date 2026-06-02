@@ -268,6 +268,38 @@ class SiteAnalysisController extends Controller
         return response()->json(['prices' => $prices]);
     }
 
+    public function bottlePurchases(Site $site, Request $request): JsonResponse
+    {
+        $monthStr = $request->query('month', now()->format('Y-m'));
+        $month = Carbon::parse($monthStr.'-01');
+
+        $sims3Site = Sims3Site::where('Id_Site', $site->name)->first();
+
+        if (! $sims3Site) {
+            return response()->json(['error' => 'Site not found in Sims3 database'], 404);
+        }
+
+        $ytdStart = $month->copy()->startOfYear();
+        $ytdEnd = $month->copy()->endOfMonth();
+        $lastYearStart = $month->copy()->subYear()->startOfYear();
+        $lastYearEnd = $month->copy()->subYear()->endOfMonth();
+
+        $ytd = (float) Sims3Sale::where('Id_Site', $sims3Site->Id_Site)
+            ->where('Month', '>=', $ytdStart)
+            ->where('Month', '<=', $ytdEnd)
+            ->sum('Bottle_Sales');
+
+        $lastYear = (float) Sims3Sale::where('Id_Site', $sims3Site->Id_Site)
+            ->where('Month', '>=', $lastYearStart)
+            ->where('Month', '<=', $lastYearEnd)
+            ->sum('Bottle_Sales');
+
+        return response()->json([
+            'ytd' => round($ytd),
+            'last_year' => round($lastYear),
+        ]);
+    }
+
     public function profitLoss(Site $site, Request $request): JsonResponse
     {
         $monthStr = $request->query('month', now()->format('Y-m'));

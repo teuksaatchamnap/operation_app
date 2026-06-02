@@ -466,48 +466,109 @@
                     </v-card-text>
                 </v-card>
 
-                <v-card variant="outlined" class="subtle-border mt-4">
-                    <div class="text-body-1 font-weight-medium px-4 pt-2">
-                        Average Prices by Channel
-                    </div>
-                    <v-card-text>
-                        <div v-if="pricesLoading" class="text-center pa-4">
-                            <v-progress-circular indeterminate />
-                        </div>
-                        <v-table
-                            v-else-if="pricesData.length"
-                            density="compact"
-                        >
-                            <thead>
-                                <tr>
-                                    <th class="text-body-2 font-weight-medium">
-                                        Channel
-                                    </th>
-                                    <th class="text-body-2 font-weight-medium text-right">
-                                        Avg Price
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr
-                                    v-for="item in pricesData"
-                                    :key="item.label"
+                <v-row class="mt-4">
+                    <v-col cols="6">
+                        <v-card variant="outlined" class="subtle-border h-100">
+                            <div class="text-body-1 font-weight-medium px-4 pt-2">
+                                Average Prices by Channel
+                            </div>
+                            <v-card-text>
+                                <div v-if="pricesLoading" class="text-center pa-4">
+                                    <v-progress-circular indeterminate />
+                                </div>
+                                <v-table
+                                    v-else-if="pricesData.length"
+                                    density="compact"
                                 >
-                                    <td>{{ item.label }}</td>
-                                    <td class="text-right">
-                                        {{ formatCurrency(item.price) }}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </v-table>
-                        <div
-                            v-else
-                            class="text-medium-emphasis text-center pa-4"
-                        >
-                            No price data for this month
-                        </div>
-                    </v-card-text>
-                </v-card>
+                                    <thead>
+                                        <tr class="accent-header">
+                                            <th class="text-body-2 font-weight-medium">
+                                                Channel
+                                            </th>
+                                            <th class="text-body-2 font-weight-medium text-right">
+                                                Avg Price
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr
+                                            v-for="item in pricesData"
+                                            :key="item.label"
+                                        >
+                                            <td class="font-weight-medium">{{ item.label }}</td>
+                                            <td class="text-right font-weight-bold">
+                                                {{ formatCurrency(item.price) }}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </v-table>
+                                <div
+                                    v-else
+                                    class="text-medium-emphasis text-center pa-4"
+                                >
+                                    No price data for this month
+                                </div>
+                            </v-card-text>
+                        </v-card>
+                    </v-col>
+                    <v-col cols="6">
+                        <v-card variant="outlined" class="subtle-border h-100">
+                            <div class="text-body-1 font-weight-medium px-4 pt-2">
+                                New Bottles Bought
+                            </div>
+                            <v-card-text>
+                                <div v-if="bottleLoading" class="text-center pa-4">
+                                    <v-progress-circular indeterminate />
+                                </div>
+                                <v-table
+                                    v-else-if="bottleData"
+                                    density="compact"
+                                >
+                                    <thead>
+                                        <tr class="accent-header">
+                                            <th class="text-body-2 font-weight-medium">
+                                                Period
+                                            </th>
+                                            <th class="text-body-2 font-weight-medium text-right">
+                                                Bottles
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="font-weight-medium">YTD</td>
+                                            <td class="text-right font-weight-bold bottle-value">
+                                                {{ formatBottleNumber(bottleData.ytd) }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="font-weight-medium">Previous Year</td>
+                                            <td class="text-right font-weight-bold bottle-value">
+                                                {{ formatBottleNumber(bottleData.last_year) }}
+                                            </td>
+                                        </tr>
+                                        <tr
+                                            class="bottle-diff-row"
+                                            :class="bottleDiff >= 0 ? 'text-success' : 'text-error'"
+                                        >
+                                            <td class="font-weight-medium">YTD vs Previous Year</td>
+                                            <td class="text-right font-weight-bold bottle-value">
+                                                {{ bottleDiff >= 0 ? '+' : '-' }}{{ formatBottleNumber(Math.abs(bottleDiff)) }}
+                                                ({{ bottleDiffPct }}%)
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </v-table>
+                                <div
+                                    v-else
+                                    class="text-medium-emphasis text-center pa-4"
+                                >
+                                    No bottle data for this period
+                                </div>
+                            </v-card-text>
+                        </v-card>
+                    </v-col>
+                </v-row>
             </template>
         </v-card-text>
     </v-card>
@@ -1017,6 +1078,42 @@ watchEffect(async () => {
         pricesLoading.value = false;
     }
 });
+
+const bottleData = ref(null);
+const bottleLoading = ref(false);
+
+const bottleDiff = computed(() => {
+    if (!bottleData.value) return 0;
+    return bottleData.value.ytd - bottleData.value.last_year;
+});
+
+const bottleDiffPct = computed(() => {
+    if (!bottleData.value || !bottleData.value.last_year) return 0;
+    return ((bottleDiff.value / bottleData.value.last_year) * 100).toFixed(1);
+});
+
+function formatBottleNumber(value) {
+    if (value === null || value === undefined) return "-";
+    return Number(value).toLocaleString("en-US");
+}
+
+watchEffect(async () => {
+    if (!props.site?.id) return;
+
+    bottleLoading.value = true;
+
+    try {
+        const res = await axios.get(
+            `/api/sites/${props.site.id}/bottle-purchases`,
+            { params: { month: selectedMonth.value } },
+        );
+        bottleData.value = res.data;
+    } catch {
+        bottleData.value = null;
+    } finally {
+        bottleLoading.value = false;
+    }
+});
 </script>
 
 <style scoped>
@@ -1068,5 +1165,19 @@ watchEffect(async () => {
 .pl-entrepreneur-income td {
     background-color: rgba(33, 150, 243, 0.12);
     font-weight: 600;
+}
+
+.bottle-diff-row td {
+    font-weight: 600;
+    border-top: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+}
+
+.accent-header th {
+    background-color: rgba(var(--v-theme-primary), 0.1);
+    border-bottom: 2px solid rgb(var(--v-theme-primary)) !important;
+}
+
+.bottle-value {
+    font-size: 1.1rem;
 }
 </style>
