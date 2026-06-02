@@ -17,9 +17,10 @@
 
             <template v-else-if="data">
                 <v-card variant="outlined" class="subtle-border">
-                    <div class="text-body-1 font-weight-medium px-4 pt-2">
+                    <v-card-title class="section-title d-flex align-center ga-2">
+                        <v-icon size="small" color="primary">mdi-store-outline</v-icon>
                         General Details
-                    </div>
+                    </v-card-title>
                     <v-card-text>
                         <v-row density="comfortable">
                             <v-col cols="3">
@@ -91,10 +92,9 @@
                 </v-card>
 
                 <v-card variant="outlined" class="subtle-border mt-4">
-                    <div class="d-flex align-center px-4">
-                        <div class="text-body-1 font-weight-medium">
-                            Site KPI
-                        </div>
+                    <v-card-title class="section-title d-flex align-center ga-2">
+                        <v-icon size="small" color="primary">mdi-gauge</v-icon>
+                        Site KPI
                         <v-spacer />
                         <div class="d-flex align-center ga-2">
                             <v-btn
@@ -115,7 +115,7 @@
                                 <v-icon>mdi-chevron-right</v-icon>
                             </v-btn>
                         </div>
-                    </div>
+                    </v-card-title>
                     <v-card-text>
                         <v-row density="comfortable">
                             <v-col
@@ -173,9 +173,10 @@
                 </v-card>
 
                 <v-card variant="outlined" class="subtle-border mt-4">
-                    <div class="text-body-1 font-weight-medium px-4 pt-2">
+                    <v-card-title class="section-title d-flex align-center ga-2">
+                        <v-icon size="small" color="primary">mdi-chart-line</v-icon>
                         Monthly Sales Performance
-                    </div>
+                    </v-card-title>
                     <v-card-text>
                         <div v-if="chartLoading" class="text-center pa-4">
                             <v-progress-circular indeterminate />
@@ -229,11 +230,10 @@
                 <v-row class="mt-4">
                     <v-col cols="6">
                         <v-card variant="outlined" class="subtle-border h-100">
-                            <div
-                                class="text-body-1 font-weight-medium px-4 pt-2"
-                            >
+                            <v-card-title class="section-title d-flex align-center ga-2">
+                                <v-icon size="small" color="primary">mdi-chart-pie</v-icon>
                                 Monthly Sales Breakdown
-                            </div>
+                            </v-card-title>
                             <v-card-text>
                                 <div
                                     v-if="salesLoading"
@@ -259,11 +259,10 @@
                     </v-col>
                     <v-col cols="6">
                         <v-card variant="outlined" class="subtle-border h-100">
-                            <div
-                                class="text-body-1 font-weight-medium px-4 pt-2"
-                            >
+                            <v-card-title class="section-title d-flex align-center ga-2">
+                                <v-icon size="small" color="primary">mdi-chart-bar</v-icon>
                                 Monthly Expenses Comparison
-                            </div>
+                            </v-card-title>
                             <v-card-text>
                                 <div
                                     v-if="expenseLoading"
@@ -290,14 +289,11 @@
                 </v-row>
 
                 <v-card variant="outlined" class="subtle-border mt-4">
-                    <div class="d-flex align-center px-4 pt-2">
-                        <div class="text-body-1 font-weight-medium">
-                            Profit &amp; Loss Details
-                        </div>
+                    <v-card-title class="section-title d-flex align-center ga-2">
+                        <v-icon size="small" color="primary">mdi-cash-multiple</v-icon>
+                        Profit &amp; Loss Details
                         <v-spacer />
-                        <span class="text-caption font-weight-medium mr-2">
-                            USD
-                        </span>
+                        <span class="caption-label font-weight-medium mr-2">USD</span>
                         <v-switch
                             v-model="currency"
                             true-value="riel"
@@ -307,10 +303,8 @@
                             density="compact"
                             class="pl-currency-switch"
                         />
-                        <span class="text-caption font-weight-medium ml-2">
-                            KHR
-                        </span>
-                    </div>
+                        <span class="caption-label font-weight-medium ml-2">KHR</span>
+                    </v-card-title>
                     <v-card-text>
                         <div v-if="profitLossLoading" class="text-center pa-4">
                             <v-progress-circular indeterminate />
@@ -469,9 +463,10 @@
                 <v-row class="mt-4">
                     <v-col cols="6">
                         <v-card variant="outlined" class="subtle-border h-100">
-                            <div class="text-body-1 font-weight-medium px-4 pt-2">
+                            <v-card-title class="section-title d-flex align-center ga-2">
+                                <v-icon size="small" color="primary">mdi-tag-multiple</v-icon>
                                 Average Prices by Channel
-                            </div>
+                            </v-card-title>
                             <v-card-text>
                                 <div v-if="pricesLoading" class="text-center pa-4">
                                     <v-progress-circular indeterminate />
@@ -513,9 +508,10 @@
                     </v-col>
                     <v-col cols="6">
                         <v-card variant="outlined" class="subtle-border h-100">
-                            <div class="text-body-1 font-weight-medium px-4 pt-2">
+                            <v-card-title class="section-title d-flex align-center ga-2">
+                                <v-icon size="small" color="primary">mdi-bottle-wine</v-icon>
                                 New Bottles Bought
-                            </div>
+                            </v-card-title>
                             <v-card-text>
                                 <div v-if="bottleLoading" class="text-center pa-4">
                                     <v-progress-circular indeterminate />
@@ -1117,8 +1113,16 @@ watchEffect(async () => {
 </script>
 
 <style scoped>
+.section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.0125em;
+    padding-block: 14px;
+    line-height: 1.5rem;
+}
+
 .caption-label {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
 }
 
 .subtle-border {
