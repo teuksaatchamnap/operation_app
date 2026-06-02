@@ -223,7 +223,7 @@
                         >
                             Failed to load monthly performance
                         </div>
-                        <apexchart
+                        <ApexChart
                             v-else-if="chartData"
                             ref="chartRef"
                             type="line"
@@ -277,7 +277,7 @@
                                 >
                                     <v-progress-circular indeterminate />
                                 </div>
-                                <apexchart
+                                <ApexChart
                                     v-else-if="salesBreakdown.length"
                                     type="pie"
                                     height="350"
@@ -306,7 +306,7 @@
                                 >
                                     <v-progress-circular indeterminate />
                                 </div>
-                                <apexchart
+                                <ApexChart
                                     v-else-if="expenseData.length"
                                     type="bar"
                                     height="350"
@@ -612,8 +612,12 @@
 
 <script setup>
 import axios from "axios";
-import { computed, ref, watchEffect } from "vue";
+import { computed, ref, watchEffect, defineAsyncComponent } from "vue";
 import { useTheme } from "vuetify";
+
+const ApexChart = defineAsyncComponent(() =>
+    import("vue3-apexcharts"),
+);
 
 const props = defineProps({
     site: {
