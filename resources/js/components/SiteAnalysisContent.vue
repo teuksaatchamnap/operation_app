@@ -315,14 +315,14 @@
                             class="pl-table"
                         >
                             <thead>
-                                <tr>
-                                    <th class="text-body-2 font-weight-medium">
+                                <tr class="pl-header-row">
+                                    <th class="caption-label font-weight-bold text-uppercase">
                                         Category
                                     </th>
                                     <th
                                         v-for="col in profitLossColumns"
                                         :key="col.key"
-                                        class="text-body-2 font-weight-medium text-right"
+                                        class="caption-label font-weight-bold text-uppercase text-right"
                                     >
                                         {{ col.label }}
                                     </th>
@@ -330,7 +330,9 @@
                             </thead>
                             <tbody>
                                 <tr class="pl-section-header pl-revenue-header">
-                                    <td colspan="5">Revenue</td>
+                                    <td colspan="5">
+                                        <span class="font-weight-bold text-uppercase caption-label">Revenue</span>
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td class="pl-indent">
@@ -367,8 +369,8 @@
                                         }}
                                     </td>
                                 </tr>
-                                <tr class="pl-sub-total pl-revenue-subtotal">
-                                    <td>Sub Total Revenue</td>
+                                <tr class="pl-revenue-subtotal">
+                                    <td class="font-weight-bold">Subtotal Revenue</td>
                                     <td
                                         v-for="col in profitLossColumns"
                                         :key="col.key"
@@ -382,10 +384,10 @@
                                         }}
                                     </td>
                                 </tr>
-                                <tr
-                                    class="pl-section-header pl-expenses-header"
-                                >
-                                    <td colspan="5">Expenses</td>
+                                <tr class="pl-section-header pl-expenses-header">
+                                    <td colspan="5">
+                                        <span class="font-weight-bold text-uppercase caption-label">Expenses</span>
+                                    </td>
                                 </tr>
                                 <tr
                                     v-for="cat in profitLossData.expenses
@@ -403,8 +405,8 @@
                                         {{ formatCurrency(cat[col.key]) }}
                                     </td>
                                 </tr>
-                                <tr class="pl-sub-total pl-expenses-subtotal">
-                                    <td>Sub Total Expenses</td>
+                                <tr class="pl-expenses-subtotal">
+                                    <td class="font-weight-bold">Subtotal Expenses</td>
                                     <td
                                         v-for="col in profitLossColumns"
                                         :key="col.key"
@@ -426,7 +428,7 @@
                                             : 'text-error'
                                     "
                                 >
-                                    <td>Result (Revenue - Expenses)</td>
+                                    <td class="font-weight-bold">Result (Revenue &minus; Expenses)</td>
                                     <td
                                         v-for="col in profitLossColumns"
                                         :key="col.key"
@@ -474,13 +476,14 @@
                                 <v-table
                                     v-else-if="pricesData.length"
                                     density="compact"
+                                    class="prices-table"
                                 >
                                     <thead>
                                         <tr class="accent-header">
-                                            <th class="text-body-2 font-weight-medium">
+                                            <th class="caption-label font-weight-bold">
                                                 Channel
                                             </th>
-                                            <th class="text-body-2 font-weight-medium text-right">
+                                            <th class="caption-label font-weight-bold text-right">
                                                 Avg Price
                                             </th>
                                         </tr>
@@ -519,13 +522,14 @@
                                 <v-table
                                     v-else-if="bottleData"
                                     density="compact"
+                                    class="bottle-table"
                                 >
                                     <thead>
                                         <tr class="accent-header">
-                                            <th class="text-body-2 font-weight-medium">
+                                            <th class="caption-label font-weight-bold">
                                                 Period
                                             </th>
-                                            <th class="text-body-2 font-weight-medium text-right">
+                                            <th class="caption-label font-weight-bold text-right">
                                                 Bottles
                                             </th>
                                         </tr>
@@ -1129,56 +1133,94 @@ watchEffect(async () => {
     border-color: rgba(var(--v-theme-on-surface), 0.12) !important;
 }
 
-.pl-section-header td {
+/* ========== P&L table ========== */
+
+.pl-header-row th {
     font-weight: 600;
-    padding-top: 16px !important;
-    border-bottom: 2px solid rgba(var(--v-theme-on-surface), 0.12);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background-color: rgba(var(--v-theme-on-surface), 0.04);
+    border-bottom: 2px solid rgb(var(--v-theme-primary));
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+}
+
+/* Section headers — Revenue / Expenses */
+.pl-section-header td {
+    padding-top: 14px !important;
+    padding-bottom: 6px !important;
+    letter-spacing: 0.05em;
 }
 
 .pl-revenue-header td {
-    background-color: rgba(76, 175, 80, 0.1);
+    background-color: rgba(var(--v-theme-success), 0.06);
+    border-bottom: 1px solid rgba(var(--v-theme-success), 0.25);
 }
 
 .pl-revenue-subtotal td {
-    background-color: rgba(76, 175, 80, 0.18);
+    background-color: rgba(var(--v-theme-success), 0.1);
+    border-top: 1px solid rgba(var(--v-theme-success), 0.3);
 }
 
 .pl-expenses-header td {
-    background-color: rgba(244, 67, 54, 0.1);
+    background-color: rgba(var(--v-theme-error), 0.06);
+    border-bottom: 1px solid rgba(var(--v-theme-error), 0.25);
 }
 
 .pl-expenses-subtotal td {
-    background-color: rgba(244, 67, 54, 0.18);
+    background-color: rgba(var(--v-theme-error), 0.1);
+    border-top: 1px solid rgba(var(--v-theme-error), 0.3);
 }
 
-.pl-indent {
-    padding-left: 32px !important;
-}
-
-.pl-sub-total td {
-    font-weight: 600;
-    border-top: 1px solid rgba(var(--v-theme-on-surface), 0.12);
-}
-
+/* Result row */
 .pl-result td {
     font-weight: 700;
     font-size: 1rem;
-    border-top: 2px solid rgba(var(--v-theme-on-surface), 0.12);
+    border-top: 2px solid rgba(var(--v-theme-on-surface), 0.15);
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
 }
 
+/* Entrepreneur income */
 .pl-entrepreneur-income td {
-    background-color: rgba(33, 150, 243, 0.12);
+    background-color: rgba(var(--v-theme-info), 0.06);
     font-weight: 600;
 }
 
-.bottle-diff-row td {
-    font-weight: 600;
-    border-top: 1px solid rgba(var(--v-theme-on-surface), 0.12);
+/* Indented sub-items */
+.pl-indent {
+    padding-left: 36px !important;
 }
 
+/* P&L row hover — skip section headers to keep their tint */
+.pl-table tbody tr:not(.pl-section-header):not(.pl-result):hover td {
+    background-color: rgba(var(--v-theme-on-surface), 0.04);
+}
+
+/* ========== Small data tables (prices, bottles) ========== */
+
+.prices-table tbody tr:hover td,
+.bottle-table tbody tr:hover td {
+    background-color: rgba(var(--v-theme-on-surface), 0.04);
+}
+
+.prices-table tbody tr:nth-child(even) td,
+.bottle-table tbody tr:nth-child(even) td {
+    background-color: rgba(var(--v-theme-on-surface), 0.02);
+}
+
+/* Accent header row on small tables */
 .accent-header th {
     background-color: rgba(var(--v-theme-primary), 0.1);
     border-bottom: 2px solid rgb(var(--v-theme-primary)) !important;
+}
+
+/* Bottle diff row */
+.bottle-diff-row td {
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    border-top: 1px solid rgba(var(--v-theme-on-surface), 0.12);
 }
 
 .bottle-value {
