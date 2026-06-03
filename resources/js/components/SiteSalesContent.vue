@@ -125,6 +125,10 @@
                         </div>
                     </v-card-text>
                 </v-card>
+
+                <div class="mt-4">
+                    <MonthlyPerformanceChart :site="site" :month="selectedMonth" />
+                </div>
             </template>
         </v-card-text>
     </v-card>
@@ -135,6 +139,7 @@ import axios from "axios";
 import { computed, ref, watchEffect } from "vue";
 import { useCurrency } from "../composables/useCurrency";
 import CurrencySwitch from "./CurrencySwitch.vue";
+import MonthlyPerformanceChart from "./MonthlyPerformanceChart.vue";
 
 const props = defineProps({
     site: {
