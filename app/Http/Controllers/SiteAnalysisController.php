@@ -477,6 +477,7 @@ class SiteAnalysisController extends Controller
 
             $objectiveValue = null;
             if ($salesVolumeKpi) {
+                /** @var Objective|null $matchingObjective */
                 $matchingObjective = $salesVolumeKpi->objectives()
                     ->where('start_date', '<=', $month)
                     ->where(fn ($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', $month))
