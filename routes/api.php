@@ -29,4 +29,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/sites/{site}/profit-loss', [SiteAnalysisController::class, 'profitLoss']);
     Route::get('/sites/{site}/channel-prices', [SiteAnalysisController::class, 'channelPrices']);
     Route::get('/sites/{site}/bottle-purchases', [SiteAnalysisController::class, 'bottlePurchases']);
+    Route::get('/sites/{site}/daily-sales', [SiteAnalysisController::class, 'dailySales']);
 });

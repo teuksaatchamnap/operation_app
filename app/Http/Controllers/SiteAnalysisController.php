@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\FactMonthly;
 use App\Models\Kpi;
 use App\Models\Objective;
+use App\Models\Sims3\DailySale;
 use App\Models\Sims3\Expense as Sims3Expense;
 use App\Models\Sims3\Platform as Sims3Platform;
 use App\Models\Sims3\Sale as Sims3Sale;
@@ -419,6 +420,98 @@ class SiteAnalysisController extends Controller
         return response()->json([
             'categories' => $monthLabels,
             'series' => $series,
+        ]);
+    }
+
+    public function dailySales(Site $site, Request $request): JsonResponse
+    {
+        $sims3Site = $this->resolveSims3Site($site);
+
+        if (! $sims3Site) {
+            return response()->json(['error' => 'Site not found in Sims3 database'], 404);
+        }
+
+        $month = $this->resolveMonth($request);
+
+        $rows = DailySale::where('Id_Site', $sims3Site->Id_Site)
+            ->whereYear('Month', $month->year)
+            ->whereMonth('Month', $month->month)
+            ->orderBy('Day')
+            ->get();
+
+        $channelKeys = ['Free_Sales', 'Hod_Sales', 'WiS_Sales', 'Onsite_Sales', 'Shopkeeper_Sales', 'Bottle_Sales'];
+
+        $sales = $rows->map(function ($r) use ($channelKeys) {
+            $knownSum = collect($channelKeys)->sum(fn ($c) => (float) ($r->{$c} ?? 0));
+            $otherSales = max(0, (float) ($r->Total_Sales ?? 0) - $knownSum);
+            $day = [];
+            foreach ($channelKeys as $c) {
+                $day[$c] = (float) ($r->{$c} ?? 0);
+            }
+
+            return [
+                'date' => $r->Day ? Carbon::parse($r->Day)->format('Y-m-d') : null,
+                ...$day,
+                'Other_Sales' => $otherSales,
+                'Total_Sales' => (float) ($r->Total_Sales ?? 0),
+            ];
+        });
+
+        $monthlySale = $this->resolveSale($sims3Site, $month);
+
+        $prices = ['Free_Price' => 0];
+        $income = ['Free_Income' => 0];
+        $totals = [];
+
+        if ($monthlySale) {
+            $priceMap = [
+                'Hod_Sales' => 'Hod_Price', 'Shopkeeper_Sales' => 'Shopkeeper_Price',
+                'WiS_Sales' => 'WiS_Price', 'Onsite_Sales' => 'Onsite_Price',
+                'Bottle_Sales' => 'Bottle_Price', 'Emergency_Sales' => 'Emergency_Price',
+            ];
+            $incomeMap = [
+                'Hod_Sales' => 'Hod_Income', 'Shopkeeper_Sales' => 'Shopkeeper_Income',
+                'WiS_Sales' => 'WiS_Income', 'Onsite_Sales' => 'Onsite_Income',
+                'Bottle_Sales' => 'Bottle_Income', 'Emergency_Sales' => 'Emergency_Income',
+            ];
+
+            foreach ($priceMap as $salesCol => $priceCol) {
+                $prices[$priceCol] = round((float) ($monthlySale->{$priceCol} ?? 0));
+            }
+            foreach ($incomeMap as $salesCol => $incomeCol) {
+                $income[$incomeCol] = round((float) ($monthlySale->{$incomeCol} ?? 0));
+            }
+
+            $totalSales = (float) $monthlySale->Total_Sales;
+            $totalIncome = (float) $monthlySale->Total_Income;
+            $knownSales = collect($channelKeys)->sum(fn ($c) => (float) ($monthlySale->{$c} ?? 0))
+                + (float) ($monthlySale->Emergency_Sales ?? 0);
+            $knownIncomeSum = collect($incomeMap)->sum(fn ($ic) => (float) ($monthlySale->{$ic} ?? 0));
+            $otherSales = max(0, $totalSales - $knownSales);
+            $otherIncome = max(0, $totalIncome - $knownIncomeSum);
+
+            $prices['Other_Price'] = $otherSales > 0 ? round($otherIncome / $otherSales) : 0;
+            $income['Other_Income'] = round($otherIncome);
+            $income['Total_Income'] = round($totalIncome);
+
+            $totals = [
+                'Free_Sales' => (float) ($monthlySale->Free_Sales ?? 0),
+                'Hod_Sales' => (float) ($monthlySale->Hod_Sales ?? 0),
+                'WiS_Sales' => (float) ($monthlySale->WiS_Sales ?? 0),
+                'Onsite_Sales' => (float) ($monthlySale->Onsite_Sales ?? 0),
+                'Shopkeeper_Sales' => (float) ($monthlySale->Shopkeeper_Sales ?? 0),
+                'Bottle_Sales' => (float) ($monthlySale->Bottle_Sales ?? 0),
+                'Emergency_Sales' => (float) ($monthlySale->Emergency_Sales ?? 0),
+                'Other_Sales' => round($otherSales),
+                'Total_Sales' => round($totalSales),
+            ];
+        }
+
+        return response()->json([
+            'sales' => $sales,
+            'totals' => $totals,
+            'prices' => $prices,
+            'income' => $income,
         ]);
     }
 

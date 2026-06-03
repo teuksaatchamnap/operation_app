@@ -72,7 +72,10 @@
                         />
                     </v-tabs-window-item>
                     <v-tabs-window-item value="sales">
-                        <div class="text-medium-emphasis">Sales content</div>
+                        <SiteSalesContent
+                            :site="site"
+                            :initial-month="initialMonth"
+                        />
                     </v-tabs-window-item>
                     <v-tabs-window-item value="pnl">
                         <div class="text-medium-emphasis">P&L content</div>
@@ -94,6 +97,7 @@
 <script setup>
 import { ref } from "vue";
 import SiteAnalysisContent from "./SiteAnalysisContent.vue";
+import SiteSalesContent from "./SiteSalesContent.vue";
 
 defineProps({
     modelValue: {

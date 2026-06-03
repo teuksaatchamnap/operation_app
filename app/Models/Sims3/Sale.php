@@ -44,6 +44,27 @@ use Illuminate\Database\Eloquent\Model;
  * @property \DateTimeInterface|null $Month
  * @property string|null $Id_Site
  * @property int|null $Number_Open_Days
+ * @property float|null $Total_Sales
+ * @property float|null $Total_Income
+ * @property float|null $Emergency_Sales
+ * @property float|null $Free_Sales
+ * @property float|null $Hod_Sales
+ * @property float|null $Shopkeeper_Sales
+ * @property float|null $WiS_Sales
+ * @property float|null $Onsite_Sales
+ * @property float|null $Bottle_Sales
+ * @property float|null $Hod_Price
+ * @property float|null $Shopkeeper_Price
+ * @property float|null $WiS_Price
+ * @property float|null $Onsite_Price
+ * @property float|null $Bottle_Price
+ * @property float|null $Emergency_Price
+ * @property float|null $Hod_Income
+ * @property float|null $Shopkeeper_Income
+ * @property float|null $WiS_Income
+ * @property float|null $Onsite_Income
+ * @property float|null $Bottle_Income
+ * @property float|null $Emergency_Income
  */
 class Sale extends Model
 {

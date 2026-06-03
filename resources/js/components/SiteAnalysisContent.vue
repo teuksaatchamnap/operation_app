@@ -329,17 +329,7 @@
                         <v-icon size="small" color="primary">mdi-cash-multiple</v-icon>
                         Profit &amp; Loss Details
                         <v-spacer />
-                        <span class="caption-label font-weight-medium mr-2">USD</span>
-                        <v-switch
-                            v-model="currency"
-                            true-value="riel"
-                            false-value="usd"
-                            color="primary"
-                            hide-details
-                            density="compact"
-                            class="pl-currency-switch"
-                        />
-                        <span class="caption-label font-weight-medium ml-2">KHR</span>
+                        <CurrencySwitch />
                     </v-card-title>
                     <v-card-text>
                         <div v-if="profitLossLoading" class="text-center pa-4">
@@ -614,6 +604,8 @@
 import axios from "axios";
 import { computed, ref, watchEffect, defineAsyncComponent } from "vue";
 import { useTheme } from "vuetify";
+import { useCurrency } from "../composables/useCurrency";
+import CurrencySwitch from "./CurrencySwitch.vue";
 
 const ApexChart = defineAsyncComponent(() =>
     import("vue3-apexcharts"),
@@ -1039,8 +1031,7 @@ watchEffect(async () => {
 
 const profitLossData = ref(null);
 const profitLossLoading = ref(false);
-const currency = ref("riel");
-const KHR_TO_USD = 4000;
+const { currency, formatCurrency, KHR_TO_USD } = useCurrency();
 
 const profitLossColumns = computed(() => {
     if (!profitLossData.value?.labels) return [];
@@ -1063,23 +1054,7 @@ const entrepreneurIncome = computed(() => {
     };
 });
 
-function formatCurrency(value) {
-    if (value === null || value === undefined) return "-";
-    if (currency.value === "usd") {
-        const converted = value / KHR_TO_USD;
-        return (
-            "$" +
-            converted.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-            })
-        );
-    }
-    return "៛" + Number(value).toLocaleString("en-US", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    });
-}
+
 
 watchEffect(async () => {
     if (!props.site?.id) return;
