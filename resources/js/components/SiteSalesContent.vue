@@ -133,7 +133,7 @@
                 <div class="mt-4">
                     <v-card variant="outlined" class="subtle-border">
                         <v-card-title class="section-title d-flex align-center ga-2">
-                            <v-icon size="small" color="primary">mdi-chart-compare</v-icon>
+                            <v-icon size="small" color="primary">mdi-chart-line</v-icon>
                             Sales Comparison: Kiosk vs Platform vs Network
                         </v-card-title>
                         <v-card-text>
