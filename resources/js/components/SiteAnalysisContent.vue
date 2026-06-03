@@ -549,11 +549,15 @@
 
 <script setup>
 import axios from "axios";
-import { computed, ref, watchEffect } from "vue";
+import { computed, ref, watchEffect, defineAsyncComponent } from "vue";
 import { useTheme } from "vuetify";
 import { useCurrency } from "../composables/useCurrency";
 import CurrencySwitch from "./CurrencySwitch.vue";
 import MonthlyPerformanceChart from "./MonthlyPerformanceChart.vue";
+
+const ApexChart = defineAsyncComponent(() =>
+    import("vue3-apexcharts"),
+);
 
 const props = defineProps({
     site: {
