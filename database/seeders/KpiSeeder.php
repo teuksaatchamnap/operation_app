@@ -47,6 +47,7 @@ class KpiSeeder extends Seeder
                 'description' => 'This is the total sales excluding WiS and new bottles',
                 'aggregate' => 'sum',
                 'default_objective' => 1968988,
+                'individual_objective' => 3000,
             ],
             [
                 'name' => 'Sales Volume LfL',

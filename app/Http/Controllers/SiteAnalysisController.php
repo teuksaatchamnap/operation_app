@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\FactMonthly;
 use App\Models\Kpi;
 use App\Models\Objective;
+use App\Models\Platform;
 use App\Models\Sims3\DailySale;
 use App\Models\Sims3\Expense as Sims3Expense;
 use App\Models\Sims3\Platform as Sims3Platform;
@@ -420,6 +421,82 @@ class SiteAnalysisController extends Controller
         return response()->json([
             'categories' => $monthLabels,
             'series' => $series,
+        ]);
+    }
+
+    public function salesComparison(Site $site): JsonResponse
+    {
+        $sims3Site = $this->resolveSims3Site($site);
+
+        if (! $sims3Site) {
+            return response()->json(['error' => 'Site not found in Sims3 database'], 404);
+        }
+
+        $platformName = $sims3Site->Platform;
+        $localPlatform = $platformName
+            ? Platform::where('name', $platformName)->first()
+            : null;
+
+        $startDate = now()->subMonths(11)->startOfMonth();
+        $months = [];
+        for ($i = 0; $i < 12; $i++) {
+            $months[] = $startDate->copy()->addMonths($i);
+        }
+
+        $records = FactMonthly::where('month', '>=', $startDate)
+            ->whereNotNull('sales_volume')
+            ->get(['site_id', 'platform_id', 'month', 'sales_volume']);
+
+        $recordsByMonth = $records->groupBy(fn ($r) => Carbon::parse($r->month)->format('Y-m'));
+
+        $salesVolumeKpi = Kpi::where('col_name', 'sales_volume')->first();
+
+        $categories = [];
+        $siteData = [];
+        $platformData = [];
+        $networkData = [];
+        $objectiveData = [];
+
+        foreach ($months as $month) {
+            $monthKey = $month->format('Y-m');
+            $categories[] = $month->format('M Y');
+
+            $monthRecs = $recordsByMonth->get($monthKey, collect());
+
+            $siteRec = $monthRecs->firstWhere('site_id', $site->id);
+            $siteData[] = $siteRec ? round($siteRec->sales_volume) : null;
+
+            if ($localPlatform) {
+                $platRecs = $monthRecs->where('platform_id', $localPlatform->id);
+                $platformData[] = $platRecs->isNotEmpty() ? round($platRecs->avg('sales_volume')) : null;
+            } else {
+                $platformData[] = null;
+            }
+
+            $networkData[] = $monthRecs->isNotEmpty() ? round($monthRecs->avg('sales_volume')) : null;
+
+            $objectiveValue = null;
+            if ($salesVolumeKpi) {
+                $matchingObjective = $salesVolumeKpi->objectives()
+                    ->where('start_date', '<=', $month)
+                    ->where(fn ($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', $month))
+                    ->orderByRaw("CASE WHEN type = 'individual' THEN 0 ELSE 1 END")
+                    ->first();
+                if ($matchingObjective) {
+                    $objectiveValue = (int) $matchingObjective->value;
+                }
+            }
+            $objectiveData[] = $objectiveValue;
+        }
+
+        return response()->json([
+            'categories' => $categories,
+            'series' => [
+                ['name' => 'This Kiosk', 'data' => $siteData],
+                ['name' => 'Platform Avg', 'data' => $platformData],
+                ['name' => 'Network Avg', 'data' => $networkData],
+                ['name' => 'Objective', 'data' => $objectiveData],
+            ],
         ]);
     }
 

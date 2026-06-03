@@ -129,6 +129,69 @@
                 <div class="mt-4">
                     <MonthlyPerformanceChart :site="site" :month="selectedMonth" />
                 </div>
+
+                <div class="mt-4">
+                    <v-card variant="outlined" class="subtle-border">
+                        <v-card-title class="section-title d-flex align-center ga-2">
+                            <v-icon size="small" color="primary">mdi-chart-compare</v-icon>
+                            Sales Comparison: Kiosk vs Platform vs Network
+                        </v-card-title>
+                        <v-card-text>
+                            <div v-if="comparisonLoading" class="text-center pa-4">
+                                <v-progress-circular indeterminate />
+                            </div>
+                            <div
+                                v-else-if="comparisonError"
+                                class="text-medium-emphasis text-center pa-4"
+                            >
+                                Failed to load sales comparison
+                            </div>
+                            <ApexChart
+                                v-else-if="comparisonData"
+                                ref="comparisonChartRef"
+                                type="line"
+                                height="350"
+                                :options="comparisonOptions"
+                                :series="comparisonData.series"
+                            />
+                            <div
+                                v-else
+                                class="text-medium-emphasis text-center pa-4"
+                            >
+                                No comparison data available
+                            </div>
+                            <div
+                                v-if="comparisonData"
+                                class="d-flex justify-end ga-1 mt-1"
+                            >
+                                <v-btn
+                                    variant="text"
+                                    size="small"
+                                    prepend-icon="mdi-file-image"
+                                    @click="exportComparisonChart('png')"
+                                >
+                                    PNG
+                                </v-btn>
+                                <v-btn
+                                    variant="text"
+                                    size="small"
+                                    prepend-icon="mdi-file-document"
+                                    @click="exportComparisonChart('svg')"
+                                >
+                                    SVG
+                                </v-btn>
+                                <v-btn
+                                    variant="text"
+                                    size="small"
+                                    prepend-icon="mdi-file-delimited"
+                                    @click="exportComparisonChart('csv')"
+                                >
+                                    CSV
+                                </v-btn>
+                            </div>
+                        </v-card-text>
+                    </v-card>
+                </div>
             </template>
         </v-card-text>
     </v-card>
@@ -136,10 +199,15 @@
 
 <script setup>
 import axios from "axios";
-import { computed, ref, watchEffect } from "vue";
+import { computed, ref, watchEffect, defineAsyncComponent } from "vue";
 import { useCurrency } from "../composables/useCurrency";
+import { useTheme } from "vuetify";
 import CurrencySwitch from "./CurrencySwitch.vue";
 import MonthlyPerformanceChart from "./MonthlyPerformanceChart.vue";
+
+const ApexChart = defineAsyncComponent(() =>
+    import("vue3-apexcharts"),
+);
 
 const props = defineProps({
     site: {
@@ -202,6 +270,107 @@ function formatNumber(num) {
 }
 
 const { currency, formatCurrency } = useCurrency();
+
+const comparisonLoading = ref(false);
+const comparisonError = ref(false);
+const comparisonData = ref(null);
+const comparisonChartRef = ref(null);
+
+function exportComparisonChart(format) {
+    if (!comparisonChartRef.value) return;
+
+    if (format === "csv") {
+        comparisonChartRef.value.chart.exports.csv();
+        return;
+    }
+
+    const type = format === "svg" ? "svg" : undefined;
+    const filename = `sales-comparison.${format}`;
+    comparisonChartRef.value.chart.dataURI({ scale: 1, type }).then(({ imgURI }) => {
+        const link = document.createElement("a");
+        link.href = imgURI;
+        link.download = filename;
+        link.click();
+    });
+}
+
+const theme = useTheme();
+const isDark = computed(() => theme.global.name.value === "dark");
+const textColor = computed(() => (isDark.value ? "#e0e0e0" : "#333333"));
+
+const comparisonColors = ["#FF6384", "#36A2EB", "#4BC0C0", "#FF9F40"];
+
+const comparisonOptions = computed(() => {
+    const categories = comparisonData.value?.categories ?? [];
+
+    return {
+        chart: {
+            foreColor: textColor.value,
+            background: "transparent",
+            zoom: { enabled: false },
+            toolbar: {
+                tools: {
+                    download: false,
+                    selection: false,
+                    zoom: false,
+                    zoomin: false,
+                    zoomout: false,
+                    pan: false,
+                    reset: false,
+                },
+            },
+        },
+        colors: comparisonColors,
+        xaxis: {
+            categories,
+            labels: { style: { colors: textColor.value } },
+        },
+        yaxis: {
+            labels: { style: { colors: textColor.value } },
+            title: {
+                text: "Sales Volume",
+                style: { color: textColor.value },
+            },
+        },
+        stroke: {
+            curve: "smooth",
+            width: 2,
+            dashArray: [0, 0, 0, 5],
+        },
+        legend: {
+            position: "bottom",
+            horizontalAlign: "center",
+            labels: { colors: textColor.value },
+        },
+        tooltip: {
+            shared: true,
+            theme: isDark.value ? "dark" : "light",
+        },
+        responsive: [
+            {
+                breakpoint: 600,
+                options: { chart: { height: 250 } },
+            },
+        ],
+    };
+});
+
+watchEffect(async () => {
+    if (!props.site?.id) return;
+
+    comparisonLoading.value = true;
+    comparisonError.value = false;
+
+    try {
+        const res = await axios.get(`/api/sites/${props.site.id}/sales-comparison`);
+        comparisonData.value = res.data;
+    } catch {
+        comparisonError.value = true;
+        comparisonData.value = null;
+    } finally {
+        comparisonLoading.value = false;
+    }
+});
 
 const channels = [
     { key: "Free_Sales", label: "Free", priceKey: "Free_Price", incomeKey: "Free_Income" },

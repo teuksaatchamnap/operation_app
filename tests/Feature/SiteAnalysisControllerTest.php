@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\FactMonthly;
 use App\Models\Kpi;
+use App\Models\Platform;
 use App\Models\Site;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -656,5 +657,164 @@ class SiteAnalysisControllerTest extends TestCase
             $this->assertCount(12, $yearSeries['data']);
             $this->assertContainsOnly('null', $yearSeries['data']);
         }
+    }
+
+    // ------------------------------------------------------------------
+    //  salesComparison()
+    // ------------------------------------------------------------------
+
+    public function test_sales_comparison_unauthenticated(): void
+    {
+        $site = Site::factory()->create();
+
+        $this->getJson("/api/sites/{$site->id}/sales-comparison")->assertUnauthorized();
+    }
+
+    public function test_sales_comparison_site_not_found_returns_404(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'MISSING']);
+
+        $builderMock = Mockery::mock(Builder::class);
+        $builderMock->shouldReceive('first')->andReturn(null);
+        Mockery::mock('overload:App\Models\Sims3\Site')
+            ->shouldReceive('where')->with('Id_Site', 'MISSING')->andReturn($builderMock);
+
+        $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/sales-comparison")
+            ->assertStatus(404)
+            ->assertJson(['error' => 'Site not found in Sims3 database']);
+    }
+
+    public function test_sales_comparison_returns_structure(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE01']);
+        $platform = Platform::factory()->create(['name' => 'SW']);
+
+        $this->mockSims3Site('SITE01');
+
+        FactMonthly::factory()->create([
+            'site_id' => $site->id,
+            'platform_id' => $platform->id,
+            'month' => now()->startOfMonth(),
+            'sales_volume' => 50000,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/sales-comparison");
+
+        $response->assertSuccessful();
+        $response->assertJsonStructure([
+            'categories',
+            'series' => [
+                ['name', 'data'],
+                ['name', 'data'],
+                ['name', 'data'],
+                ['name', 'data'],
+            ],
+        ]);
+
+        $series = $response->json('series');
+        $this->assertCount(4, $series);
+        $this->assertEquals('This Kiosk', $series[0]['name']);
+        $this->assertEquals('Platform Avg', $series[1]['name']);
+        $this->assertEquals('Network Avg', $series[2]['name']);
+        $this->assertEquals('Objective', $series[3]['name']);
+        $this->assertCount(12, $series[0]['data']);
+        $this->assertCount(12, $response->json('categories'));
+    }
+
+    public function test_sales_comparison_includes_objective_line(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE01']);
+        $platform = Platform::factory()->create(['name' => 'SW']);
+
+        $this->mockSims3Site('SITE01');
+
+        $kpi = Kpi::factory()->create([
+            'col_name' => 'sales_volume',
+            'name' => 'Sales Volume',
+            'periodicity' => 'monthly',
+        ]);
+        $kpi->objectives()->create([
+            'start_date' => now()->startOfYear(),
+            'value' => 3000,
+            'type' => 'individual',
+        ]);
+
+        FactMonthly::factory()->create([
+            'site_id' => $site->id,
+            'platform_id' => $platform->id,
+            'month' => now()->startOfMonth(),
+            'sales_volume' => 50000,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/sales-comparison");
+
+        $response->assertSuccessful();
+        $series = $response->json('series');
+
+        $this->assertCount(4, $series);
+        $this->assertEquals('Objective', $series[3]['name']);
+
+        $categories = $response->json('categories');
+        $targetLabel = now()->startOfMonth()->format('M Y');
+        $monthIndex = array_search($targetLabel, $categories);
+        $this->assertNotFalse($monthIndex);
+        $this->assertEquals(3000, $series[3]['data'][$monthIndex]);
+    }
+
+    public function test_sales_comparison_computes_averages_correctly(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE01']);
+        $platform = Platform::factory()->create(['name' => 'SW']);
+        $otherPlatform = Platform::factory()->create(['name' => 'OT']);
+
+        $this->mockSims3Site('SITE01');
+
+        $samePlatformSite = Site::factory()->create();
+        $otherPlatformSite = Site::factory()->create();
+
+        $targetMonth = now()->startOfMonth();
+
+        FactMonthly::factory()->create([
+            'site_id' => $site->id,
+            'platform_id' => $platform->id,
+            'month' => $targetMonth,
+            'sales_volume' => 100,
+        ]);
+
+        FactMonthly::factory()->create([
+            'site_id' => $samePlatformSite->id,
+            'platform_id' => $platform->id,
+            'month' => $targetMonth,
+            'sales_volume' => 80,
+        ]);
+
+        FactMonthly::factory()->create([
+            'site_id' => $otherPlatformSite->id,
+            'platform_id' => $otherPlatform->id,
+            'month' => $targetMonth,
+            'sales_volume' => 60,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/sales-comparison");
+
+        $response->assertSuccessful();
+        $series = $response->json('series');
+        $categories = $response->json('categories');
+
+        $targetLabel = $targetMonth->format('M Y');
+        $monthIndex = array_search($targetLabel, $categories);
+        $this->assertNotFalse($monthIndex);
+
+        $this->assertEquals(100, $series[0]['data'][$monthIndex]);
+        $this->assertEquals(90, $series[1]['data'][$monthIndex]);
+        $this->assertEquals(80, $series[2]['data'][$monthIndex]);
     }
 }
