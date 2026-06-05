@@ -767,6 +767,178 @@ class SiteAnalysisControllerTest extends TestCase
         $this->assertEquals(3000, $series[3]['data'][$monthIndex]);
     }
 
+    // ------------------------------------------------------------------
+    //  waterLossByWeek()
+    // ------------------------------------------------------------------
+
+    public function test_water_loss_by_week_unauthenticated(): void
+    {
+        $site = Site::factory()->create();
+
+        $this->getJson("/api/sites/{$site->id}/water-loss-by-week")->assertUnauthorized();
+    }
+
+    public function test_water_loss_by_week_site_not_found_returns_404(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'MISSING']);
+
+        $builderMock = Mockery::mock(Builder::class);
+        $builderMock->shouldReceive('first')->andReturn(null);
+        Mockery::mock('overload:App\Models\Sims3\Site')
+            ->shouldReceive('where')->with('Id_Site', 'MISSING')->andReturn($builderMock);
+
+        $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/water-loss-by-week")
+            ->assertStatus(404)
+            ->assertJson(['error' => 'Site not found in Sims3 database']);
+    }
+
+    public function test_water_loss_by_week_returns_weekly_data(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE01']);
+
+        $this->mockSims3Site('SITE01');
+
+        $meterData = collect([
+            (object) ['site' => 'SITE01', 'date' => '2025-01-01', 'value' => 10.0],
+            (object) ['site' => 'SITE01', 'date' => '2025-01-08', 'value' => 25.0],
+            (object) ['site' => 'SITE01', 'date' => '2025-01-15', 'value' => 45.0],
+            (object) ['site' => 'SITE01', 'date' => '2025-01-22', 'value' => 70.0],
+            (object) ['site' => 'SITE01', 'date' => '2025-01-29', 'value' => 100.0],
+            (object) ['site' => 'SITE01', 'date' => '2025-02-01', 'value' => 135.0],
+        ]);
+
+        $meterBuilder = Mockery::mock(Builder::class);
+        $meterBuilder->shouldReceive('whereBetween')->andReturnSelf();
+        $meterBuilder->shouldReceive('orderBy')->with('date')->andReturnSelf();
+        $meterBuilder->shouldReceive('get')->andReturn($meterData);
+
+        Mockery::mock('overload:App\Models\Sims3\WaterMeter')
+            ->shouldReceive('where')->with('site', 'SITE01')->andReturn($meterBuilder);
+
+        $dailySalesData = collect();
+        for ($day = 1; $day <= 31; $day++) {
+            $dailySalesData->push((object) [
+                'Day' => sprintf('2025-01-%02d', $day),
+                'Total_Sales' => 50,
+            ]);
+        }
+
+        $dailySaleBuilder = Mockery::mock(Builder::class);
+        $dailySaleBuilder->shouldReceive('whereYear')->andReturnSelf();
+        $dailySaleBuilder->shouldReceive('whereMonth')->andReturnSelf();
+        $dailySaleBuilder->shouldReceive('get')->andReturn($dailySalesData);
+
+        Mockery::mock('overload:App\Models\Sims3\DailySale')
+            ->shouldReceive('where')->with('Id_Site', 'SITE01')->andReturn($dailySaleBuilder);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/water-loss-by-week?month=2025-01");
+
+        $response->assertSuccessful();
+        $response->assertJsonStructure([
+            'weeks' => [
+                '*' => ['week', 'meter_start', 'meter_end', 'consumed', 'sold', 'loss', 'loss_pct'],
+            ],
+        ]);
+
+        $weeks = $response->json('weeks');
+        $this->assertCount(5, $weeks);
+
+        // Week 1: days 1-7 (7 days), meter (10.0 -> 25.0)
+        $this->assertEquals(1, $weeks[0]['week']);
+        $this->assertEquals(10.0, $weeks[0]['meter_start']);
+        $this->assertEquals(25.0, $weeks[0]['meter_end']);
+        $this->assertEquals(15000.0, $weeks[0]['consumed']);
+        $this->assertEquals(7000.0, $weeks[0]['sold']);
+        $this->assertEquals(8000.0, $weeks[0]['loss']);
+        $this->assertEquals(53.33, $weeks[0]['loss_pct']);
+
+        // Week 2: days 8-14 (7 days), meter (25.0 -> 45.0)
+        $this->assertEquals(2, $weeks[1]['week']);
+        $this->assertEquals(25.0, $weeks[1]['meter_start']);
+        $this->assertEquals(45.0, $weeks[1]['meter_end']);
+        $this->assertEquals(20000.0, $weeks[1]['consumed']);
+        $this->assertEquals(7000.0, $weeks[1]['sold']);
+        $this->assertEquals(13000.0, $weeks[1]['loss']);
+        $this->assertEquals(65.0, $weeks[1]['loss_pct']);
+
+        // Week 3: days 15-21 (7 days), meter (45.0 -> 70.0)
+        $this->assertEquals(3, $weeks[2]['week']);
+        $this->assertEquals(45.0, $weeks[2]['meter_start']);
+        $this->assertEquals(70.0, $weeks[2]['meter_end']);
+        $this->assertEquals(25000.0, $weeks[2]['consumed']);
+        $this->assertEquals(7000.0, $weeks[2]['sold']);
+        $this->assertEquals(18000.0, $weeks[2]['loss']);
+        $this->assertEquals(72.0, $weeks[2]['loss_pct']);
+
+        // Week 4: days 22-28 (7 days), meter (70.0 -> 100.0)
+        $this->assertEquals(4, $weeks[3]['week']);
+        $this->assertEquals(70.0, $weeks[3]['meter_start']);
+        $this->assertEquals(100.0, $weeks[3]['meter_end']);
+        $this->assertEquals(30000.0, $weeks[3]['consumed']);
+        $this->assertEquals(7000.0, $weeks[3]['sold']);
+        $this->assertEquals(23000.0, $weeks[3]['loss']);
+        $this->assertEqualsWithDelta(76.67, $weeks[3]['loss_pct'], 0.01);
+
+        // Week 5: days 29-31 (3 days), meter (100.0 -> 135.0)
+        $this->assertEquals(5, $weeks[4]['week']);
+        $this->assertEquals(100.0, $weeks[4]['meter_start']);
+        $this->assertEquals(135.0, $weeks[4]['meter_end']);
+        $this->assertEquals(35000.0, $weeks[4]['consumed']);
+        $this->assertEquals(3000.0, $weeks[4]['sold']);
+        $this->assertEquals(32000.0, $weeks[4]['loss']);
+        $this->assertEqualsWithDelta(91.43, $weeks[4]['loss_pct'], 0.01);
+    }
+
+    public function test_water_loss_by_week_no_meter_data(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE02']);
+
+        $this->mockSims3Site('SITE02');
+
+        $meterBuilder = Mockery::mock(Builder::class);
+        $meterBuilder->shouldReceive('whereBetween')->andReturnSelf();
+        $meterBuilder->shouldReceive('orderBy')->with('date')->andReturnSelf();
+        $meterBuilder->shouldReceive('get')->andReturn(collect());
+
+        Mockery::mock('overload:App\Models\Sims3\WaterMeter')
+            ->shouldReceive('where')->with('site', 'SITE02')->andReturn($meterBuilder);
+
+        $dailySaleBuilder = Mockery::mock(Builder::class);
+        $dailySaleBuilder->shouldReceive('whereYear')->andReturnSelf();
+        $dailySaleBuilder->shouldReceive('whereMonth')->andReturnSelf();
+        $dailySaleBuilder->shouldReceive('get')->andReturn(collect());
+
+        Mockery::mock('overload:App\Models\Sims3\DailySale')
+            ->shouldReceive('where')->with('Id_Site', 'SITE02')->andReturn($dailySaleBuilder);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/water-loss-by-week?month=2025-01");
+
+        $response->assertSuccessful();
+        $response->assertJsonStructure([
+            'weeks' => [
+                '*' => ['week', 'meter_start', 'meter_end', 'consumed', 'sold', 'loss', 'loss_pct'],
+            ],
+        ]);
+
+        $weeks = $response->json('weeks');
+        $this->assertCount(5, $weeks);
+
+        foreach ($weeks as $week) {
+            $this->assertNull($week['meter_start']);
+            $this->assertNull($week['meter_end']);
+            $this->assertNull($week['consumed']);
+            $this->assertEquals(0.0, $week['sold']);
+            $this->assertNull($week['loss']);
+            $this->assertNull($week['loss_pct']);
+        }
+    }
+
     public function test_sales_comparison_computes_averages_correctly(): void
     {
         $user = User::factory()->create();

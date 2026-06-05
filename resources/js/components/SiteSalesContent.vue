@@ -192,6 +192,63 @@
                         </v-card-text>
                     </v-card>
                 </div>
+
+                <div class="mt-4">
+                    <v-card variant="outlined" class="subtle-border">
+                        <v-card-title class="section-title d-flex align-center ga-2">
+                            <v-icon size="small" color="primary">mdi-water</v-icon>
+                            Water Loss by Week
+                        </v-card-title>
+                        <v-card-text>
+                            <template v-if="waterLoading">
+                                <div class="skeleton skeleton-table" />
+                            </template>
+
+                            <template v-else-if="waterError">
+                                <div class="text-medium-emphasis text-center pa-4">
+                                    Failed to load water loss data
+                                </div>
+                            </template>
+
+                            <template v-else-if="waterData && waterData.weeks.length">
+                                <v-table density="compact" class="sales-table">
+                                    <thead>
+                                        <tr class="accent-header">
+                                            <th class="caption-label font-weight-bold">Week</th>
+                                            <th class="caption-label font-weight-bold text-right">Meter Start (L)</th>
+                                            <th class="caption-label font-weight-bold text-right">Meter End (L)</th>
+                                            <th class="caption-label font-weight-bold text-right">Consumed (L)</th>
+                                            <th class="caption-label font-weight-bold text-right">Sold (L)</th>
+                                            <th class="caption-label font-weight-bold text-right">Loss (L)</th>
+                                            <th class="caption-label font-weight-bold text-right">Loss (%)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr
+                                            v-for="w in waterData.weeks"
+                                            :key="w.week"
+                                        >
+                                            <td class="font-weight-medium">{{ w.week }}</td>
+                                            <td class="text-right">{{ w.meter_start != null ? formatNumber(w.meter_start) : 'N/A' }}</td>
+                                            <td class="text-right">{{ w.meter_end != null ? formatNumber(w.meter_end) : 'N/A' }}</td>
+                                            <td class="text-right">{{ w.consumed != null ? formatNumber(w.consumed) : 'N/A' }}</td>
+                                            <td class="text-right">{{ formatNumber(w.sold) }}</td>
+                                            <td class="text-right">{{ w.loss != null ? formatNumber(w.loss) : 'N/A' }}</td>
+                                            <td class="text-right">{{ w.loss_pct != null ? w.loss_pct + '%' : 'N/A' }}</td>
+                                        </tr>
+                                    </tbody>
+                                </v-table>
+                            </template>
+
+                            <div
+                                v-else
+                                class="text-medium-emphasis text-center pa-4"
+                            >
+                                No water loss data for this month
+                            </div>
+                        </v-card-text>
+                    </v-card>
+                </div>
             </template>
         </v-card-text>
     </v-card>
@@ -224,6 +281,9 @@ const now = new Date();
 const loading = ref(false);
 const error = ref(false);
 const data = ref(null);
+const waterLoading = ref(false);
+const waterError = ref(false);
+const waterData = ref(null);
 const selectedMonth = ref(
     props.initialMonth ||
         `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
@@ -398,6 +458,25 @@ watchEffect(async () => {
         data.value = null;
     } finally {
         loading.value = false;
+    }
+});
+
+watchEffect(async () => {
+    if (!props.site?.id) return;
+
+    waterLoading.value = true;
+    waterError.value = false;
+
+    try {
+        const res = await axios.get(`/api/sites/${props.site.id}/water-loss-by-week`, {
+            params: { month: selectedMonth.value },
+        });
+        waterData.value = res.data;
+    } catch {
+        waterError.value = true;
+        waterData.value = null;
+    } finally {
+        waterLoading.value = false;
     }
 });
 </script>

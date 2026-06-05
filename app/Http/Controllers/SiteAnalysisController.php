@@ -11,6 +11,7 @@ use App\Models\Sims3\Expense as Sims3Expense;
 use App\Models\Sims3\Platform as Sims3Platform;
 use App\Models\Sims3\Sale as Sims3Sale;
 use App\Models\Sims3\Site as Sims3Site;
+use App\Models\Sims3\WaterMeter;
 use App\Models\Site;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -591,6 +592,89 @@ class SiteAnalysisController extends Controller
             'prices' => $prices,
             'income' => $income,
         ]);
+    }
+
+    public function waterLossByWeek(Site $site, Request $request): JsonResponse
+    {
+        $sims3Site = $this->resolveSims3Site($site);
+
+        if (! $sims3Site) {
+            return response()->json(['error' => 'Site not found in Sims3 database'], 404);
+        }
+
+        $month = $this->resolveMonth($request);
+        $monthStart = $month->copy()->startOfMonth();
+        $monthEnd = $month->copy()->endOfMonth();
+        $nextMonthStart = $month->copy()->addMonth()->startOfMonth();
+
+        $meters = WaterMeter::where('site', $sims3Site->Id_Site)
+            ->whereBetween('date', [$monthStart, $nextMonthStart])
+            ->orderBy('date')
+            ->get()
+            ->keyBy(fn ($m) => Carbon::parse($m->date)->format('Y-m-d'));
+
+        $dailySales = DailySale::where('Id_Site', $sims3Site->Id_Site)
+            ->whereYear('Month', $month->year)
+            ->whereMonth('Month', $month->month)
+            ->get(['Day', 'Total_Sales']);
+
+        $salesByWeek = [];
+        foreach ($dailySales as $sale) {
+            if (! $sale->Day) {
+                continue;
+            }
+            $dayOfMonth = Carbon::parse($sale->Day)->day;
+            $weekNum = (int) ceil($dayOfMonth / 7);
+            $salesByWeek[$weekNum] = ($salesByWeek[$weekNum] ?? 0) + (float) ($sale->Total_Sales ?? 0);
+        }
+
+        $daysInMonth = $month->daysInMonth;
+        $numWeeks = (int) ceil($daysInMonth / 7);
+        $weeks = [];
+
+        for ($i = 0; $i < $numWeeks; $i++) {
+            $weekNum = $i + 1;
+            $weekStartDate = $monthStart->copy()->addDays($i * 7);
+            $nextWeekStartDate = $i < $numWeeks - 1
+                ? $monthStart->copy()->addDays(($i + 1) * 7)
+                : $nextMonthStart;
+
+            $weekStartKey = $weekStartDate->format('Y-m-d');
+            $weekEndKey = $nextWeekStartDate->format('Y-m-d');
+
+            $meterStart = $meters->get($weekStartKey);
+            $meterEnd = $meters->get($weekEndKey);
+
+            $startValue = $meterStart ? (float) $meterStart->value : null;
+            $endValue = $meterEnd ? (float) $meterEnd->value : null;
+
+            $consumed = null;
+            if ($startValue !== null && $endValue !== null && $endValue > $startValue) {
+                $consumed = round(($endValue - $startValue) * 1000, 2);
+            }
+
+            $totalBottles = $salesByWeek[$weekNum] ?? 0;
+            $waterSold = round($totalBottles * 20, 2);
+
+            $waterLoss = null;
+            $waterLossPct = null;
+            if ($consumed !== null && $consumed > 0) {
+                $waterLoss = round($consumed - $waterSold, 2);
+                $waterLossPct = round(($waterLoss / $consumed) * 100, 2);
+            }
+
+            $weeks[] = [
+                'week' => $weekNum,
+                'meter_start' => $startValue,
+                'meter_end' => $endValue,
+                'consumed' => $consumed,
+                'sold' => $waterSold,
+                'loss' => $waterLoss,
+                'loss_pct' => $waterLossPct,
+            ];
+        }
+
+        return response()->json(['weeks' => $weeks]);
     }
 
     private function getExpenseCategories(): array
