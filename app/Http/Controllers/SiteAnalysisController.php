@@ -6,19 +6,23 @@ use App\Models\FactMonthly;
 use App\Models\Kpi;
 use App\Models\Objective;
 use App\Models\Platform;
-use App\Models\Sims3\DailySale;
 use App\Models\Sims3\Expense as Sims3Expense;
 use App\Models\Sims3\Platform as Sims3Platform;
 use App\Models\Sims3\Sale as Sims3Sale;
 use App\Models\Sims3\Site as Sims3Site;
 use App\Models\Sims3\WaterMeter;
 use App\Models\Site;
+use App\Services\DailySalesProvider;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class SiteAnalysisController extends Controller
 {
+    public function __construct(
+        private readonly DailySalesProvider $dailySalesProvider,
+    ) {}
+
     public function show(Site $site, Request $request): JsonResponse
     {
         $sims3Site = $this->resolveSims3Site($site);
@@ -512,31 +516,11 @@ class SiteAnalysisController extends Controller
 
         $month = $this->resolveMonth($request);
 
-        $rows = DailySale::where('Id_Site', $sims3Site->Id_Site)
-            ->whereYear('Month', $month->year)
-            ->whereMonth('Month', $month->month)
-            ->orderBy('Day')
-            ->get();
-
-        $channelKeys = ['Free_Sales', 'Hod_Sales', 'WiS_Sales', 'Onsite_Sales', 'Shopkeeper_Sales', 'Bottle_Sales'];
-
-        $sales = $rows->map(function ($r) use ($channelKeys) {
-            $knownSum = collect($channelKeys)->sum(fn ($c) => (float) ($r->{$c} ?? 0));
-            $otherSales = max(0, (float) ($r->Total_Sales ?? 0) - $knownSum);
-            $day = [];
-            foreach ($channelKeys as $c) {
-                $day[$c] = (float) ($r->{$c} ?? 0);
-            }
-
-            return [
-                'date' => $r->Day ? Carbon::parse($r->Day)->format('Y-m-d') : null,
-                ...$day,
-                'Other_Sales' => $otherSales,
-                'Total_Sales' => (float) ($r->Total_Sales ?? 0),
-            ];
-        });
+        $sales = $this->dailySalesProvider->getDailySales($sims3Site->Id_Site, $month);
 
         $monthlySale = $this->resolveSale($sims3Site, $month);
+
+        $channelKeys = ['Free_Sales', 'Hod_Sales', 'WiS_Sales', 'Onsite_Sales', 'Shopkeeper_Sales', 'Bottle_Sales'];
 
         $prices = ['Free_Price' => 0];
         $income = ['Free_Income' => 0];
@@ -605,55 +589,49 @@ class SiteAnalysisController extends Controller
         $month = $this->resolveMonth($request);
         $monthStart = $month->copy()->startOfMonth();
         $monthEnd = $month->copy()->endOfMonth();
-        $nextMonthStart = $month->copy()->addMonth()->startOfMonth();
+
+        $queryStart = $monthStart->copy()->subDays(30);
+        $queryEnd = $monthEnd->copy()->addDays(30);
 
         $meters = WaterMeter::where('site', $sims3Site->Id_Site)
-            ->whereBetween('date', [$monthStart, $nextMonthStart])
+            ->whereBetween('date', [$queryStart, $queryEnd])
             ->orderBy('date')
-            ->get()
-            ->keyBy(fn ($m) => Carbon::parse($m->date)->format('Y-m-d'));
+            ->get();
 
-        $dailySales = DailySale::where('Id_Site', $sims3Site->Id_Site)
-            ->whereYear('Month', $month->year)
-            ->whereMonth('Month', $month->month)
-            ->get(['Day', 'Total_Sales']);
+        $dayTotals = $this->dailySalesProvider->getDayTotals($sims3Site->Id_Site, $month);
 
-        $salesByWeek = [];
-        foreach ($dailySales as $sale) {
-            if (! $sale->Day) {
+        $weeks = [];
+        $weekNum = 0;
+
+        for ($i = 0; $i < $meters->count() - 1; $i++) {
+            $startMeter = $meters[$i];
+            $endMeter = $meters[$i + 1];
+
+            $startDate = Carbon::parse($startMeter->date);
+            $endDate = Carbon::parse($endMeter->date);
+
+            if ($endDate < $monthStart || $startDate > $monthEnd) {
                 continue;
             }
-            $dayOfMonth = Carbon::parse($sale->Day)->day;
-            $weekNum = (int) ceil($dayOfMonth / 7);
-            $salesByWeek[$weekNum] = ($salesByWeek[$weekNum] ?? 0) + (float) ($sale->Total_Sales ?? 0);
-        }
 
-        $daysInMonth = $month->daysInMonth;
-        $numWeeks = (int) ceil($daysInMonth / 7);
-        $weeks = [];
+            $weekNum++;
 
-        for ($i = 0; $i < $numWeeks; $i++) {
-            $weekNum = $i + 1;
-            $weekStartDate = $monthStart->copy()->addDays($i * 7);
-            $nextWeekStartDate = $i < $numWeeks - 1
-                ? $monthStart->copy()->addDays(($i + 1) * 7)
-                : $nextMonthStart;
-
-            $weekStartKey = $weekStartDate->format('Y-m-d');
-            $weekEndKey = $nextWeekStartDate->format('Y-m-d');
-
-            $meterStart = $meters->get($weekStartKey);
-            $meterEnd = $meters->get($weekEndKey);
-
-            $startValue = $meterStart ? (float) $meterStart->value : null;
-            $endValue = $meterEnd ? (float) $meterEnd->value : null;
+            $startValue = (float) $startMeter->value;
+            $endValue = (float) $endMeter->value;
 
             $consumed = null;
-            if ($startValue !== null && $endValue !== null && $endValue > $startValue) {
+            if ($endValue > $startValue) {
                 $consumed = round(($endValue - $startValue) * 1000, 2);
             }
 
-            $totalBottles = $salesByWeek[$weekNum] ?? 0;
+            $totalBottles = 0;
+            $cursor = $startDate->copy();
+            while ($cursor < $endDate) {
+                $key = $cursor->format('Y-m-d');
+                $totalBottles += (float) ($dayTotals[$key] ?? 0);
+                $cursor->addDay();
+            }
+
             $waterSold = round($totalBottles * 20, 2);
 
             $waterLoss = null;

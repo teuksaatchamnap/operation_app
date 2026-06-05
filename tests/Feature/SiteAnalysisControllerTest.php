@@ -847,7 +847,7 @@ class SiteAnalysisControllerTest extends TestCase
         $weeks = $response->json('weeks');
         $this->assertCount(5, $weeks);
 
-        // Week 1: days 1-7 (7 days), meter (10.0 -> 25.0)
+        // Pair 1: Jan 1 -> Jan 8, days 1-7 (7 days), meter (10.0 -> 25.0)
         $this->assertEquals(1, $weeks[0]['week']);
         $this->assertEquals(10.0, $weeks[0]['meter_start']);
         $this->assertEquals(25.0, $weeks[0]['meter_end']);
@@ -856,7 +856,7 @@ class SiteAnalysisControllerTest extends TestCase
         $this->assertEquals(8000.0, $weeks[0]['loss']);
         $this->assertEquals(53.33, $weeks[0]['loss_pct']);
 
-        // Week 2: days 8-14 (7 days), meter (25.0 -> 45.0)
+        // Pair 2: Jan 8 -> Jan 15, days 8-14 (7 days), meter (25.0 -> 45.0)
         $this->assertEquals(2, $weeks[1]['week']);
         $this->assertEquals(25.0, $weeks[1]['meter_start']);
         $this->assertEquals(45.0, $weeks[1]['meter_end']);
@@ -865,7 +865,7 @@ class SiteAnalysisControllerTest extends TestCase
         $this->assertEquals(13000.0, $weeks[1]['loss']);
         $this->assertEquals(65.0, $weeks[1]['loss_pct']);
 
-        // Week 3: days 15-21 (7 days), meter (45.0 -> 70.0)
+        // Pair 3: Jan 15 -> Jan 22, days 15-21 (7 days), meter (45.0 -> 70.0)
         $this->assertEquals(3, $weeks[2]['week']);
         $this->assertEquals(45.0, $weeks[2]['meter_start']);
         $this->assertEquals(70.0, $weeks[2]['meter_end']);
@@ -874,7 +874,7 @@ class SiteAnalysisControllerTest extends TestCase
         $this->assertEquals(18000.0, $weeks[2]['loss']);
         $this->assertEquals(72.0, $weeks[2]['loss_pct']);
 
-        // Week 4: days 22-28 (7 days), meter (70.0 -> 100.0)
+        // Pair 4: Jan 22 -> Jan 29, days 22-28 (7 days), meter (70.0 -> 100.0)
         $this->assertEquals(4, $weeks[3]['week']);
         $this->assertEquals(70.0, $weeks[3]['meter_start']);
         $this->assertEquals(100.0, $weeks[3]['meter_end']);
@@ -883,7 +883,7 @@ class SiteAnalysisControllerTest extends TestCase
         $this->assertEquals(23000.0, $weeks[3]['loss']);
         $this->assertEqualsWithDelta(76.67, $weeks[3]['loss_pct'], 0.01);
 
-        // Week 5: days 29-31 (3 days), meter (100.0 -> 135.0)
+        // Pair 5: Jan 29 -> Feb 1, days 29-31 (3 days), meter (100.0 -> 135.0)
         $this->assertEquals(5, $weeks[4]['week']);
         $this->assertEquals(100.0, $weeks[4]['meter_start']);
         $this->assertEquals(135.0, $weeks[4]['meter_end']);
@@ -916,8 +916,77 @@ class SiteAnalysisControllerTest extends TestCase
         Mockery::mock('overload:App\Models\Sims3\DailySale')
             ->shouldReceive('where')->with('Id_Site', 'SITE02')->andReturn($dailySaleBuilder);
 
+        $cashierBuilder = Mockery::mock(Builder::class);
+        $cashierBuilder->shouldReceive('whereYear')->andReturnSelf();
+        $cashierBuilder->shouldReceive('whereMonth')->andReturnSelf();
+        $cashierBuilder->shouldReceive('get')->andReturn(collect());
+
+        Mockery::mock('overload:App\Models\Sims3\CashierSale')
+            ->shouldReceive('where')->with('site', 'SITE02')->andReturn($cashierBuilder);
+
         $response = $this->actingAs($user)
             ->getJson("/api/sites/{$site->id}/water-loss-by-week?month=2025-01");
+
+        $response->assertSuccessful();
+        $response->assertJson(['weeks' => []]);
+    }
+
+    // ------------------------------------------------------------------
+    //  dailySales()
+    // ------------------------------------------------------------------
+
+    public function test_daily_sales_unauthenticated(): void
+    {
+        $site = Site::factory()->create();
+
+        $this->getJson("/api/sites/{$site->id}/daily-sales")
+            ->assertUnauthorized();
+    }
+
+    public function test_water_loss_by_week_readings_not_on_aligned_dates(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE03']);
+
+        $this->mockSims3Site('SITE03');
+
+        $meterData = collect([
+            (object) ['site' => 'SITE03', 'date' => '2026-05-07', 'value' => 703],
+            (object) ['site' => 'SITE03', 'date' => '2026-05-14', 'value' => 729],
+            (object) ['site' => 'SITE03', 'date' => '2026-05-21', 'value' => 742],
+            (object) ['site' => 'SITE03', 'date' => '2026-05-28', 'value' => 760],
+            (object) ['site' => 'SITE03', 'date' => '2026-06-04', 'value' => 785],
+        ]);
+
+        $meterBuilder = Mockery::mock(Builder::class);
+        $meterBuilder->shouldReceive('whereBetween')->andReturnSelf();
+        $meterBuilder->shouldReceive('orderBy')->with('date')->andReturnSelf();
+        $meterBuilder->shouldReceive('get')->andReturn($meterData);
+
+        Mockery::mock('overload:App\Models\Sims3\WaterMeter')
+            ->shouldReceive('where')->with('site', 'SITE03')->andReturn($meterBuilder);
+
+        $dailySalesData = collect();
+        for ($day = 1; $day <= 31; $day++) {
+            $dailySalesData->push((object) [
+                'Day' => sprintf('2026-05-%02d', $day),
+                'Total_Sales' => 50,
+            ]);
+        }
+        $dailySalesData->push((object) ['Day' => '2026-06-01', 'Total_Sales' => 50]);
+        $dailySalesData->push((object) ['Day' => '2026-06-02', 'Total_Sales' => 50]);
+        $dailySalesData->push((object) ['Day' => '2026-06-03', 'Total_Sales' => 50]);
+
+        $dailySaleBuilder = Mockery::mock(Builder::class);
+        $dailySaleBuilder->shouldReceive('whereYear')->andReturnSelf();
+        $dailySaleBuilder->shouldReceive('whereMonth')->andReturnSelf();
+        $dailySaleBuilder->shouldReceive('get')->andReturn($dailySalesData);
+
+        Mockery::mock('overload:App\Models\Sims3\DailySale')
+            ->shouldReceive('where')->with('Id_Site', 'SITE03')->andReturn($dailySaleBuilder);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/water-loss-by-week?month=2026-05");
 
         $response->assertSuccessful();
         $response->assertJsonStructure([
@@ -927,16 +996,285 @@ class SiteAnalysisControllerTest extends TestCase
         ]);
 
         $weeks = $response->json('weeks');
-        $this->assertCount(5, $weeks);
+        $this->assertCount(4, $weeks);
 
-        foreach ($weeks as $week) {
-            $this->assertNull($week['meter_start']);
-            $this->assertNull($week['meter_end']);
-            $this->assertNull($week['consumed']);
-            $this->assertEquals(0.0, $week['sold']);
-            $this->assertNull($week['loss']);
-            $this->assertNull($week['loss_pct']);
-        }
+        // Pair 1: May 7 -> May 14, days 7-13 (7 days), meter (703 -> 729)
+        $this->assertEquals(1, $weeks[0]['week']);
+        $this->assertEquals(703, $weeks[0]['meter_start']);
+        $this->assertEquals(729, $weeks[0]['meter_end']);
+        $this->assertEquals(26000.0, $weeks[0]['consumed']);
+        $this->assertEquals(7000.0, $weeks[0]['sold']);
+        $this->assertEquals(19000.0, $weeks[0]['loss']);
+        $this->assertEqualsWithDelta(73.08, $weeks[0]['loss_pct'], 0.01);
+
+        // Pair 2: May 14 -> May 21, days 14-20 (7 days), meter (729 -> 742)
+        $this->assertEquals(2, $weeks[1]['week']);
+        $this->assertEquals(729, $weeks[1]['meter_start']);
+        $this->assertEquals(742, $weeks[1]['meter_end']);
+        $this->assertEquals(13000.0, $weeks[1]['consumed']);
+        $this->assertEquals(7000.0, $weeks[1]['sold']);
+        $this->assertEquals(6000.0, $weeks[1]['loss']);
+        $this->assertEqualsWithDelta(46.15, $weeks[1]['loss_pct'], 0.01);
+
+        // Pair 3: May 21 -> May 28, days 21-27 (7 days), meter (742 -> 760)
+        $this->assertEquals(3, $weeks[2]['week']);
+        $this->assertEquals(742, $weeks[2]['meter_start']);
+        $this->assertEquals(760, $weeks[2]['meter_end']);
+        $this->assertEquals(18000.0, $weeks[2]['consumed']);
+        $this->assertEquals(7000.0, $weeks[2]['sold']);
+        $this->assertEquals(11000.0, $weeks[2]['loss']);
+        $this->assertEqualsWithDelta(61.11, $weeks[2]['loss_pct'], 0.01);
+
+        // Pair 4: May 28 -> Jun 4, days 28-Jun 3 (7 days), meter (760 -> 785)
+        $this->assertEquals(4, $weeks[3]['week']);
+        $this->assertEquals(760, $weeks[3]['meter_start']);
+        $this->assertEquals(785, $weeks[3]['meter_end']);
+        $this->assertEquals(25000.0, $weeks[3]['consumed']);
+        $this->assertEquals(7000.0, $weeks[3]['sold']);
+        $this->assertEquals(18000.0, $weeks[3]['loss']);
+        $this->assertEqualsWithDelta(72.0, $weeks[3]['loss_pct'], 0.01);
+    }
+
+    public function test_daily_sales_site_not_found_returns_404(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'NONEXISTENT']);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/daily-sales?month=2025-01");
+
+        $response->assertNotFound();
+    }
+
+    public function test_daily_sales_returns_full_structure(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE30']);
+
+        $this->mockSims3Site('SITE30');
+
+        $dailySalesData = collect([
+            (object) [
+                'Day' => '2025-01-01',
+                'Total_Sales' => 160,
+                'Hod_Sales' => 100,
+                'Shopkeeper_Sales' => 50,
+                'WiS_Sales' => 0,
+                'Onsite_Sales' => 0,
+                'Free_Sales' => 10,
+                'Bottle_Sales' => 0,
+            ],
+            (object) [
+                'Day' => '2025-01-15',
+                'Total_Sales' => 200,
+                'Hod_Sales' => 80,
+                'Shopkeeper_Sales' => 60,
+                'WiS_Sales' => 20,
+                'Onsite_Sales' => 30,
+                'Free_Sales' => 0,
+                'Bottle_Sales' => 10,
+            ],
+        ]);
+
+        $dailySaleBuilder = Mockery::mock(Builder::class);
+        $dailySaleBuilder->shouldReceive('whereYear')->andReturnSelf();
+        $dailySaleBuilder->shouldReceive('whereMonth')->andReturnSelf();
+        $dailySaleBuilder->shouldReceive('get')->andReturn($dailySalesData);
+
+        Mockery::mock('overload:App\Models\Sims3\DailySale')
+            ->shouldReceive('where')->with('Id_Site', 'SITE30')->andReturn($dailySaleBuilder);
+
+        $saleMock = Mockery::mock('overload:App\Models\Sims3\Sale');
+        $saleMock->Total_Sales = 360;
+        $saleMock->Total_Income = 180000;
+        $saleMock->Hod_Sales = 180;
+        $saleMock->Hod_Price = 500;
+        $saleMock->Hod_Income = 90000;
+        $saleMock->Shopkeeper_Sales = 110;
+        $saleMock->Shopkeeper_Price = 600;
+        $saleMock->Shopkeeper_Income = 66000;
+        $saleMock->WiS_Sales = 20;
+        $saleMock->WiS_Price = 400;
+        $saleMock->WiS_Income = 8000;
+        $saleMock->Onsite_Sales = 30;
+        $saleMock->Onsite_Price = 300;
+        $saleMock->Onsite_Income = 9000;
+        $saleMock->Free_Sales = 10;
+        $saleMock->Bottle_Sales = 10;
+        $saleMock->Bottle_Price = 700;
+        $saleMock->Bottle_Income = 7000;
+        $saleMock->Emergency_Sales = 0;
+        $saleMock->Emergency_Price = 0;
+        $saleMock->Emergency_Income = 0;
+
+        $saleBuilder = Mockery::mock(Builder::class);
+        $saleBuilder->shouldReceive('whereYear')->andReturnSelf();
+        $saleBuilder->shouldReceive('whereMonth')->andReturnSelf();
+        $saleBuilder->shouldReceive('first')->andReturn($saleMock);
+
+        $saleMock->shouldReceive('where')->with('Id_Site', 'SITE30')->andReturn($saleBuilder);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/daily-sales?month=2025-01");
+
+        $response->assertSuccessful();
+        $response->assertJsonStructure([
+            'sales' => [
+                '*' => ['date', 'Free_Sales', 'Hod_Sales', 'WiS_Sales', 'Onsite_Sales', 'Shopkeeper_Sales', 'Bottle_Sales', 'Other_Sales', 'Total_Sales'],
+            ],
+            'totals' => ['Free_Sales', 'Hod_Sales', 'WiS_Sales', 'Onsite_Sales', 'Shopkeeper_Sales', 'Bottle_Sales', 'Emergency_Sales', 'Other_Sales', 'Total_Sales'],
+            'prices' => ['Free_Price', 'Hod_Price', 'Shopkeeper_Price', 'WiS_Price', 'Onsite_Price', 'Bottle_Price', 'Emergency_Price', 'Other_Price'],
+            'income' => ['Free_Income', 'Hod_Income', 'Shopkeeper_Income', 'WiS_Income', 'Onsite_Income', 'Bottle_Income', 'Emergency_Income', 'Other_Income', 'Total_Income'],
+        ]);
+
+        $sales = $response->json('sales');
+        $this->assertCount(2, $sales);
+        $this->assertEquals('2025-01-01', $sales[0]['date']);
+        $this->assertEquals(100, $sales[0]['Hod_Sales']);
+        $this->assertEquals(50, $sales[0]['Shopkeeper_Sales']);
+        $this->assertEquals(0, $sales[0]['Other_Sales']);
+        $this->assertEquals(160, $sales[0]['Total_Sales']);
+
+        $this->assertEquals('2025-01-15', $sales[1]['date']);
+        $this->assertEquals(80, $sales[1]['Hod_Sales']);
+        $this->assertEquals(20, $sales[1]['WiS_Sales']);
+        $this->assertEquals(0, $sales[1]['Other_Sales']);
+        $this->assertEquals(200, $sales[1]['Total_Sales']);
+
+        $this->assertEquals(180, $response->json('totals.Hod_Sales'));
+        $this->assertEquals(500, $response->json('prices.Hod_Price'));
+        $this->assertEquals(90000, $response->json('income.Hod_Income'));
+    }
+
+    public function test_daily_sales_falls_back_to_cashier_sale(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE31']);
+
+        $this->mockSims3Site('SITE31');
+
+        $dailySaleBuilder = Mockery::mock(Builder::class);
+        $dailySaleBuilder->shouldReceive('whereYear')->andReturnSelf();
+        $dailySaleBuilder->shouldReceive('whereMonth')->andReturnSelf();
+        $dailySaleBuilder->shouldReceive('get')->andReturn(collect());
+
+        Mockery::mock('overload:App\Models\Sims3\DailySale')
+            ->shouldReceive('where')->with('Id_Site', 'SITE31')->andReturn($dailySaleBuilder);
+
+        $cashierData = collect([
+            (object) ['sale_date' => '2025-01-01', 'quantity' => 10, 'unit_price' => 500, 'type' => 'hod'],
+            (object) ['sale_date' => '2025-01-01', 'quantity' => 5, 'unit_price' => 600, 'type' => 'shop'],
+            (object) ['sale_date' => '2025-01-02', 'quantity' => 8, 'unit_price' => 500, 'type' => 'hod'],
+            (object) ['sale_date' => '2025-01-02', 'quantity' => 3, 'unit_price' => 400, 'type' => 'onsite'],
+            (object) ['sale_date' => '2025-01-02', 'quantity' => 2, 'unit_price' => 300, 'type' => 'bottle'],
+        ]);
+
+        $cashierBuilder = Mockery::mock(Builder::class);
+        $cashierBuilder->shouldReceive('whereYear')->andReturnSelf();
+        $cashierBuilder->shouldReceive('whereMonth')->andReturnSelf();
+        $cashierBuilder->shouldReceive('get')->andReturn($cashierData);
+
+        Mockery::mock('overload:App\Models\Sims3\CashierSale')
+            ->shouldReceive('where')->with('site', 'SITE31')->andReturn($cashierBuilder);
+
+        $saleMock = Mockery::mock('overload:App\Models\Sims3\Sale');
+        $saleMock->Total_Sales = 28;
+        $saleMock->Total_Income = 14000;
+        $saleMock->Hod_Sales = 18;
+        $saleMock->Hod_Price = 500;
+        $saleMock->Hod_Income = 9000;
+        $saleMock->Shopkeeper_Sales = 5;
+        $saleMock->Shopkeeper_Price = 600;
+        $saleMock->Shopkeeper_Income = 3000;
+        $saleMock->WiS_Sales = 0;
+        $saleMock->WiS_Price = 0;
+        $saleMock->WiS_Income = 0;
+        $saleMock->Onsite_Sales = 3;
+        $saleMock->Onsite_Price = 400;
+        $saleMock->Onsite_Income = 1200;
+        $saleMock->Free_Sales = 0;
+        $saleMock->Bottle_Sales = 2;
+        $saleMock->Bottle_Price = 300;
+        $saleMock->Bottle_Income = 600;
+        $saleMock->Emergency_Sales = 0;
+        $saleMock->Emergency_Price = 0;
+        $saleMock->Emergency_Income = 0;
+
+        $saleBuilder = Mockery::mock(Builder::class);
+        $saleBuilder->shouldReceive('whereYear')->andReturnSelf();
+        $saleBuilder->shouldReceive('whereMonth')->andReturnSelf();
+        $saleBuilder->shouldReceive('first')->andReturn($saleMock);
+
+        $saleMock->shouldReceive('where')->with('Id_Site', 'SITE31')->andReturn($saleBuilder);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/daily-sales?month=2025-01");
+
+        $response->assertSuccessful();
+
+        $sales = $response->json('sales');
+        $this->assertCount(2, $sales);
+
+        $this->assertEquals('2025-01-01', $sales[0]['date']);
+        $this->assertEquals(0, $sales[0]['Free_Sales']);
+        $this->assertEquals(10, $sales[0]['Hod_Sales']);
+        $this->assertEquals(5, $sales[0]['Shopkeeper_Sales']);
+        $this->assertEquals(0, $sales[0]['WiS_Sales']);
+        $this->assertEquals(0, $sales[0]['Onsite_Sales']);
+        $this->assertEquals(0, $sales[0]['Bottle_Sales']);
+        $this->assertEquals(0, $sales[0]['Other_Sales']);
+        $this->assertEquals(15, $sales[0]['Total_Sales']);
+
+        $this->assertEquals('2025-01-02', $sales[1]['date']);
+        $this->assertEquals(0, $sales[1]['Free_Sales']);
+        $this->assertEquals(8, $sales[1]['Hod_Sales']);
+        $this->assertEquals(0, $sales[1]['Shopkeeper_Sales']);
+        $this->assertEquals(0, $sales[1]['WiS_Sales']);
+        $this->assertEquals(3, $sales[1]['Onsite_Sales']);
+        $this->assertEquals(2, $sales[1]['Bottle_Sales']);
+        $this->assertEquals(0, $sales[1]['Other_Sales']);
+        $this->assertEquals(13, $sales[1]['Total_Sales']);
+    }
+
+    public function test_daily_sales_no_data_returns_empty(): void
+    {
+        $user = User::factory()->create();
+        $site = Site::factory()->create(['name' => 'SITE32']);
+
+        $this->mockSims3Site('SITE32');
+
+        $dailySaleBuilder = Mockery::mock(Builder::class);
+        $dailySaleBuilder->shouldReceive('whereYear')->andReturnSelf();
+        $dailySaleBuilder->shouldReceive('whereMonth')->andReturnSelf();
+        $dailySaleBuilder->shouldReceive('get')->andReturn(collect());
+
+        Mockery::mock('overload:App\Models\Sims3\DailySale')
+            ->shouldReceive('where')->with('Id_Site', 'SITE32')->andReturn($dailySaleBuilder);
+
+        $cashierBuilder = Mockery::mock(Builder::class);
+        $cashierBuilder->shouldReceive('whereYear')->andReturnSelf();
+        $cashierBuilder->shouldReceive('whereMonth')->andReturnSelf();
+        $cashierBuilder->shouldReceive('get')->andReturn(collect());
+
+        Mockery::mock('overload:App\Models\Sims3\CashierSale')
+            ->shouldReceive('where')->with('site', 'SITE32')->andReturn($cashierBuilder);
+
+        $saleBuilder = Mockery::mock(Builder::class);
+        $saleBuilder->shouldReceive('whereYear')->andReturnSelf();
+        $saleBuilder->shouldReceive('whereMonth')->andReturnSelf();
+        $saleBuilder->shouldReceive('first')->andReturnNull();
+
+        Mockery::mock('overload:App\Models\Sims3\Sale')
+            ->shouldReceive('where')->with('Id_Site', 'SITE32')->andReturn($saleBuilder);
+
+        $response = $this->actingAs($user)
+            ->getJson("/api/sites/{$site->id}/daily-sales?month=2025-01");
+
+        $response->assertSuccessful();
+        $this->assertEquals([], $response->json('sales'));
+        $this->assertEquals([], $response->json('totals'));
+        $this->assertEquals(['Free_Price' => 0], $response->json('prices'));
+        $this->assertEquals(['Free_Income' => 0], $response->json('income'));
     }
 
     public function test_sales_comparison_computes_averages_correctly(): void
