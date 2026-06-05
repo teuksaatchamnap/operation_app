@@ -1040,6 +1040,11 @@ class SiteAnalysisControllerTest extends TestCase
         $user = User::factory()->create();
         $site = Site::factory()->create(['name' => 'NONEXISTENT']);
 
+        $builderMock = Mockery::mock(Builder::class);
+        $builderMock->shouldReceive('first')->andReturn(null);
+        Mockery::mock('overload:App\Models\Sims3\Site')
+            ->shouldReceive('where')->with('Id_Site', 'NONEXISTENT')->andReturn($builderMock);
+
         $response = $this->actingAs($user)
             ->getJson("/api/sites/{$site->id}/daily-sales?month=2025-01");
 
