@@ -78,7 +78,10 @@
                         />
                     </v-tabs-window-item>
                     <v-tabs-window-item value="pnl">
-                        <div class="text-medium-emphasis">P&L content</div>
+                        <SitePnlContent
+                            :site="site"
+                            :initial-month="initialMonth"
+                        />
                     </v-tabs-window-item>
                     <v-tabs-window-item value="technical">
                         <div class="text-medium-emphasis">
@@ -86,7 +89,7 @@
                         </div>
                     </v-tabs-window-item>
                     <v-tabs-window-item value="site">
-                        <div class="text-medium-emphasis">Site content</div>
+                        <SiteSiteContent :site="site" />
                     </v-tabs-window-item>
                 </v-tabs-window>
             </v-card-text>
@@ -98,6 +101,8 @@
 import { ref } from "vue";
 import SiteAnalysisContent from "./SiteAnalysisContent.vue";
 import SiteSalesContent from "./SiteSalesContent.vue";
+import SitePnlContent from "./SitePnlContent.vue";
+import SiteSiteContent from "./SiteSiteContent.vue";
 
 defineProps({
     modelValue: {

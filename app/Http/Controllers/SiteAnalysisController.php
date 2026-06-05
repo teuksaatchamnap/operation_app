@@ -396,6 +396,177 @@ class SiteAnalysisController extends Controller
         ]);
     }
 
+    public function monthlyExpenseByCategory(Site $site, Request $request): JsonResponse
+    {
+        $sims3Site = $this->resolveSims3Site($site);
+
+        if (! $sims3Site) {
+            return response()->json(['error' => 'Site not found in Sims3 database'], 404);
+        }
+
+        $month = $this->resolveMonth($request);
+        $start = $month->copy()->subMonths(11)->startOfMonth();
+        $end = $month->copy()->endOfMonth();
+
+        $categories = $this->getExpenseCategories();
+        $allRefs = collect($categories)->values()->flatten()->all();
+
+        $rows = Sims3Expense::where('Id_Site', $sims3Site->Id_Site)
+            ->where('Month', '>=', $start)
+            ->where('Month', '<=', $end)
+            ->whereNotIn('Ref_expenses', $this->getExpensesToIgnore())
+            ->whereIn('Ref_expenses', $allRefs)
+            ->get(['Month', 'Ref_expenses', 'Amount_expenses']);
+
+        $months = [];
+        for ($d = $start->copy(); $d <= $end; $d->addMonth()) {
+            $months[] = $d->format('Y-m');
+        }
+
+        $monthLabels = [];
+        $seriesData = [];
+
+        foreach ($categories as $cat => $refs) {
+            $seriesData[$cat] = array_fill(0, count($months), 0);
+        }
+
+        foreach ($rows as $row) {
+            $monthKey = Carbon::parse($row->Month)->format('Y-m');
+            $monthIndex = array_search($monthKey, $months);
+            if ($monthIndex === false) {
+                continue;
+            }
+
+            foreach ($categories as $cat => $refs) {
+                if (in_array($row->Ref_expenses, $refs)) {
+                    $seriesData[$cat][$monthIndex] += (float) $row->Amount_expenses;
+                    break;
+                }
+            }
+        }
+
+        $series = [];
+        foreach ($categories as $cat => $refs) {
+            $series[] = [
+                'name' => $cat,
+                'data' => array_map(fn ($v) => round($v), $seriesData[$cat]),
+            ];
+        }
+
+        $monthLabels = array_map(fn ($m) => Carbon::parse($m.'-01')->format('M Y'), $months);
+
+        return response()->json([
+            'months' => $monthLabels,
+            'series' => $series,
+        ]);
+    }
+
+    public function monthlyProfitLoss(Site $site, Request $request): JsonResponse
+    {
+        $month = $this->resolveMonth($request);
+        $start = $month->copy()->subMonths(11)->startOfMonth();
+        $end = $month->copy()->endOfMonth();
+
+        $records = FactMonthly::where('site_id', $site->id)
+            ->where('month', '>=', $start)
+            ->where('month', '<=', $end)
+            ->orderBy('month')
+            ->get(['month', 'revenue', 'expenses']);
+
+        $months = [];
+        for ($d = $start->copy(); $d <= $end; $d->addMonth()) {
+            $months[] = $d->format('Y-m');
+        }
+
+        $revenueData = [];
+        $expensesData = [];
+        $netProfitData = [];
+
+        $recordsByMonth = $records->keyBy(fn ($r) => Carbon::parse($r->month)->format('Y-m'));
+
+        foreach ($months as $m) {
+            $rec = $recordsByMonth->get($m);
+            $rev = (float) ($rec->revenue ?? 0);
+            $exp = (float) ($rec->expenses ?? 0);
+            $revenueData[] = round($rev);
+            $expensesData[] = round($exp);
+            $netProfitData[] = round($rev - $exp);
+        }
+
+        $monthLabels = array_map(fn ($m) => Carbon::parse($m.'-01')->format('M Y'), $months);
+
+        return response()->json([
+            'months' => $monthLabels,
+            'revenue' => $revenueData,
+            'expenses' => $expensesData,
+            'net_profit' => $netProfitData,
+        ]);
+    }
+
+    public function siteProfile(Site $site): JsonResponse
+    {
+        $sims3Site = $this->resolveSims3Site($site);
+
+        if (! $sims3Site) {
+            return response()->json(['error' => 'Site not found in Sims3 database'], 404);
+        }
+
+        $romName = $sims3Site->Platform
+            ? Sims3Platform::where('Code_Platform', $sims3Site->Platform)->value('Mail_ROM')
+            : null;
+
+        $saleDate = $sims3Site->Sale_Starting_Date
+            ? Carbon::parse($sims3Site->Sale_Starting_Date)->format('M Y')
+            : null;
+
+        $startDate = $sims3Site->Date_start_working
+            ? Carbon::parse($sims3Site->Date_start_working)->format('M Y')
+            : null;
+
+        $lat = $sims3Site->Latitude;
+        $lng = $sims3Site->Longitude;
+
+        return response()->json([
+            'profile' => [
+                'lat' => $lat ? round((float) $lat, 4) : null,
+                'lng' => $lng ? round((float) $lng, 4) : null,
+                'entrepreneur' => $sims3Site->Entrepreneur_English_Name,
+                'advisor' => $sims3Site->Advisor,
+                'rom' => $romName,
+                'technician' => $sims3Site->technician_site,
+                'installation_date' => $saleDate,
+                'start_working_date' => $startDate,
+                'phone' => $sims3Site->Phone_Number,
+                'education' => $sims3Site->Education,
+                'previous_job' => $sims3Site->Previous_Job,
+            ],
+            'location' => [
+                'village' => [
+                    'en' => $sims3Site->Village,
+                    'km' => $sims3Site->Village_khmer,
+                ],
+                'commune' => [
+                    'en' => $sims3Site->Commune,
+                    'km' => $sims3Site->Commune_khmer,
+                ],
+                'district' => [
+                    'en' => $sims3Site->District,
+                    'km' => $sims3Site->District_khmer,
+                ],
+                'province' => [
+                    'en' => $sims3Site->Province,
+                    'km' => $sims3Site->Province_khmer,
+                ],
+            ],
+            'demographics' => [
+                'villages_in_commune' => $sims3Site->Number_Village ? (int) $sims3Site->Number_Village : null,
+                'families' => $sims3Site->Number_Family ? (int) $sims3Site->Number_Family : (int) ($sims3Site->Family ?? null),
+                'households' => $sims3Site->Households ? (int) $sims3Site->Households : null,
+                'population' => $sims3Site->Number_Population ? (int) $sims3Site->Number_Population : (int) ($sims3Site->Population ?? null),
+            ],
+        ]);
+    }
+
     public function monthlyPerformance(Site $site): JsonResponse
     {
         $currentYear = now()->year;
@@ -655,6 +826,64 @@ class SiteAnalysisController extends Controller
         return response()->json(['weeks' => $weeks]);
     }
 
+    public function pnlExpenses(Site $site, Request $request): JsonResponse
+    {
+        $sims3Site = $this->resolveSims3Site($site);
+
+        if (! $sims3Site) {
+            return response()->json(['error' => 'Site not found in Sims3 database'], 404);
+        }
+
+        $month = $this->resolveMonth($request);
+        $categories = $this->getExpenseCategories();
+        $labels = $this->getExpenseLabels();
+
+        $rows = Sims3Expense::where('Id_Site', $sims3Site->Id_Site)
+            ->whereYear('Month', $month->year)
+            ->whereMonth('Month', $month->month)
+            ->whereNotIn('Ref_expenses', $this->getExpensesToIgnore())
+            ->whereIn('Ref_expenses', collect($categories)->values()->flatten()->all())
+            ->get(['Ref_expenses', 'Amount_expenses']);
+
+        $result = [];
+        $grandTotal = 0;
+
+        foreach ($categories as $cat => $refs) {
+            $catRows = $rows->filter(fn ($r) => in_array($r->Ref_expenses, $refs));
+            $catTotal = 0;
+            $items = [];
+
+            foreach ($refs as $ref) {
+                $amount = (float) ($catRows->firstWhere('Ref_expenses', $ref)->Amount_expenses ?? 0);
+                if ($amount > 0) {
+                    $items[] = [
+                        'ref' => $ref,
+                        'label' => $labels[$ref] ?? $ref,
+                        'amount' => round($amount),
+                    ];
+                    $catTotal += $amount;
+                }
+            }
+
+            $catTotal = round($catTotal);
+
+            if ($catTotal > 0 || count($items) > 0) {
+                $result[] = [
+                    'category' => $cat,
+                    'sub_total' => $catTotal,
+                    'items' => $items,
+                ];
+            }
+
+            $grandTotal += $catTotal;
+        }
+
+        return response()->json([
+            'categories' => $result,
+            'grand_total' => round($grandTotal),
+        ]);
+    }
+
     private function getExpenseCategories(): array
     {
         return [
@@ -670,6 +899,29 @@ class SiteAnalysisController extends Controller
     private function getExpensesToIgnore(): array
     {
         return ['WinS_invoice', 'debt', 'withdrawal', 'adjustment'];
+    }
+
+    private function getExpenseLabels(): array
+    {
+        return [
+            'consumable_production' => 'Consumable Production',
+            'stock_ts' => 'Stock TS',
+            'bottle_invoice' => 'Bottle Invoice',
+            'electricity' => 'Electricity',
+            'gasoline_waterpump' => 'Gasoline (Water Pump)',
+            'raw_water' => 'Raw Water',
+            'fix_salary_entrepreneurs' => 'Fix Salary (Entrepreneur)',
+            'variable_salary_entrepreneurs' => 'Variable Salary (Entrepreneur)',
+            'fix_salary_operators' => 'Fix Salary (Operators)',
+            'variable_salary_operators' => 'Variable Salary (Operators)',
+            'maintenance_delivery' => 'Maintenance (Delivery)',
+            'gasoline_delivery' => 'Gasoline (Delivery)',
+            'commune_contribution' => 'Commune Contribution',
+            'entrepreneur_contribution' => 'Entrepreneur Contribution',
+            'technical intervention' => 'Technical Intervention',
+            'water quality alert' => 'Water Quality Alert',
+            'investment' => 'Investment',
+        ];
     }
 
     private function resolveMonth(Request $request): Carbon
