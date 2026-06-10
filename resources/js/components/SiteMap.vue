@@ -40,6 +40,19 @@
                 isFullscreen ? "mdi-fullscreen-exit" : "mdi-fullscreen"
             }}</v-icon>
         </v-btn>
+        <div v-if="legend.length" class="map-legend">
+            <div
+                v-for="entry in legend"
+                :key="entry.value"
+                class="legend-item"
+            >
+                <div
+                    class="legend-swatch"
+                    :style="{ backgroundColor: entry.color }"
+                />
+                <span class="legend-label">{{ entry.value }}</span>
+            </div>
+        </div>
     </div>
     <v-progress-linear v-else indeterminate color="primary" class="mb-2" />
 </template>
@@ -401,5 +414,38 @@ onMounted(() => {
 :deep(.leaflet-tooltip.site-hover-tooltip.leaflet-tooltip-right:before) {
     border-left-color: #fff;
     border-right-color: #fff;
+}
+
+.map-legend {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.92);
+    padding: 8px 12px;
+    border-radius: 6px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.legend-label {
+    font-size: 12px;
+    color: #212121;
+    white-space: nowrap;
 }
 </style>

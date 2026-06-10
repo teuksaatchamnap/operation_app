@@ -206,7 +206,7 @@
             No sites found for the selected filters.
         </div>
 
-        <template v-if="mergedSites.length > 0">
+        <template v-if="viewMode !== 'map' && mergedSites.length > 0">
             <v-divider class="my-3" />
             <div class="d-flex flex-wrap ga-4">
                 <div
