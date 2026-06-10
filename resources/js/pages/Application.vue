@@ -5,7 +5,7 @@
                 <MonthPicker v-model="selectedMonth" />
             </v-col>
             <v-col>
-                <v-select
+                <v-autocomplete
                     v-model="selectedSites"
                     :items="sites"
                     item-title="name"
@@ -16,10 +16,11 @@
                     chips
                     closable-chips
                     hide-details
+                    auto-select-first
                 />
             </v-col>
             <v-col>
-                <v-select
+                <v-autocomplete
                     v-model="selectedAdvisors"
                     :items="advisors"
                     item-title="name"
@@ -30,6 +31,7 @@
                     chips
                     closable-chips
                     hide-details
+                    auto-select-first
                 />
             </v-col>
             <v-col>
