@@ -45,6 +45,8 @@
                 v-for="entry in legend"
                 :key="entry.value"
                 class="legend-item"
+                :class="{ active: selectedLegends.has(entry.value) }"
+                @click="toggleLegend(entry.value)"
             >
                 <div
                     class="legend-swatch"
@@ -99,6 +101,18 @@ const props = defineProps({
         default: () => ({}),
     },
 });
+
+const selectedLegends = ref(new Set());
+
+function toggleLegend(value) {
+    const set = selectedLegends.value;
+    if (set.has(value)) {
+        set.delete(value);
+        selectedLegends.value = new Set(set);
+    } else {
+        selectedLegends.value = new Set(set).add(value);
+    }
+}
 
 const legendMap = computed(() => {
     const map = {};
@@ -212,7 +226,11 @@ function clampMapView() {
 }
 
 const sitesWithCoords = computed(() =>
-    props.sites.filter((s) => s.latitude && s.longitude),
+    props.sites.filter((s) => {
+        if (!s.latitude || !s.longitude) return false;
+        if (selectedLegends.value.size === 0) return true;
+        return selectedLegends.value.has(getSiteValue(s));
+    }),
 );
 
 const geoJsonOptions = {
@@ -421,7 +439,8 @@ onMounted(() => {
     bottom: 12px;
     left: 12px;
     z-index: 1000;
-    background: rgba(255, 255, 255, 0.92);
+    background: rgba(var(--v-theme-surface), 0.92);
+    color: rgb(var(--v-theme-on-surface));
     padding: 8px 12px;
     border-radius: 6px;
     box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
@@ -434,6 +453,20 @@ onMounted(() => {
     display: flex;
     align-items: center;
     gap: 4px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+}
+
+.legend-item:hover {
+    opacity: 1;
+}
+
+.legend-item.active {
+    opacity: 1;
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+    border-radius: 2px;
 }
 
 .legend-swatch {
@@ -445,7 +478,6 @@ onMounted(() => {
 
 .legend-label {
     font-size: 12px;
-    color: #212121;
     white-space: nowrap;
 }
 </style>
