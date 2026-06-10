@@ -16,6 +16,7 @@ use App\Services\DailySalesProvider;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SiteAnalysisController extends Controller
 {
@@ -97,14 +98,25 @@ class SiteAnalysisController extends Controller
 
             if ($fact) {
                 if ($def['periodicity'] === 'ytd') {
-                    $ytdRecords = FactMonthly::where('site_id', $site->id)
-                        ->whereYear('month', $month->year)
-                        ->where('month', '<=', $month)
-                        ->whereNotNull($def['col_name'])
-                        ->pluck($def['col_name']);
+                    if ($def['col_name'] === 'bottles_per_day') {
+                        $totals = DB::table('fact_monthly')
+                            ->where('site_id', $site->id)
+                            ->whereYear('month', $month->year)
+                            ->where('month', '<=', $month)
+                            ->selectRaw('SUM(sales_volume) as total_volume, SUM(days_open) as total_days')
+                            ->first();
 
-                    if ($ytdRecords->isNotEmpty()) {
-                        $value = round($ytdRecords->avg());
+                        $value = $totals && $totals->total_days > 0
+                            ? round($totals->total_volume / $totals->total_days)
+                            : 0;
+                    } else {
+                        $ytdRecords = FactMonthly::where('site_id', $site->id)
+                            ->whereYear('month', $month->year)
+                            ->where('month', '<=', $month)
+                            ->whereNotNull($def['col_name'])
+                            ->pluck($def['col_name']);
+
+                        $value = $ytdRecords->isNotEmpty() ? round($ytdRecords->avg()) : 0;
                     }
                 } else {
                     $value = $fact->{$def['col_name']};

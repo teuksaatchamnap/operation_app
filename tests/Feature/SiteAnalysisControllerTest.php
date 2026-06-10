@@ -178,9 +178,18 @@ class SiteAnalysisControllerTest extends TestCase
         $user = User::factory()->create();
         $site = Site::factory()->create(['name' => 'SITE04']);
 
-        FactMonthly::factory()->create(['site_id' => $site->id, 'month' => '2025-01-01', 'bottles_per_day' => 100]);
-        FactMonthly::factory()->create(['site_id' => $site->id, 'month' => '2025-02-01', 'bottles_per_day' => 110]);
-        FactMonthly::factory()->create(['site_id' => $site->id, 'month' => '2025-03-01', 'bottles_per_day' => 120]);
+        FactMonthly::factory()->create([
+            'site_id' => $site->id, 'month' => '2025-01-01',
+            'sales_volume' => 1000, 'days_open' => 10, 'bottles_per_day' => 100,
+        ]);
+        FactMonthly::factory()->create([
+            'site_id' => $site->id, 'month' => '2025-02-01',
+            'sales_volume' => 1100, 'days_open' => 10, 'bottles_per_day' => 110,
+        ]);
+        FactMonthly::factory()->create([
+            'site_id' => $site->id, 'month' => '2025-03-01',
+            'sales_volume' => 1200, 'days_open' => 10, 'bottles_per_day' => 120,
+        ]);
         Kpi::factory()->create(['col_name' => 'bottles_per_day', 'name' => 'BPD', 'periodicity' => 'year to date']);
 
         $this->mockSims3Site('SITE04', ['Platform' => null]);

@@ -17,7 +17,7 @@ class ComputeExpenses extends BaseComputeJob
             ->select(['Id_Site', 'Month', 'Amount_expenses'])
             ->whereBetween('Month', [$from, $to])
             ->whereIn('Id_Site', $siteNames)
-            ->where('Ref_expenses', '<>', 'debt')
+            ->whereIn('Category_expenses', ['production', 'salary', 'delivery', 'contribution', 'investment', 'technical'])
             ->get();
 
         $map = [];

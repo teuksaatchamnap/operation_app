@@ -9,6 +9,8 @@ use Illuminate\Support\Collection;
 
 class ComputeIsProfitable extends BaseComputeJob
 {
+    private const EXCHANGE_RATE = 4020;
+
     protected function prepareData(Collection $siteMap, Collection $months, array $siteNames): array
     {
         $from = $months->first()->copy()->startOfMonth();
@@ -20,15 +22,16 @@ class ComputeIsProfitable extends BaseComputeJob
             ->whereIn('Id_Site', $siteNames)
             ->get()
             ->groupBy(fn ($s) => trim($s->Id_Site).'|'.Carbon::parse($s->Month)->startOfMonth()->format('Y-m-d'))
-            ->map(fn ($rows) => $rows->sum('Total_Income'));
+            ->map(fn ($rows) => $rows->sum('Total_Income') / self::EXCHANGE_RATE);
 
         $expenses = Expense::query()
             ->select(['Id_Site', 'Month', 'Amount_expenses'])
             ->whereBetween('Month', [$from, $to])
             ->whereIn('Id_Site', $siteNames)
+            ->whereIn('Category_expenses', ['production', 'salary', 'delivery', 'contribution', 'investment', 'technical'])
             ->get()
             ->groupBy(fn ($e) => trim($e->Id_Site).'|'.Carbon::parse($e->Month)->startOfMonth()->format('Y-m-d'))
-            ->map(fn ($rows) => $rows->sum('Amount_expenses'));
+            ->map(fn ($rows) => $rows->sum('Amount_expenses') / self::EXCHANGE_RATE);
 
         $salaryEntrepreneur = Expense::query()
             ->select(['Id_Site', 'Month', 'Amount_expenses'])
@@ -37,7 +40,7 @@ class ComputeIsProfitable extends BaseComputeJob
             ->whereIn('Ref_expenses', ['variable_salary_entrepreneurs', 'fix_salary_entrepreneurs'])
             ->get()
             ->groupBy(fn ($e) => trim($e->Id_Site).'|'.Carbon::parse($e->Month)->startOfMonth()->format('Y-m-d'))
-            ->map(fn ($rows) => $rows->sum('Amount_expenses'));
+            ->map(fn ($rows) => $rows->sum('Amount_expenses') / self::EXCHANGE_RATE);
 
         $allKeys = array_unique(array_merge(
             array_keys($revenue->toArray()),

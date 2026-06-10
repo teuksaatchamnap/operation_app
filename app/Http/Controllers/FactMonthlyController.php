@@ -166,6 +166,8 @@ class FactMonthlyController extends Controller
             $query->whereIn('site_id', $validated['site_ids']);
         }
 
+        $isBottlesPerDayYtd = $kpi === 'bottles_per_day' && $yearToDate;
+
         if ($request->filled('aggregate')) {
             $aggregateFunc = $validated['aggregate'];
 
@@ -173,9 +175,11 @@ class FactMonthlyController extends Controller
                 $query->where('active', 1);
             }
 
-            $rawExpr = $aggregateFunc === 'pct_active'
-                ? "SUM({$kpi}) / NULLIF(SUM(active), 0) * 100"
-                : "{$aggregateFunc}({$kpi})";
+            $rawExpr = match (true) {
+                $aggregateFunc === 'pct_active' => "SUM({$kpi}) / NULLIF(SUM(active), 0) * 100",
+                $isBottlesPerDayYtd => 'SUM(sales_volume) / NULLIF(SUM(days_open), 0)',
+                default => "{$aggregateFunc}({$kpi})",
+            };
 
             $query->selectRaw("{$rawExpr} as {$kpi}");
             $result = $query->first();
@@ -188,8 +192,12 @@ class FactMonthlyController extends Controller
         }
 
         if ($yearToDate) {
-            $query->selectRaw('site_id, platform_id, advisor_id, SUM('.$kpi.') as '.$kpi)
-                ->groupBy('site_id', 'platform_id', 'advisor_id');
+            if ($isBottlesPerDayYtd) {
+                $query->selectRaw('site_id, platform_id, advisor_id, SUM(sales_volume) / NULLIF(SUM(days_open), 0) as '.$kpi);
+            } else {
+                $query->selectRaw('site_id, platform_id, advisor_id, SUM('.$kpi.') as '.$kpi);
+            }
+            $query->groupBy('site_id', 'platform_id', 'advisor_id');
 
             return response()->json($query->get());
         }
