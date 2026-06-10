@@ -50,17 +50,6 @@
     </v-card>
 
     <ScrollPanel class="my-2">
-        <KpiCard
-            :kpi="findKpi('sales_volume')"
-            :year-to-date="1"
-            :filters="kpiFilters"
-        />
-        <KpiCard
-            :kpi="findKpi('sales_volume_lfl')"
-            :year-to-date="1"
-            :filters="kpiFilters"
-        />
-        <KpiCard :kpi="findKpi('sales_volume_lfl')" :filters="kpiFilters" />
         <KpiCard :kpi="findKpi('active')" :filters="kpiFilters" />
         <KpiCard
             :kpi="findKpi('super_tier_1')"
@@ -72,6 +61,17 @@
             :year-to-date="1"
             :filters="kpiFilters"
         />
+        <KpiCard
+            :kpi="findKpi('sales_volume')"
+            :year-to-date="1"
+            :filters="kpiFilters"
+        />
+        <KpiCard
+            :kpi="findKpi('sales_volume_lfl')"
+            :year-to-date="1"
+            :filters="kpiFilters"
+        />
+        <KpiCard :kpi="findKpi('sales_volume_lfl')" :filters="kpiFilters" />
         <KpiCard :kpi="findKpi('has_3_workers')" :filters="kpiFilters" />
         <KpiCard :kpi="findKpi('consumers')" :filters="kpiFilters" />
         <KpiCard
@@ -139,7 +139,7 @@ function saveFilters() {
             sites: selectedSites.value,
             advisors: selectedAdvisors.value,
             platforms: selectedPlatforms.value,
-        })
+        }),
     );
 }
 

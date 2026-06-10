@@ -67,13 +67,14 @@ class ComputeSalesVolume extends BaseComputeJob
                 $map[$key]['super_tier_1'] = 0;
                 $map[$key]['bottles_per_day'] = 0;
                 if ($map[$key]['days_open'] > 0) {
-                    $map[$key]['super_tier_1'] = ($map[$key]['sales_volume'] / $map[$key]['days_open']) > 110 ? 1 : 0;
                     $map[$key]['bottles_per_day'] = $map[$key]['sales_volume'] / $map[$key]['days_open'];
                 }
 
-                $map[$key]['tier'] = $this->computeTier(
+                $tierResult = $this->computeTier(
                     $site, $carbon, $allSales[$site] ?? collect(), $deadSites
                 );
+                $map[$key]['tier'] = $tierResult['tier'];
+                $map[$key]['super_tier_1'] = $tierResult['avg_per_day'] > 110 ? 1 : 0;
             }
         }
 
@@ -85,17 +86,18 @@ class ComputeSalesVolume extends BaseComputeJob
                     continue;
                 }
                 $carbon = $month->copy()->startOfMonth();
+                $tierResult = $this->computeTier(
+                    $siteName, $carbon, $allSales[$siteName] ?? collect(), $deadSites
+                );
                 $map[$key] = [
                     'sales_volume' => 0,
                     'sales_volume_lfl' => null,
                     'days_open' => 0,
                     'revenue' => 0,
                     'active' => 0,
-                    'super_tier_1' => 0,
+                    'super_tier_1' => $tierResult['avg_per_day'] > 110 ? 1 : 0,
                     'bottles_per_day' => 0,
-                    'tier' => $this->computeTier(
-                        $siteName, $carbon, $allSales[$siteName] ?? collect(), $deadSites
-                    ),
+                    'tier' => $tierResult['tier'],
                 ];
             }
         }
@@ -103,10 +105,10 @@ class ComputeSalesVolume extends BaseComputeJob
         return $map;
     }
 
-    private function computeTier(string $site, Carbon $month, Collection $siteSales, array $deadSites): string
+    private function computeTier(string $site, Carbon $month, Collection $siteSales, array $deadSites): array
     {
         if (in_array($site, $deadSites, true)) {
-            return 'Dead';
+            return ['tier' => 'Dead', 'avg_per_day' => 0];
         }
 
         $monthStart = $month->copy()->startOfMonth();
@@ -131,19 +133,19 @@ class ComputeSalesVolume extends BaseComputeJob
         )->filter(fn ($s) => $s->Total_Sales !== null)->isNotEmpty();
 
         if ($hasSalesBefore && $trailingSales->isEmpty()) {
-            return 'Closed';
+            return ['tier' => 'Closed', 'avg_per_day' => 0];
         }
 
         if ($trailingSales->isNotEmpty() && ! $hasThisMonth) {
-            return 'Inactive';
+            return ['tier' => 'Inactive', 'avg_per_day' => 0];
         }
 
         if ($totalRecords <= 3) {
-            return 'New';
+            return ['tier' => 'New', 'avg_per_day' => 0];
         }
 
         if ($recentCount < 4) {
-            return 'Reopen';
+            return ['tier' => 'Reopen', 'avg_per_day' => 0];
         }
 
         $totalVolume = 0;
@@ -156,15 +158,15 @@ class ComputeSalesVolume extends BaseComputeJob
         $avgPerDay = $totalDays > 0 ? $totalVolume / $totalDays : 0;
 
         if ($avgPerDay > 125) {
-            return 'ST1';
+            return ['tier' => 'ST1', 'avg_per_day' => $avgPerDay];
         }
         if ($avgPerDay > 85) {
-            return '1';
+            return ['tier' => '1', 'avg_per_day' => $avgPerDay];
         }
         if ($avgPerDay >= 60) {
-            return '2';
+            return ['tier' => '2', 'avg_per_day' => $avgPerDay];
         }
 
-        return '3';
+        return ['tier' => '3', 'avg_per_day' => $avgPerDay];
     }
 }
