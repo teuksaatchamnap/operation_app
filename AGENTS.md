@@ -96,6 +96,21 @@ Order in PHP files:
 
 ## Architecture
 
+### Folder Structure
+```
+app/              # Laravel app (Models, Http, Jobs, Console)
+bootstrap/        # App bootstrap & cache
+config/           # Configuration files
+database/         # Migrations, factories, seeders
+docs/             # Legacy app source code (cloudsql/, sims3/) for reference
+public/           # Frontend entry point (Vite build output)
+resources/        # Vue 3 frontend source (js/, views/)
+routes/           # API & web route definitions
+scripts/          # Utility scripts
+storage/          # Logs, cache, compiled views
+tests/            # PHPUnit tests (Feature/, Unit/)
+```
+
 ### Database Connections
 - **`mysql`** (default): Local read-write database. Contains `fact_monthly`, `users`, `advisors`, `platforms`, `sites`, `kpis`.
 - **`sims3`**: External legacy read-only database. Same host credentials, different database name (`DB_DATABASE_SIMS3`).
