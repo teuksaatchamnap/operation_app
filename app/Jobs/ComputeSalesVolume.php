@@ -157,13 +157,13 @@ class ComputeSalesVolume extends BaseComputeJob
 
         $avgPerDay = $totalDays > 0 ? $totalVolume / $totalDays : 0;
 
-        if ($avgPerDay > 125) {
+        if ($avgPerDay > 110) {
             return ['tier' => 'ST1', 'avg_per_day' => $avgPerDay];
         }
-        if ($avgPerDay > 85) {
+        if ($avgPerDay > 70) {
             return ['tier' => '1', 'avg_per_day' => $avgPerDay];
         }
-        if ($avgPerDay >= 60) {
+        if ($avgPerDay >= 45) {
             return ['tier' => '2', 'avg_per_day' => $avgPerDay];
         }
 
