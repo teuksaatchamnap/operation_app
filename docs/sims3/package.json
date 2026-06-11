@@ -1,0 +1,38 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build"
+    },
+    "devDependencies": {
+        "axios": "^1.4.0",
+        "eslint": "^8.47.0",
+        "eslint-plugin-vue": "^9.17.0",
+        "laravel-vite-plugin": "^0.7.5",
+        "vite": "^4.0.0"
+    },
+    "dependencies": {
+        "@mdi/font": "^7.2.96",
+        "@mdi/js": "^7.2.96",
+        "@vitejs/plugin-vue": "^4.2.3",
+        "apexcharts": "^5.10.0",
+        "chart.js": "^3.9.1",
+        "html2canvas": "^1.4.1",
+        "jspdf": "^4.2.0",
+        "jspdf-autotable": "^5.0.7",
+        "leaflet": "^1.9.4",
+        "sweetalert2": "^11.6.13",
+        "vanilla-jsoneditor": "^0.18.3",
+        "vue": "^3.3.4",
+        "vue-chart-3": "^3.1.8",
+        "vue-i18n": "^11.2.8",
+        "vue-loader": "^17.2.2",
+        "vue-router": "^4.2.4",
+        "vue3-apexcharts": "^1.4.4",
+        "vue3-easy-data-table": "^1.5.47",
+        "vue3-google-login": "^2.0.18",
+        "vuetify": "^3.4.0",
+        "vuex": "^4.0.2"
+    }
+}
