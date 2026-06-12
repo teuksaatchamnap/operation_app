@@ -99,6 +99,15 @@ const kanbanGroups = computed(() => {
         }
         groups[platform].sites.push(site);
     }
+    for (const group of Object.values(groups)) {
+        group.sites.sort((a, b) => {
+            const aVal = getSiteValue(a);
+            const bVal = getSiteValue(b);
+            const aIdx = legendOrder.value.indexOf(aVal);
+            const bIdx = legendOrder.value.indexOf(bVal);
+            return (aIdx === -1 ? 999 : aIdx) - (bIdx === -1 ? 999 : bIdx);
+        });
+    }
     return Object.values(groups).sort((a, b) =>
         a.platform.localeCompare(b.platform),
     );
