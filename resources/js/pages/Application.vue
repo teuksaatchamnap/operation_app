@@ -17,6 +17,7 @@
                     closable-chips
                     hide-details
                     auto-select-first
+                    autocomplete="off"
                 />
             </v-col>
             <v-col>
@@ -32,6 +33,7 @@
                     closable-chips
                     hide-details
                     auto-select-first
+                    autocomplete="off"
                 />
             </v-col>
             <v-col>
