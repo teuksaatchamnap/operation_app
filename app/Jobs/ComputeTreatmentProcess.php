@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class ComputeTreatmentProcess extends BaseComputeJob
@@ -112,23 +113,27 @@ class ComputeTreatmentProcess extends BaseComputeJob
 
     private function fetchSheet(): ?string
     {
-        $url = 'https://docs.google.com/spreadsheets/d/'.self::SPREADSHEET_ID.'/export?format=csv&gid='.self::GID;
+        $cacheKey = 'spreadsheet_'.self::SPREADSHEET_ID.'_'.self::GID;
 
-        $context = stream_context_create([
-            'http' => [
-                'method' => 'GET',
-                'header' => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36\r\n",
-                'timeout' => 30,
-            ],
-        ]);
+        return Cache::remember($cacheKey, 600, function () {
+            $url = 'https://docs.google.com/spreadsheets/d/'.self::SPREADSHEET_ID.'/export?format=csv&gid='.self::GID;
 
-        $csvData = @file_get_contents($url, false, $context);
-        if ($csvData === false) {
-            Log::warning(static::class.': Failed to fetch Google Sheet');
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'GET',
+                    'header' => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36\r\n",
+                    'timeout' => 30,
+                ],
+            ]);
 
-            return null;
-        }
+            $csvData = @file_get_contents($url, false, $context);
+            if ($csvData === false) {
+                Log::warning(static::class.': Failed to fetch Google Sheet');
 
-        return $csvData;
+                return null;
+            }
+
+            return $csvData;
+        });
     }
 }

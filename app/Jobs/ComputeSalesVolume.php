@@ -25,18 +25,11 @@ class ComputeSalesVolume extends BaseComputeJob
             ->select(['Id_Site', 'Month', 'Total_Sales', 'WiS_Sales', 'Bottle_Sales', 'Number_Open_Days'])
             ->whereIn('Id_Site', $siteNames)
             ->where('Month', '<=', $to)
-            ->get()
-            ->groupBy(fn ($s) => trim($s->Id_Site));
-
-        $deadSites = Sims3Site::query()
-            ->where('Platform', 'Dead')
-            ->pluck('Id_Site')
-            ->map(fn ($v) => trim($v))
-            ->toArray();
+            ->get();
 
         $januarySitesByYear = [];
 
-        foreach ($sales as $sale) {
+        foreach ($allSales as $sale) {
             $carbon = Carbon::parse($sale->Month)->startOfMonth();
             if ($carbon->month === 1) {
                 $volume = ($sale->Total_Sales ?? 0) - ($sale->WiS_Sales ?? 0) - ($sale->Bottle_Sales ?? 0);
@@ -45,6 +38,14 @@ class ComputeSalesVolume extends BaseComputeJob
                 }
             }
         }
+
+        $allSales = $allSales->groupBy(fn ($s) => trim($s->Id_Site));
+
+        $deadSites = Sims3Site::query()
+            ->where('Platform', 'Dead')
+            ->pluck('Id_Site')
+            ->map(fn ($v) => trim($v))
+            ->toArray();
 
         $map = [];
         foreach ($sales as $sale) {
@@ -57,7 +58,7 @@ class ComputeSalesVolume extends BaseComputeJob
                 $volume = ($sale->Total_Sales ?? 0) - ($sale->WiS_Sales ?? 0) - ($sale->Bottle_Sales ?? 0);
                 $map[$key] = [
                     'sales_volume' => (int) round($volume),
-                    'sales_volume_lfl' => isset($januarySitesByYear[$carbon->year][$site])
+                    'sales_volume_lfl' => isset($januarySitesByYear[$carbon->year - 1][$site])
                         ? (int) round($volume)
                         : null,
                     'days_open' => $sale->Number_Open_Days !== null ? (int) $sale->Number_Open_Days : 0,
