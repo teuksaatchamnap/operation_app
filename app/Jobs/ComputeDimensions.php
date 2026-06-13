@@ -6,44 +6,77 @@ use App\Models\Advisor;
 use App\Models\Platform;
 use App\Models\Sims3\Site as Sims3Site;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class ComputeDimensions extends BaseComputeJob
 {
     protected function prepareData(Collection $siteMap, Collection $months, array $siteNames): array
     {
-        $sims3Sites = Sims3Site::query()
-            ->select(['Id_Site', 'Platform', 'Advisor'])
-            ->whereIn('Id_Site', $siteNames)
-            ->get();
+        $dimensionsPerSite = Cache::remember('dimensions_per_site', 600, function () {
+            $sims3Sites = Sims3Site::query()
+                ->select(['Id_Site', 'Platform', 'Advisor'])
+                ->get();
 
-        $dimensionsPerSite = [];
-        foreach ($sims3Sites as $sims3Site) {
-            $siteName = trim($sims3Site->Id_Site);
+            $uniquePlatformNames = [];
+            $uniqueAdvisorNames = [];
 
-            if (! isset($siteMap[$siteName])) {
-                continue;
+            foreach ($sims3Sites as $s) {
+                $pn = trim($s->Platform);
+                if (! empty($pn) && $pn !== 'Dead') {
+                    $uniquePlatformNames[$pn] = true;
+                }
+                $an = trim($s->Advisor);
+                if (! empty($an) && $an !== 'Stop') {
+                    $uniqueAdvisorNames[$an] = true;
+                }
             }
 
-            $platformId = null;
-            $advisorId = null;
+            $uniquePlatformNames = array_keys($uniquePlatformNames);
+            $uniqueAdvisorNames = array_keys($uniqueAdvisorNames);
 
-            $platformName = trim($sims3Site->Platform);
-            if (! empty($platformName) && $platformName !== 'Dead') {
-                $platform = Platform::firstOrCreate(['name' => $platformName]);
-                $platformId = $platform->id;
+            if (! empty($uniquePlatformNames)) {
+                Platform::insertOrIgnore(
+                    array_map(fn ($n) => ['name' => $n], $uniquePlatformNames)
+                );
             }
 
-            $advisorName = trim($sims3Site->Advisor);
-            if (! empty($advisorName) && $advisorName !== 'Stop') {
-                $advisor = Advisor::firstOrCreate(['name' => $advisorName]);
-                $advisorId = $advisor->id;
+            if (! empty($uniqueAdvisorNames)) {
+                Advisor::insertOrIgnore(
+                    array_map(fn ($n) => ['name' => $n], $uniqueAdvisorNames)
+                );
             }
 
-            $dimensionsPerSite[$siteName] = [
-                'platform_id' => $platformId,
-                'advisor_id' => $advisorId,
-            ];
-        }
+            $platformLookup = ! empty($uniquePlatformNames)
+                ? Platform::whereIn('name', $uniquePlatformNames)->pluck('id', 'name')->toArray()
+                : [];
+
+            $advisorLookup = ! empty($uniqueAdvisorNames)
+                ? Advisor::whereIn('name', $uniqueAdvisorNames)->pluck('id', 'name')->toArray()
+                : [];
+
+            $result = [];
+
+            foreach ($sims3Sites as $s) {
+                $siteName = trim($s->Id_Site);
+                $pn = trim($s->Platform);
+                $an = trim($s->Advisor);
+
+                $platformId = (! empty($pn) && $pn !== 'Dead')
+                    ? ($platformLookup[$pn] ?? null)
+                    : null;
+
+                $advisorId = (! empty($an) && $an !== 'Stop')
+                    ? ($advisorLookup[$an] ?? null)
+                    : null;
+
+                $result[$siteName] = [
+                    'platform_id' => $platformId,
+                    'advisor_id' => $advisorId,
+                ];
+            }
+
+            return $result;
+        });
 
         $map = [];
         foreach ($months as $month) {
