@@ -617,9 +617,9 @@ class SiteAnalysisControllerTest extends TestCase
         $response->assertJsonStructure(['categories' => [], 'series' => [['name', 'data']]]);
 
         $series = $response->json('series');
-        $this->assertCount(6, $series);
+        $this->assertCount(7, $series);
         $this->assertEquals(12, count($series[0]['data']));
-        $this->assertEquals((string) $currentYear, end($series)['name']);
+        $this->assertEquals((string) $currentYear, $series[count($series) - 2]['name']);
     }
 
     public function test_monthly_performance_fills_gaps_with_null(): void
@@ -645,7 +645,7 @@ class SiteAnalysisControllerTest extends TestCase
 
         $response->assertSuccessful();
         $series = $response->json('series');
-        $currentYearSeries = end($series);
+        $currentYearSeries = $series[count($series) - 2];
         $this->assertEquals(100, $currentYearSeries['data'][0]);
         $this->assertNull($currentYearSeries['data'][1]);
         $this->assertEquals(200, $currentYearSeries['data'][2]);
@@ -660,11 +660,12 @@ class SiteAnalysisControllerTest extends TestCase
             ->getJson("/api/sites/{$site->id}/monthly-performance");
 
         $response->assertSuccessful();
-        $this->assertCount(6, $response->json('series'));
+        $this->assertCount(7, $response->json('series'));
 
-        foreach ($response->json('series') as $yearSeries) {
-            $this->assertCount(12, $yearSeries['data']);
-            $this->assertContainsOnly('null', $yearSeries['data']);
+        $yearSeries = array_slice($response->json('series'), 0, 6);
+        foreach ($yearSeries as $s) {
+            $this->assertCount(12, $s['data']);
+            $this->assertContainsOnly('null', $s['data']);
         }
     }
 

@@ -83,6 +83,11 @@ const chartOptions = computed(() => {
     const series = chartData.value?.series ?? [];
     const categories = chartData.value?.categories ?? [];
 
+    const colors = series.map((s) => {
+        if (s.name === "Objectives") return "#FF0000";
+        return chartColors[series.indexOf(s) % chartColors.length];
+    });
+
     const options = {
         chart: {
             foreColor: textColor.value,
@@ -102,7 +107,7 @@ const chartOptions = computed(() => {
                 },
             },
         },
-        colors: chartColors,
+        colors,
         xaxis: {
             categories,
             labels: {
@@ -127,6 +132,7 @@ const chartOptions = computed(() => {
         stroke: {
             curve: "smooth",
             width: 2,
+            dashArray: series.map((s) => (s.name === "Objectives" ? 6 : 0)),
         },
         legend: {
             position: "bottom",
@@ -158,7 +164,7 @@ const chartOptions = computed(() => {
 
     if (seriesIdx >= 0 && series[seriesIdx].data[selMonthIndex] != null) {
         const yVal = series[seriesIdx].data[selMonthIndex];
-        const color = chartColors[seriesIdx] || chartColors[0];
+        const color = colors[seriesIdx] || colors[0];
 
         options.annotations = {
             points: [

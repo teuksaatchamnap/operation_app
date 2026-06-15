@@ -606,6 +606,21 @@ class SiteAnalysisController extends Controller
             ];
         }
 
+        $bottlesPerDayKpi = Kpi::where('col_name', 'bottles_per_day')->first();
+        $objectiveData = [];
+        if ($bottlesPerDayKpi) {
+            $currentMonth = now()->startOfMonth();
+            /** @var Objective|null $matchingObjective */
+            $matchingObjective = $bottlesPerDayKpi->objectives()
+                ->where('start_date', '<=', $currentMonth)
+                ->where(fn ($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', $currentMonth))
+                ->orderByRaw("CASE WHEN type = 'individual' THEN 0 ELSE 1 END")
+                ->first();
+            $objectiveValue = $matchingObjective ? (int) $matchingObjective->value : null;
+            $objectiveData = array_fill(0, 12, $objectiveValue);
+        }
+        $series[] = ['name' => 'Objectives', 'data' => $objectiveData];
+
         return response()->json([
             'categories' => $monthLabels,
             'series' => $series,
