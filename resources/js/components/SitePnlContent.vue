@@ -176,7 +176,7 @@
                         <template v-else-if="profitData">
                             <ApexChart
                                 ref="profitChartRef"
-                                type="line"
+                                type="bar"
                                 height="350"
                                 :options="profitOptions"
                                 :series="profitSeries"
@@ -370,24 +370,21 @@ const profitData = ref(null);
 const profitSeries = computed(() => {
     if (!profitData.value) return [];
     return [
-        { name: "Revenue", type: "column", data: profitData.value.revenue },
-        { name: "Expenses", type: "column", data: profitData.value.expenses.map((v) => -Math.abs(v)) },
-        { name: "Net Profit", type: "line", data: profitData.value.net_profit },
+        { name: "Expenses", data: profitData.value.expenses },
+        { name: "Profit/Loss", data: profitData.value.net_profit },
     ];
 });
 
 const profitOptions = computed(() => ({
     chart: {
-        type: "line",
+        type: "bar",
+        stacked: true,
         foreColor: textColor.value,
         background: "transparent",
         toolbar: { show: false },
         zoom: { enabled: false },
     },
-    colors: ["#4CAF50", "#F44336", "#2196F3"],
-    stroke: {
-        width: [0, 0, 2],
-    },
+    colors: ["#F44336", "#2196F3"],
     plotOptions: {
         bar: {
             columnWidth: "55%",
@@ -401,7 +398,7 @@ const profitOptions = computed(() => ({
     yaxis: {
         labels: {
             style: { colors: textColor.value },
-            formatter: (val) => formatCurrency(Math.abs(val)),
+            formatter: (val) => formatCurrency(val),
         },
         title: {
             text: currency.value === "usd" ? "Amount ($)" : "Amount (KHR)",
@@ -410,10 +407,7 @@ const profitOptions = computed(() => ({
     },
     tooltip: {
         y: {
-            formatter: (val, { seriesIndex }) => {
-                const displayVal = seriesIndex === 1 ? Math.abs(val) : val;
-                return formatCurrency(displayVal);
-            },
+            formatter: (val) => formatCurrency(val),
         },
         theme: isDark.value ? "dark" : "light",
     },
