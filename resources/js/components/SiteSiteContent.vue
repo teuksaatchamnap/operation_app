@@ -618,6 +618,14 @@
                         </v-col>
                     </v-row>
 
+                    <v-row v-else-if="!entrepreneurItems.length" class="text-center">
+                        <v-col>
+                            <div class="text-medium-emphasis">
+                                No entrepreneur records found for this site
+                            </div>
+                        </v-col>
+                    </v-row>
+
                     <v-data-table
                         v-else
                         :headers="entrepreneurHeaders"

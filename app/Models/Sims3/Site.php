@@ -137,6 +137,8 @@ CREATE TABLE `sites` (
  * @property string|null $Water_Source
  * @property string|null $Status_Site
  * @property string|null $Entrepreneur_English_Name
+ * @property string|null $Entrepreneur_Khmer_Name
+ * @property string|null $Sex
  * @property string|null $technician_site
  * @property string|null $Last_Tier
  * @property string|null $Commune
