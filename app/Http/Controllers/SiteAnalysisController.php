@@ -957,7 +957,7 @@ class SiteAnalysisController extends Controller
             return response()->json(['error' => 'Contract file not found on disk : ' . $contract->commune_contract], 404);
         }
 
-        return Storage::disk('sims3')->download($contract->commune_contract, $site->Id_Site . '_commune_contract.pdf');
+        return Storage::disk('sims3')->download($contract->commune_contract, $site->name . '_commune_contract.pdf');
     }
 
     private function getExpenseCategories(): array
