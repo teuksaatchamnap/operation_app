@@ -1,10 +1,10 @@
 <template>
     <v-card flat>
         <v-card-text>
-            <v-card variant="outlined" class="subtle-border mb-4">
+            <v-card variant="outlined" class="subtle-border">
                 <v-card-title class="section-title d-flex align-center ga-2">
                     <v-icon size="small" color="primary">mdi-cash-plus</v-icon>
-                    Income
+                    Income &amp; Expenses
                     <v-spacer />
                     <div class="d-flex align-center ga-2">
                         <CurrencySwitch />
@@ -30,30 +30,24 @@
                     </div>
                 </v-card-title>
                 <v-card-text>
-                    <v-card v-if="incomeLoading" variant="outlined" class="subtle-border">
+                    <v-card v-if="loading || incomeLoading" variant="outlined" class="subtle-border">
                         <v-card-text>
                             <div class="skeleton skeleton-table" />
                         </v-card-text>
                     </v-card>
-                    <v-row v-else-if="incomeError" class="text-center">
+                    <v-row v-else-if="error || incomeError" class="text-center">
                         <v-col>
                             <div class="text-medium-emphasis">
-                                Failed to load income data
+                                Failed to load data
                             </div>
                         </v-col>
                     </v-row>
-                    <template v-else-if="incomeData">
-                        <v-table
-                            v-if="incomeData.totals"
-                            density="compact"
-                            class="pnl-table"
-                        >
+                    <template v-else-if="data && incomeData">
+                        <v-table density="compact" class="pnl-table">
                             <thead>
                                 <tr class="accent-header income-header">
-                                    <th class="caption-label font-weight-bold">Channel</th>
-                                    <th class="caption-label font-weight-bold text-right">Volume</th>
-                                    <th class="caption-label font-weight-bold text-right">Price</th>
-                                    <th class="caption-label font-weight-bold text-right">Income</th>
+                                    <th class="caption-label font-weight-bold">Revenue</th>
+                                    <th class="caption-label font-weight-bold text-right">Amount</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -62,140 +56,83 @@
                                     :key="ch.key"
                                 >
                                     <td>{{ ch.label }}</td>
-                                    <td class="text-right">{{ incomeTotals[ch.key] ?? 0 }}</td>
-                                    <td class="text-right">{{ formatCurrency(incomePrices[ch.priceKey] ?? 0) }}</td>
                                     <td class="text-right font-weight-medium">{{ formatCurrency(incomeIncome[ch.incomeKey] ?? 0) }}</td>
                                 </tr>
                                 <tr class="pl-grand-total">
-                                    <td class="font-weight-bold text-uppercase">Total</td>
-                                    <td class="text-right font-weight-bold">{{ incomeTotals.Total_Sales ?? 0 }}</td>
-                                    <td />
+                                    <td class="font-weight-bold text-uppercase">Total Revenue</td>
                                     <td class="text-right font-weight-bold">{{ formatCurrency(incomeIncome.Total_Income ?? 0) }}</td>
                                 </tr>
-                            </tbody>
-                        </v-table>
-                        <div
-                            v-else
-                            class="text-medium-emphasis text-center pa-4"
-                        >
-                            No income data for this month
-                        </div>
-                    </template>
-                </v-card-text>
-            </v-card>
 
-            <template v-if="loading">
-                <v-card variant="outlined" class="subtle-border">
-                    <v-card-title class="section-title d-flex align-center ga-2">
-                        <v-icon size="small" color="primary">mdi-cash-multiple</v-icon>
-                        Expense Breakdown
-                    </v-card-title>
-                    <v-card-text>
-                        <div class="skeleton skeleton-table" />
-                    </v-card-text>
-                </v-card>
-            </template>
-
-            <v-row v-else-if="error" class="text-center">
-                <v-col>
-                    <div class="text-medium-emphasis">
-                        Failed to load expense data
-                    </div>
-                </v-col>
-            </v-row>
-
-            <template v-else-if="data">
-                <v-card variant="outlined" class="subtle-border">
-                    <v-card-title class="section-title d-flex align-center ga-2">
-                        <v-icon size="small" color="primary">mdi-cash-multiple</v-icon>
-                        Expense Breakdown
-                        <v-spacer />
-                        <div class="d-flex align-center ga-2">
-                            <CurrencySwitch />
-                        </div>
-                        <div class="d-flex align-center ga-2 ml-2">
-                            <v-btn
-                                icon
-                                variant="text"
-                                size="small"
-                                @click="prevMonth"
-                            >
-                                <v-icon>mdi-chevron-left</v-icon>
-                            </v-btn>
-                            <span class="text-body-2">{{ displayMonth }}</span>
-                            <v-btn
-                                icon
-                                variant="text"
-                                size="small"
-                                @click="nextMonth"
-                            >
-                                <v-icon>mdi-chevron-right</v-icon>
-                            </v-btn>
-                        </div>
-                    </v-card-title>
-                    <v-card-text>
-                        <v-table
-                            v-if="data.categories.length"
-                            density="compact"
-                            class="pnl-table"
-                        >
-                            <thead>
-                                <tr class="accent-header">
-                                    <th class="caption-label font-weight-bold">
-                                        Category / Item
-                                    </th>
-                                    <th
-                                        class="caption-label font-weight-bold text-right"
-                                    >
-                                        Amount
-                                    </th>
+                                <tr class="pl-spacer-row">
+                                    <td colspan="2" />
                                 </tr>
-                            </thead>
-                            <tbody>
-                                <template
-                                    v-for="cat in data.categories"
-                                    :key="cat.category"
-                                >
-                                    <tr class="pl-section-header pl-expenses-header">
-                                        <td colspan="2">
-                                            <span class="font-weight-bold text-uppercase caption-label">{{ cat.category }}</span>
-                                        </td>
+
+                                <template v-if="data.categories.length">
+                                    <tr class="accent-header expenses-header">
+                                        <th class="caption-label font-weight-bold" colspan="2">Expenses</th>
                                     </tr>
-                                    <tr
-                                        v-for="item in cat.items"
-                                        :key="item.ref"
+
+                                    <template
+                                        v-for="cat in data.categories"
+                                        :key="cat.category"
                                     >
-                                        <td class="pl-indent">
-                                            {{ item.label }}
-                                        </td>
-                                        <td class="text-right font-weight-medium">
-                                            {{ formatCurrency(item.amount) }}
-                                        </td>
-                                    </tr>
-                                    <tr class="pl-expenses-subtotal">
-                                        <td class="font-weight-bold">Subtotal {{ cat.category }}</td>
+                                        <tr class="pl-section-header pl-expenses-header">
+                                            <td colspan="2">
+                                                <span class="font-weight-bold text-uppercase caption-label">{{ cat.category }}</span>
+                                            </td>
+                                        </tr>
+                                        <tr
+                                            v-for="item in cat.items"
+                                            :key="item.ref"
+                                        >
+                                            <td class="pl-indent">
+                                                {{ item.label }}
+                                            </td>
+                                            <td class="text-right font-weight-medium">
+                                                {{ formatCurrency(item.amount) }}
+                                            </td>
+                                        </tr>
+                                        <tr class="pl-expenses-subtotal">
+                                            <td class="font-weight-bold">Subtotal {{ cat.category }}</td>
+                                            <td class="text-right font-weight-bold">
+                                                {{ formatCurrency(cat.sub_total) }}
+                                            </td>
+                                        </tr>
+                                    </template>
+
+                                    <tr class="pl-expenses-total">
+                                        <td class="font-weight-bold text-uppercase">Total Expenses</td>
                                         <td class="text-right font-weight-bold">
-                                            {{ formatCurrency(cat.sub_total) }}
+                                            {{ formatCurrency(data.grand_total) }}
                                         </td>
                                     </tr>
                                 </template>
-                                <tr class="pl-grand-total">
-                                    <td class="font-weight-bold text-uppercase">Grand Total</td>
+
+                                <tr class="pl-net-result" :class="netResult >= 0 ? 'text-success' : 'text-error'">
+                                    <td class="font-weight-bold text-uppercase">NET RESULT</td>
                                     <td class="text-right font-weight-bold">
-                                        {{ formatCurrency(data.grand_total) }}
+                                        {{ formatCurrency(netResult) }}
                                     </td>
                                 </tr>
                             </tbody>
                         </v-table>
                         <div
-                            v-else
+                            v-if="!data.categories.length"
                             class="text-medium-emphasis text-center pa-4"
                         >
-                            No expense data for this month
+                            No expenses for this month
                         </div>
-                    </v-card-text>
-                </v-card>
+                    </template>
+                    <div
+                        v-else
+                        class="text-medium-emphasis text-center pa-4"
+                    >
+                        No data for this month
+                    </div>
+                </v-card-text>
+            </v-card>
 
+            <template v-if="data">
                 <v-card variant="outlined" class="subtle-border mt-4">
                     <v-card-title class="section-title d-flex align-center ga-2">
                         <v-icon size="small" color="primary">mdi-chart-bar</v-icon>
@@ -335,9 +272,13 @@ const incomeChannels = [
     { key: "Free_Sales", label: "Free", priceKey: "Free_Price", incomeKey: "Free_Income" },
 ];
 
-const incomeTotals = computed(() => incomeData.value?.totals ?? {});
-const incomePrices = computed(() => incomeData.value?.prices ?? {});
 const incomeIncome = computed(() => incomeData.value?.income ?? {});
+
+const netResult = computed(() => {
+    const totalIncome = incomeIncome.value?.Total_Income ?? 0;
+    const totalExpenses = data.value?.grand_total ?? 0;
+    return totalIncome - totalExpenses;
+});
 
 const theme = useTheme();
 const isDark = computed(() => theme.global.name.value === "dark");
@@ -591,6 +532,18 @@ watchEffect(async () => {
     border-bottom: 2px solid rgb(var(--v-theme-success)) !important;
 }
 
+.pl-spacer-row td {
+    height: 12px;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+.expenses-header th {
+    background-color: rgba(var(--v-theme-error), 0.08);
+    border-bottom: 2px solid rgb(var(--v-theme-error)) !important;
+}
+
 .pl-expenses-subtotal td {
     background-color: rgba(var(--v-theme-error), 0.1);
     border-top: 1px solid rgba(var(--v-theme-error), 0.3);
@@ -607,6 +560,24 @@ watchEffect(async () => {
     padding-top: 10px !important;
     padding-bottom: 10px !important;
     background-color: rgba(var(--v-theme-primary), 0.06);
+}
+
+.pl-expenses-total td {
+    font-weight: 700;
+    font-size: 1rem;
+    border-top: 2px solid rgb(var(--v-theme-error));
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    background-color: rgba(var(--v-theme-error), 0.1);
+}
+
+.pl-net-result td {
+    font-weight: 800;
+    font-size: 1.05rem;
+    border-top: 3px double rgba(var(--v-theme-on-surface), 0.25);
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    background-color: rgba(var(--v-theme-primary), 0.04);
 }
 
 .skeleton {
