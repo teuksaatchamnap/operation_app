@@ -1,6 +1,89 @@
 <template>
     <v-card flat>
         <v-card-text>
+            <v-card variant="outlined" class="subtle-border mb-4">
+                <v-card-title class="section-title d-flex align-center ga-2">
+                    <v-icon size="small" color="primary">mdi-cash-plus</v-icon>
+                    Income
+                    <v-spacer />
+                    <div class="d-flex align-center ga-2">
+                        <CurrencySwitch />
+                    </div>
+                    <div class="d-flex align-center ga-2 ml-2">
+                        <v-btn
+                            icon
+                            variant="text"
+                            size="small"
+                            @click="prevMonth"
+                        >
+                            <v-icon>mdi-chevron-left</v-icon>
+                        </v-btn>
+                        <span class="text-body-2">{{ displayMonth }}</span>
+                        <v-btn
+                            icon
+                            variant="text"
+                            size="small"
+                            @click="nextMonth"
+                        >
+                            <v-icon>mdi-chevron-right</v-icon>
+                        </v-btn>
+                    </div>
+                </v-card-title>
+                <v-card-text>
+                    <v-card v-if="incomeLoading" variant="outlined" class="subtle-border">
+                        <v-card-text>
+                            <div class="skeleton skeleton-table" />
+                        </v-card-text>
+                    </v-card>
+                    <v-row v-else-if="incomeError" class="text-center">
+                        <v-col>
+                            <div class="text-medium-emphasis">
+                                Failed to load income data
+                            </div>
+                        </v-col>
+                    </v-row>
+                    <template v-else-if="incomeData">
+                        <v-table
+                            v-if="incomeData.totals"
+                            density="compact"
+                            class="pnl-table"
+                        >
+                            <thead>
+                                <tr class="accent-header income-header">
+                                    <th class="caption-label font-weight-bold">Channel</th>
+                                    <th class="caption-label font-weight-bold text-right">Volume</th>
+                                    <th class="caption-label font-weight-bold text-right">Price</th>
+                                    <th class="caption-label font-weight-bold text-right">Income</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                    v-for="ch in incomeChannels"
+                                    :key="ch.key"
+                                >
+                                    <td>{{ ch.label }}</td>
+                                    <td class="text-right">{{ incomeTotals[ch.key] ?? 0 }}</td>
+                                    <td class="text-right">{{ formatCurrency(incomePrices[ch.priceKey] ?? 0) }}</td>
+                                    <td class="text-right font-weight-medium">{{ formatCurrency(incomeIncome[ch.incomeKey] ?? 0) }}</td>
+                                </tr>
+                                <tr class="pl-grand-total">
+                                    <td class="font-weight-bold text-uppercase">Total</td>
+                                    <td class="text-right font-weight-bold">{{ incomeTotals.Total_Sales ?? 0 }}</td>
+                                    <td />
+                                    <td class="text-right font-weight-bold">{{ formatCurrency(incomeIncome.Total_Income ?? 0) }}</td>
+                                </tr>
+                            </tbody>
+                        </v-table>
+                        <div
+                            v-else
+                            class="text-medium-emphasis text-center pa-4"
+                        >
+                            No income data for this month
+                        </div>
+                    </template>
+                </v-card-text>
+            </v-card>
+
             <template v-if="loading">
                 <v-card variant="outlined" class="subtle-border">
                     <v-card-title class="section-title d-flex align-center ga-2">
@@ -122,13 +205,41 @@
                         <div v-if="chartLoading" class="text-center pa-4">
                             <v-progress-circular indeterminate />
                         </div>
-                        <ApexChart
-                            v-else-if="chartData"
-                            type="bar"
-                            height="350"
-                            :options="chartOptions"
-                            :series="chartSeries"
-                        />
+                        <template v-else-if="chartData">
+                            <ApexChart
+                                ref="chartRef"
+                                type="bar"
+                                height="350"
+                                :options="chartOptions"
+                                :series="chartSeries"
+                            />
+                            <div class="d-flex justify-end ga-1 mt-1">
+                                <v-btn
+                                    variant="text"
+                                    size="small"
+                                    prepend-icon="mdi-file-image"
+                                    @click="exportChart('png')"
+                                >
+                                    PNG
+                                </v-btn>
+                                <v-btn
+                                    variant="text"
+                                    size="small"
+                                    prepend-icon="mdi-file-document"
+                                    @click="exportChart('svg')"
+                                >
+                                    SVG
+                                </v-btn>
+                                <v-btn
+                                    variant="text"
+                                    size="small"
+                                    prepend-icon="mdi-file-delimited"
+                                    @click="exportChart('csv')"
+                                >
+                                    CSV
+                                </v-btn>
+                            </div>
+                        </template>
                         <div
                             v-else
                             class="text-medium-emphasis text-center pa-4"
@@ -147,13 +258,41 @@
                         <div v-if="profitChartLoading" class="text-center pa-4">
                             <v-progress-circular indeterminate />
                         </div>
-                        <ApexChart
-                            v-else-if="profitData"
-                            type="line"
-                            height="350"
-                            :options="profitOptions"
-                            :series="profitSeries"
-                        />
+                        <template v-else-if="profitData">
+                            <ApexChart
+                                ref="profitChartRef"
+                                type="line"
+                                height="350"
+                                :options="profitOptions"
+                                :series="profitSeries"
+                            />
+                            <div class="d-flex justify-end ga-1 mt-1">
+                                <v-btn
+                                    variant="text"
+                                    size="small"
+                                    prepend-icon="mdi-file-image"
+                                    @click="exportProfitChart('png')"
+                                >
+                                    PNG
+                                </v-btn>
+                                <v-btn
+                                    variant="text"
+                                    size="small"
+                                    prepend-icon="mdi-file-document"
+                                    @click="exportProfitChart('svg')"
+                                >
+                                    SVG
+                                </v-btn>
+                                <v-btn
+                                    variant="text"
+                                    size="small"
+                                    prepend-icon="mdi-file-delimited"
+                                    @click="exportProfitChart('csv')"
+                                >
+                                    CSV
+                                </v-btn>
+                            </div>
+                        </template>
                         <div
                             v-else
                             class="text-medium-emphasis text-center pa-4"
@@ -193,6 +332,9 @@ const now = new Date();
 const loading = ref(false);
 const error = ref(false);
 const data = ref(null);
+const incomeLoading = ref(false);
+const incomeError = ref(false);
+const incomeData = ref(null);
 const selectedMonth = ref(
     props.initialMonth ||
         `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
@@ -225,9 +367,63 @@ function nextMonth() {
 
 const { currency, formatCurrency } = useCurrency();
 
+const incomeChannels = [
+    { key: "Hod_Sales", label: "Home Delivery", priceKey: "Hod_Price", incomeKey: "Hod_Income" },
+    { key: "Shopkeeper_Sales", label: "Shopkeeper", priceKey: "Shopkeeper_Price", incomeKey: "Shopkeeper_Income" },
+    { key: "Onsite_Sales", label: "On-Site", priceKey: "Onsite_Price", incomeKey: "Onsite_Income" },
+    { key: "WiS_Sales", label: "Water in School", priceKey: "WiS_Price", incomeKey: "WiS_Income" },
+    { key: "Bottle_Sales", label: "Bottle", priceKey: "Bottle_Price", incomeKey: "Bottle_Income" },
+    { key: "Emergency_Sales", label: "Emergency", priceKey: "Emergency_Price", incomeKey: "Emergency_Income" },
+    { key: "Other_Sales", label: "Other", priceKey: "Other_Price", incomeKey: "Other_Income" },
+    { key: "Free_Sales", label: "Free", priceKey: "Free_Price", incomeKey: "Free_Income" },
+];
+
+const incomeTotals = computed(() => incomeData.value?.totals ?? {});
+const incomePrices = computed(() => incomeData.value?.prices ?? {});
+const incomeIncome = computed(() => incomeData.value?.income ?? {});
+
 const theme = useTheme();
 const isDark = computed(() => theme.global.name.value === "dark");
 const textColor = computed(() => (isDark.value ? "#e0e0e0" : "#333333"));
+
+const chartRef = ref(null);
+const profitChartRef = ref(null);
+
+function exportChart(format) {
+    if (!chartRef.value) return;
+
+    if (format === "csv") {
+        chartRef.value.chart.exports.csv();
+        return;
+    }
+
+    const type = format === "svg" ? "svg" : undefined;
+    const filename = `monthly-expenses-by-category.${format}`;
+    chartRef.value.chart.dataURI({ scale: 1, type }).then(({ imgURI }) => {
+        const link = document.createElement("a");
+        link.href = imgURI;
+        link.download = filename;
+        link.click();
+    });
+}
+
+function exportProfitChart(format) {
+    if (!profitChartRef.value) return;
+
+    if (format === "csv") {
+        profitChartRef.value.chart.exports.csv();
+        return;
+    }
+
+    const type = format === "svg" ? "svg" : undefined;
+    const filename = `monthly-profit-loss.${format}`;
+    profitChartRef.value.chart.dataURI({ scale: 1, type }).then(({ imgURI }) => {
+        const link = document.createElement("a");
+        link.href = imgURI;
+        link.download = filename;
+        link.click();
+    });
+}
 
 const chartColors = [
     "#FF6384",
@@ -392,6 +588,25 @@ watchEffect(async () => {
 watchEffect(async () => {
     if (!props.site?.id) return;
 
+    incomeLoading.value = true;
+    incomeError.value = false;
+
+    try {
+        const res = await axios.get(`/api/sites/${props.site.id}/daily-sales`, {
+            params: { month: selectedMonth.value },
+        });
+        incomeData.value = res.data;
+    } catch {
+        incomeError.value = true;
+        incomeData.value = null;
+    } finally {
+        incomeLoading.value = false;
+    }
+});
+
+watchEffect(async () => {
+    if (!props.site?.id) return;
+
     loading.value = true;
     error.value = false;
 
@@ -448,6 +663,11 @@ watchEffect(async () => {
 .pl-expenses-header td {
     background-color: rgba(var(--v-theme-error), 0.06);
     border-bottom: 1px solid rgba(var(--v-theme-error), 0.25);
+}
+
+.income-header th {
+    background-color: rgba(var(--v-theme-success), 0.08);
+    border-bottom: 2px solid rgb(var(--v-theme-success)) !important;
 }
 
 .pl-expenses-subtotal td {
