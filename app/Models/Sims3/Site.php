@@ -161,6 +161,19 @@ CREATE TABLE `sites` (
  * @property string|null $Province_khmer
  * @property float|null $Number_Village
  * @property float|null $Number_Family
+ * @property string|null $ProjectAgreement
+ * @property string|null $Wave
+ * @property string|null $Funder_1
+ * @property string|null $Funder_2
+ * @property string|null $Funder_3
+ * @property float|null $Number_Pagoda
+ * @property float|null $Number_Primary_School
+ * @property string|null $Land_of_kiosk
+ * @property string|null $Road_Leading_to_Kiosk
+ * @property float|null $Paved_Asphalt_Road
+ * @property float|null $Concrete_Road
+ * @property float|null $Laterite_Road
+ * @property float|null $White_Soiled_Road
  */
 class Site extends Model
 {

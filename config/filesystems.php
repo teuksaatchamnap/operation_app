@@ -38,10 +38,18 @@ return [
             'report' => false,
         ],
 
+        'sims3' => [
+            'driver' => 'local',
+            'root' => env('SIMS3_STORAGE_PATH', '/data/sims3/storage/app/public/'),
+            'serve' => true,
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/') . '/storage',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,

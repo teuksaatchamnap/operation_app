@@ -46,6 +46,36 @@
                         </v-row>
                     </v-card-text>
                 </v-card>
+
+                <v-card variant="outlined" class="subtle-border mt-4">
+                    <v-card-title class="section-title d-flex align-center ga-2">
+                        <v-icon size="small" color="primary">mdi-file-document-outline</v-icon>
+                        Project
+                    </v-card-title>
+                    <v-card-text>
+                        <v-row density="comfortable">
+                            <v-col v-for="i in 3" :key="i" cols="3">
+                                <div class="skeleton skeleton-label" />
+                                <div class="skeleton skeleton-value mt-1" />
+                            </v-col>
+                        </v-row>
+                    </v-card-text>
+                </v-card>
+
+                <v-card variant="outlined" class="subtle-border mt-4">
+                    <v-card-title class="section-title d-flex align-center ga-2">
+                        <v-icon size="small" color="primary">mdi-office-building-outline</v-icon>
+                        Infrastructure
+                    </v-card-title>
+                    <v-card-text>
+                        <v-row density="comfortable">
+                            <v-col v-for="i in 8" :key="i" cols="3">
+                                <div class="skeleton skeleton-label" />
+                                <div class="skeleton skeleton-value mt-1" />
+                            </v-col>
+                        </v-row>
+                    </v-card-text>
+                </v-card>
             </template>
 
             <v-row v-else-if="error" class="text-center">
@@ -121,6 +151,18 @@
                     <v-card-title class="section-title d-flex align-center ga-2">
                         <v-icon size="small" color="primary">mdi-map-marker</v-icon>
                         Location Details
+                        <v-spacer />
+                        <v-btn
+                            variant="text"
+                            color="primary"
+                            size="small"
+                            :loading="downloading"
+                            :disabled="!site?.id"
+                            @click="downloadCommuneContract"
+                            prepend-icon="mdi-download"
+                        >
+                            Commune Contract
+                        </v-btn>
                     </v-card-title>
                     <v-card-text>
                         <v-row density="comfortable">
@@ -182,6 +224,72 @@
                         </v-row>
                     </v-card-text>
                 </v-card>
+
+                <v-card variant="outlined" class="subtle-border mt-4">
+                    <v-card-title class="section-title d-flex align-center ga-2">
+                        <v-icon size="small" color="primary">mdi-file-document-outline</v-icon>
+                        Project
+                    </v-card-title>
+                    <v-card-text>
+                        <v-row density="comfortable">
+                            <v-col cols="3">
+                                <div class="caption-label text-medium-emphasis">Project Agreement Date</div>
+                                <div class="text-body-1">{{ data.project?.agreement_date ?? "-" }}</div>
+                            </v-col>
+                            <v-col cols="3">
+                                <div class="caption-label text-medium-emphasis">Wave</div>
+                                <div class="text-body-1">{{ data.project?.wave ?? "-" }}</div>
+                            </v-col>
+                            <v-col cols="3">
+                                <div class="caption-label text-medium-emphasis">Funders</div>
+                                <div class="text-body-1">{{ data.project?.funders ?? "-" }}</div>
+                            </v-col>
+                        </v-row>
+                    </v-card-text>
+                </v-card>
+
+                <v-card variant="outlined" class="subtle-border mt-4">
+                    <v-card-title class="section-title d-flex align-center ga-2">
+                        <v-icon size="small" color="primary">mdi-office-building-outline</v-icon>
+                        Infrastructure
+                    </v-card-title>
+                    <v-card-text>
+                        <v-row density="comfortable">
+                            <v-col cols="3">
+                                <div class="caption-label text-medium-emphasis">Number of Pagodas</div>
+                                <div class="text-body-1">{{ data.infrastructure?.number_of_pagodas ?? "-" }}</div>
+                            </v-col>
+                            <v-col cols="3">
+                                <div class="caption-label text-medium-emphasis">Number of Primary Schools</div>
+                                <div class="text-body-1">{{ data.infrastructure?.number_of_primary_schools ?? "-" }}</div>
+                            </v-col>
+                            <v-col cols="3">
+                                <div class="caption-label text-medium-emphasis">Kiosk Land</div>
+                                <div class="text-body-1">{{ data.infrastructure?.kiosk_land ?? "-" }}</div>
+                            </v-col>
+                            <v-col cols="3">
+                                <div class="caption-label text-medium-emphasis">Kiosk Road Type</div>
+                                <div class="text-body-1">{{ data.infrastructure?.kiosk_road_type ?? "-" }}</div>
+                            </v-col>
+                            <v-col cols="3">
+                                <div class="caption-label text-medium-emphasis">% Paved Asphalt</div>
+                                <div class="text-body-1">{{ data.infrastructure?.paved_asphalt_pct ?? "-" }}</div>
+                            </v-col>
+                            <v-col cols="3">
+                                <div class="caption-label text-medium-emphasis">% Concrete Road</div>
+                                <div class="text-body-1">{{ data.infrastructure?.concrete_road_pct ?? "-" }}</div>
+                            </v-col>
+                            <v-col cols="3">
+                                <div class="caption-label text-medium-emphasis">% Laterite Road</div>
+                                <div class="text-body-1">{{ data.infrastructure?.laterite_road_pct ?? "-" }}</div>
+                            </v-col>
+                            <v-col cols="3">
+                                <div class="caption-label text-medium-emphasis">% White Soiled Road</div>
+                                <div class="text-body-1">{{ data.infrastructure?.white_soiled_road_pct ?? "-" }}</div>
+                            </v-col>
+                        </v-row>
+                    </v-card-text>
+                </v-card>
             </template>
         </v-card-text>
     </v-card>
@@ -201,6 +309,7 @@ const props = defineProps({
 const loading = ref(false);
 const error = ref(false);
 const data = ref(null);
+const downloading = ref(false);
 
 const formattedLocation = computed(() => {
     const { lat, lng } = data.value?.profile ?? {};
@@ -239,6 +348,27 @@ watchEffect(async () => {
         loading.value = false;
     }
 });
+
+const downloadCommuneContract = async () => {
+    downloading.value = true;
+    try {
+        const res = await axios.get(`/api/sites/${props.site.id}/download-commune-contract`, {
+            responseType: 'blob',
+        });
+        const url = window.URL.createObjectURL(new Blob([res.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'commune_contract.pdf');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    } catch {
+        // silently fail
+    } finally {
+        downloading.value = false;
+    }
+};
 </script>
 
 <style scoped>
