@@ -160,35 +160,11 @@
                             >
                                 No comparison data available
                             </div>
-                            <div
+                            <ChartExportButtons
                                 v-if="comparisonData"
-                                class="d-flex justify-end ga-1 mt-1"
-                            >
-                                <v-btn
-                                    variant="text"
-                                    size="small"
-                                    prepend-icon="mdi-file-image"
-                                    @click="exportComparisonChart('png')"
-                                >
-                                    PNG
-                                </v-btn>
-                                <v-btn
-                                    variant="text"
-                                    size="small"
-                                    prepend-icon="mdi-file-document"
-                                    @click="exportComparisonChart('svg')"
-                                >
-                                    SVG
-                                </v-btn>
-                                <v-btn
-                                    variant="text"
-                                    size="small"
-                                    prepend-icon="mdi-file-delimited"
-                                    @click="exportComparisonChart('csv')"
-                                >
-                                    CSV
-                                </v-btn>
-                            </div>
+                                :chart="comparisonChartRef?.chart"
+                                filename="sales-comparison"
+                            />
                         </v-card-text>
                     </v-card>
                 </div>
@@ -260,6 +236,7 @@ import { computed, ref, watchEffect, defineAsyncComponent } from "vue";
 import { useCurrency } from "../composables/useCurrency";
 import { useTheme } from "vuetify";
 import CurrencySwitch from "./CurrencySwitch.vue";
+import ChartExportButtons from "./ChartExportButtons.vue";
 import MonthlyPerformanceChart from "./MonthlyPerformanceChart.vue";
 
 const ApexChart = defineAsyncComponent(() =>
@@ -335,24 +312,6 @@ const comparisonLoading = ref(false);
 const comparisonError = ref(false);
 const comparisonData = ref(null);
 const comparisonChartRef = ref(null);
-
-function exportComparisonChart(format) {
-    if (!comparisonChartRef.value) return;
-
-    if (format === "csv") {
-        comparisonChartRef.value.chart.exports.csv();
-        return;
-    }
-
-    const type = format === "svg" ? "svg" : undefined;
-    const filename = `sales-comparison.${format}`;
-    comparisonChartRef.value.chart.dataURI({ scale: 1, type }).then(({ imgURI }) => {
-        const link = document.createElement("a");
-        link.href = imgURI;
-        link.download = filename;
-        link.click();
-    });
-}
 
 const theme = useTheme();
 const isDark = computed(() => theme.global.name.value === "dark");

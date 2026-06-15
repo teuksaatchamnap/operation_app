@@ -28,35 +28,11 @@
             >
                 No performance data available
             </div>
-            <div
+            <ChartExportButtons
                 v-if="chartData"
-                class="d-flex justify-end ga-1 mt-1"
-            >
-                <v-btn
-                    variant="text"
-                    size="small"
-                    prepend-icon="mdi-file-image"
-                    @click="exportChart('png')"
-                >
-                    PNG
-                </v-btn>
-                <v-btn
-                    variant="text"
-                    size="small"
-                    prepend-icon="mdi-file-document"
-                    @click="exportChart('svg')"
-                >
-                    SVG
-                </v-btn>
-                <v-btn
-                    variant="text"
-                    size="small"
-                    prepend-icon="mdi-file-delimited"
-                    @click="exportChart('csv')"
-                >
-                    CSV
-                </v-btn>
-            </div>
+                :chart="chartRef?.chart"
+                filename="monthly-sales-performance"
+            />
         </v-card-text>
     </v-card>
 </template>
@@ -65,6 +41,8 @@
 import axios from "axios";
 import { computed, ref, watchEffect, defineAsyncComponent } from "vue";
 import { useTheme } from "vuetify";
+
+import ChartExportButtons from "./ChartExportButtons.vue";
 
 const ApexChart = defineAsyncComponent(() =>
     import("vue3-apexcharts"),
@@ -86,24 +64,6 @@ const chartData = ref(null);
 const chartLoading = ref(false);
 const chartError = ref(false);
 const chartRef = ref(null);
-
-function exportChart(format) {
-    if (!chartRef.value) return;
-
-    if (format === "csv") {
-        chartRef.value.chart.exports.csv();
-        return;
-    }
-
-    const type = format === "svg" ? "svg" : undefined;
-    const filename = `monthly-sales-performance.${format}`;
-    chartRef.value.chart.dataURI({ scale: 1, type }).then(({ imgURI }) => {
-        const link = document.createElement("a");
-        link.href = imgURI;
-        link.download = filename;
-        link.click();
-    });
-}
 
 const theme = useTheme();
 const isDark = computed(() => theme.global.name.value === "dark");

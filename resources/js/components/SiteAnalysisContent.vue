@@ -224,13 +224,19 @@
                                 >
                                     <v-progress-circular indeterminate />
                                 </div>
+                            <template v-else-if="salesBreakdown.length">
                                 <ApexChart
-                                    v-else-if="salesBreakdown.length"
+                                    ref="salesChartRef"
                                     type="pie"
                                     height="350"
                                     :options="salesChartOptions"
                                     :series="salesSeries"
                                 />
+                                <ChartExportButtons
+                                    :chart="salesChartRef?.chart"
+                                    filename="monthly-sales-breakdown"
+                                />
+                            </template>
                                 <div
                                     v-else
                                     class="text-medium-emphasis text-center pa-4"
@@ -253,13 +259,19 @@
                                 >
                                     <v-progress-circular indeterminate />
                                 </div>
-                                <ApexChart
-                                    v-else-if="expenseData.length"
-                                    type="bar"
-                                    height="350"
-                                    :options="expenseChartOptions"
-                                    :series="expenseChartSeries"
-                                />
+                                <template v-else-if="expenseData.length">
+                                    <ApexChart
+                                        ref="expenseChartRef"
+                                        type="bar"
+                                        height="350"
+                                        :options="expenseChartOptions"
+                                        :series="expenseChartSeries"
+                                    />
+                                    <ChartExportButtons
+                                        :chart="expenseChartRef?.chart"
+                                        filename="monthly-expenses-comparison"
+                                    />
+                                </template>
                                 <div
                                     v-else
                                     class="text-medium-emphasis text-center pa-4"
@@ -553,6 +565,7 @@ import { computed, ref, watchEffect, defineAsyncComponent } from "vue";
 import { useTheme } from "vuetify";
 import { useCurrency } from "../composables/useCurrency";
 import CurrencySwitch from "./CurrencySwitch.vue";
+import ChartExportButtons from "./ChartExportButtons.vue";
 import MonthlyPerformanceChart from "./MonthlyPerformanceChart.vue";
 
 const ApexChart = defineAsyncComponent(() =>
@@ -666,6 +679,9 @@ const chartColors = [
     "#9966FF",
     "#FF9F40",
 ];
+
+const salesChartRef = ref(null);
+const expenseChartRef = ref(null);
 
 const salesBreakdown = ref([]);
 const salesLoading = ref(false);

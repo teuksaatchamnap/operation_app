@@ -213,32 +213,10 @@
                                 :options="chartOptions"
                                 :series="chartSeries"
                             />
-                            <div class="d-flex justify-end ga-1 mt-1">
-                                <v-btn
-                                    variant="text"
-                                    size="small"
-                                    prepend-icon="mdi-file-image"
-                                    @click="exportChart('png')"
-                                >
-                                    PNG
-                                </v-btn>
-                                <v-btn
-                                    variant="text"
-                                    size="small"
-                                    prepend-icon="mdi-file-document"
-                                    @click="exportChart('svg')"
-                                >
-                                    SVG
-                                </v-btn>
-                                <v-btn
-                                    variant="text"
-                                    size="small"
-                                    prepend-icon="mdi-file-delimited"
-                                    @click="exportChart('csv')"
-                                >
-                                    CSV
-                                </v-btn>
-                            </div>
+                            <ChartExportButtons
+                                :chart="chartRef?.chart"
+                                filename="monthly-expenses-by-category"
+                            />
                         </template>
                         <div
                             v-else
@@ -266,32 +244,10 @@
                                 :options="profitOptions"
                                 :series="profitSeries"
                             />
-                            <div class="d-flex justify-end ga-1 mt-1">
-                                <v-btn
-                                    variant="text"
-                                    size="small"
-                                    prepend-icon="mdi-file-image"
-                                    @click="exportProfitChart('png')"
-                                >
-                                    PNG
-                                </v-btn>
-                                <v-btn
-                                    variant="text"
-                                    size="small"
-                                    prepend-icon="mdi-file-document"
-                                    @click="exportProfitChart('svg')"
-                                >
-                                    SVG
-                                </v-btn>
-                                <v-btn
-                                    variant="text"
-                                    size="small"
-                                    prepend-icon="mdi-file-delimited"
-                                    @click="exportProfitChart('csv')"
-                                >
-                                    CSV
-                                </v-btn>
-                            </div>
+                            <ChartExportButtons
+                                :chart="profitChartRef?.chart"
+                                filename="monthly-profit-loss"
+                            />
                         </template>
                         <div
                             v-else
@@ -312,6 +268,7 @@ import { computed, ref, watchEffect, defineAsyncComponent } from "vue";
 import { useTheme } from "vuetify";
 import { useCurrency } from "../composables/useCurrency";
 import CurrencySwitch from "./CurrencySwitch.vue";
+import ChartExportButtons from "./ChartExportButtons.vue";
 
 const ApexChart = defineAsyncComponent(() =>
     import("vue3-apexcharts"),
@@ -388,42 +345,6 @@ const textColor = computed(() => (isDark.value ? "#e0e0e0" : "#333333"));
 
 const chartRef = ref(null);
 const profitChartRef = ref(null);
-
-function exportChart(format) {
-    if (!chartRef.value) return;
-
-    if (format === "csv") {
-        chartRef.value.chart.exports.csv();
-        return;
-    }
-
-    const type = format === "svg" ? "svg" : undefined;
-    const filename = `monthly-expenses-by-category.${format}`;
-    chartRef.value.chart.dataURI({ scale: 1, type }).then(({ imgURI }) => {
-        const link = document.createElement("a");
-        link.href = imgURI;
-        link.download = filename;
-        link.click();
-    });
-}
-
-function exportProfitChart(format) {
-    if (!profitChartRef.value) return;
-
-    if (format === "csv") {
-        profitChartRef.value.chart.exports.csv();
-        return;
-    }
-
-    const type = format === "svg" ? "svg" : undefined;
-    const filename = `monthly-profit-loss.${format}`;
-    profitChartRef.value.chart.dataURI({ scale: 1, type }).then(({ imgURI }) => {
-        const link = document.createElement("a");
-        link.href = imgURI;
-        link.download = filename;
-        link.click();
-    });
-}
 
 const chartColors = [
     "#FF6384",
