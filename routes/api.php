@@ -37,4 +37,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/sites/{site}/daily-sales', [SiteAnalysisController::class, 'dailySales']);
     Route::get('/sites/{site}/water-loss-by-week', [SiteAnalysisController::class, 'waterLossByWeek']);
     Route::get('/sites/{site}/download-commune-contract', [SiteAnalysisController::class, 'downloadCommuneContract']);
+    Route::get('/sites/{site}/entrepreneur-history', [SiteAnalysisController::class, 'entrepreneurHistory']);
+    Route::get('/download-entrepreneur-contract/{filename}', [SiteAnalysisController::class, 'downloadEntrepreneurContract']);
 });

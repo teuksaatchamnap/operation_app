@@ -6,6 +6,7 @@ use App\Models\FactMonthly;
 use App\Models\Kpi;
 use App\Models\Objective;
 use App\Models\Platform;
+use App\Models\Sims3\EntrepreneurProfile as Sims3EntrepreneurProfile;
 use App\Models\Sims3\Expense as Sims3Expense;
 use App\Models\Sims3\Platform as Sims3Platform;
 use App\Models\Sims3\Sale as Sims3Sale;
@@ -958,6 +959,46 @@ class SiteAnalysisController extends Controller
         }
 
         return Storage::disk('sims3')->download($contract->commune_contract, $site->name . '_commune_contract.pdf');
+    }
+
+    public function entrepreneurHistory(Site $site): JsonResponse
+    {
+        $sims3Site = $this->resolveSims3Site($site);
+
+        if (! $sims3Site) {
+            return response()->json(['error' => 'Site not found in Sims3 database'], 404);
+        }
+
+        $current = Sims3EntrepreneurProfile::where('Id_Site', $sims3Site->Id_Site)
+            ->where('Status', 'new_entrepreneur_coming')
+            ->orderBy('Submitted_Date', 'desc')
+            ->first();
+
+        $currentData = $current
+            ? array_merge($current->toArray(), ['_isCurrent' => true])
+            : null;
+
+        $history = Sims3EntrepreneurProfile::where('Id_Site', $sims3Site->Id_Site)
+            ->where('Status', 'entrepreneur_resignation')
+            ->orderBy('Submitted_Date', 'desc')
+            ->get()
+            ->toArray();
+
+        return response()->json([
+            'current' => $currentData,
+            'history' => $history,
+        ]);
+    }
+
+    public function downloadEntrepreneurContract(string $filename): JsonResponse|StreamedResponse
+    {
+        $path = 'En_Contract/' . $filename;
+
+        if (! Storage::disk('sims3')->exists($path)) {
+            return response()->json(['error' => 'File not found : ' . $path], 404);
+        }
+
+        return Storage::disk('sims3')->download($path, $filename);
     }
 
     private function getExpenseCategories(): array
