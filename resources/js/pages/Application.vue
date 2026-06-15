@@ -7,7 +7,7 @@
             <v-col>
                 <v-autocomplete
                     v-model="selectedSites"
-                    :items="sites"
+                    :items="availableSites"
                     item-title="name"
                     item-value="id"
                     label="Sites"
@@ -119,6 +119,7 @@ const selectedSites = ref([]);
 const selectedAdvisors = ref([]);
 const selectedPlatforms = ref([]);
 const selectedMonth = ref(currentMonth);
+const factSiteIds = ref(null);
 
 const STORAGE_KEY = "application_filters";
 
@@ -160,9 +161,28 @@ const kpiFilters = computed(() => ({
     month: selectedMonth.value,
 }));
 
+const availableSites = computed(() => {
+    if (factSiteIds.value === null) return sites.value;
+    const ids = factSiteIds.value;
+    return sites.value.filter((s) => ids.has(s.id));
+});
+
 function findKpi(colName) {
     return kpis.value.find((k) => k.col_name === colName) || null;
 }
+
+async function fetchFactSiteIds() {
+    try {
+        const res = await axios.get("/api/fact-monthly", {
+            params: { month: selectedMonth.value, kpis: "active" },
+        });
+        factSiteIds.value = new Set(res.data.map((r) => r.site_id));
+    } catch {
+        factSiteIds.value = null;
+    }
+}
+
+watch(selectedMonth, fetchFactSiteIds);
 
 onMounted(async () => {
     loadFilters();
@@ -182,5 +202,7 @@ onMounted(async () => {
     } catch (error) {
         console.error("Failed to load dimensions:", error);
     }
+
+    fetchFactSiteIds();
 });
 </script>
