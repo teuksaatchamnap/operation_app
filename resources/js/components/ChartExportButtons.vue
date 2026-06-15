@@ -52,12 +52,21 @@ function exportChart(format) {
         return;
     }
 
-    const type = format === "svg" ? "svg" : undefined;
-    chart.dataURI({ scale: 1, type }).then(({ imgURI }) => {
-        const link = document.createElement("a");
-        link.href = imgURI;
-        link.download = `${props.filename}.${format}`;
-        link.click();
-    });
+    const link = document.createElement("a");
+
+    if (format === "svg") {
+        chart.getSvgString().then((svgContent) => {
+            const blob = new Blob([svgContent], { type: "image/svg+xml" });
+            link.href = URL.createObjectURL(blob);
+            link.download = `${props.filename}.svg`;
+            link.click();
+        });
+    } else {
+        chart.dataURI({ scale: 1 }).then(({ imgURI }) => {
+            link.href = imgURI;
+            link.download = `${props.filename}.png`;
+            link.click();
+        });
+    }
 }
 </script>
