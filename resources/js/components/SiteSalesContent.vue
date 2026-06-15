@@ -3,8 +3,12 @@
         <v-card-text>
             <template v-if="loading">
                 <v-card variant="outlined" class="subtle-border">
-                    <v-card-title class="section-title d-flex align-center ga-2">
-                        <v-icon size="small" color="primary">mdi-chart-line</v-icon>
+                    <v-card-title
+                        class="section-title d-flex align-center ga-2"
+                    >
+                        <v-icon size="small" color="primary"
+                            >mdi-chart-line</v-icon
+                        >
                         Sales by Channel
                     </v-card-title>
                     <v-card-text>
@@ -23,8 +27,12 @@
 
             <template v-else-if="data">
                 <v-card variant="outlined" class="subtle-border">
-                    <v-card-title class="section-title d-flex align-center ga-2">
-                        <v-icon size="small" color="primary">mdi-chart-line</v-icon>
+                    <v-card-title
+                        class="section-title d-flex align-center ga-2"
+                    >
+                        <v-icon size="small" color="primary"
+                            >mdi-chart-line</v-icon
+                        >
                         Sales by Channel
                         <v-spacer />
                         <div class="d-flex align-center ga-2">
@@ -58,7 +66,9 @@
                         >
                             <thead>
                                 <tr class="accent-header">
-                                    <th class="caption-label font-weight-bold">Date</th>
+                                    <th class="caption-label font-weight-bold">
+                                        Date
+                                    </th>
                                     <th
                                         v-for="ch in channels"
                                         :key="ch.key"
@@ -66,18 +76,33 @@
                                     >
                                         {{ ch.label }}<br />
                                         <span class="text-medium-emphasis">
-                                            {{ formatCurrency(data.prices[ch.priceKey]) }}
+                                            {{
+                                                formatCurrency(
+                                                    data.prices[ch.priceKey],
+                                                )
+                                            }}
                                         </span>
                                     </th>
-                                    <th class="caption-label font-weight-bold text-right">Total</th>
+                                    <th
+                                        class="caption-label font-weight-bold text-right"
+                                    >
+                                        Total
+                                    </th>
+                                    <th
+                                        class="caption-label font-weight-bold text-right"
+                                    >
+                                        Total sales<br />
+                                        <span class="text-medium-emphasis">{{
+                                            currency === "usd" ? "USD" : "KHR"
+                                        }}</span>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr
-                                    v-for="sale in data.sales"
-                                    :key="sale.date"
-                                >
-                                    <td class="font-weight-medium">{{ formatDate(sale.date) }}</td>
+                                <tr v-for="sale in data.sales" :key="sale.date">
+                                    <td class="font-weight-medium">
+                                        {{ formatDate(sale.date) }}
+                                    </td>
                                     <td
                                         v-for="ch in channels"
                                         :key="ch.key"
@@ -88,9 +113,16 @@
                                     <td class="text-right font-weight-bold">
                                         {{ sale.Total_Sales }}
                                     </td>
+                                    <td class="text-right font-weight-bold">
+                                        {{ formatCurrency(getRowTotal(sale)) }}
+                                    </td>
                                 </tr>
                                 <tr class="sales-total-row">
-                                    <td class="font-weight-bold text-uppercase caption-label">Total</td>
+                                    <td
+                                        class="font-weight-bold text-uppercase caption-label"
+                                    >
+                                        Total
+                                    </td>
                                     <td
                                         v-for="ch in channels"
                                         :key="ch.key"
@@ -99,20 +131,44 @@
                                         {{ formatNumber(data.totals[ch.key]) }}
                                     </td>
                                     <td class="text-right font-weight-bold">
-                                        {{ formatNumber(data.totals.Total_Sales) }}
+                                        {{
+                                            formatNumber(
+                                                data.totals.Total_Sales,
+                                            )
+                                        }}
                                     </td>
                                 </tr>
                                 <tr class="sales-income-row">
-                                    <td class="font-weight-bold text-uppercase caption-label">{{ currency === 'usd' ? 'Total USD' : 'Total KHR' }}</td>
+                                    <td
+                                        class="font-weight-bold text-uppercase caption-label"
+                                    >
+                                        {{
+                                            currency === "usd"
+                                                ? "Total USD"
+                                                : "Total KHR"
+                                        }}
+                                    </td>
                                     <td
                                         v-for="ch in channels"
                                         :key="ch.key"
                                         class="text-right font-weight-bold"
                                     >
-                                        {{ formatCurrency(data.income[ch.incomeKey]) }}
+                                        {{
+                                            formatCurrency(
+                                                data.income[ch.incomeKey],
+                                            )
+                                        }}
                                     </td>
-                                    <td class="text-right font-weight-bold">
-                                        {{ formatCurrency(data.income.Total_Income) }}
+                                    <td />
+                                    <td
+                                        rowspan="2"
+                                        class="text-right font-weight-bold"
+                                    >
+                                        {{
+                                            formatCurrency(
+                                                data.income.Total_Income,
+                                            )
+                                        }}
                                     </td>
                                 </tr>
                             </tbody>
@@ -127,17 +183,27 @@
                 </v-card>
 
                 <div class="mt-4">
-                    <MonthlyPerformanceChart :site="site" :month="selectedMonth" />
+                    <MonthlyPerformanceChart
+                        :site="site"
+                        :month="selectedMonth"
+                    />
                 </div>
 
                 <div class="mt-4">
                     <v-card variant="outlined" class="subtle-border">
-                        <v-card-title class="section-title d-flex align-center ga-2">
-                            <v-icon size="small" color="primary">mdi-chart-line</v-icon>
+                        <v-card-title
+                            class="section-title d-flex align-center ga-2"
+                        >
+                            <v-icon size="small" color="primary"
+                                >mdi-chart-line</v-icon
+                            >
                             Sales Comparison: Kiosk vs Platform vs Network
                         </v-card-title>
                         <v-card-text>
-                            <div v-if="comparisonLoading" class="text-center pa-4">
+                            <div
+                                v-if="comparisonLoading"
+                                class="text-center pa-4"
+                            >
                                 <v-progress-circular indeterminate />
                             </div>
                             <div
@@ -171,8 +237,12 @@
 
                 <div class="mt-4">
                     <v-card variant="outlined" class="subtle-border">
-                        <v-card-title class="section-title d-flex align-center ga-2">
-                            <v-icon size="small" color="primary">mdi-water</v-icon>
+                        <v-card-title
+                            class="section-title d-flex align-center ga-2"
+                        >
+                            <v-icon size="small" color="primary"
+                                >mdi-water</v-icon
+                            >
                             Water Loss by Week
                         </v-card-title>
                         <v-card-text>
@@ -181,22 +251,54 @@
                             </template>
 
                             <template v-else-if="waterError">
-                                <div class="text-medium-emphasis text-center pa-4">
+                                <div
+                                    class="text-medium-emphasis text-center pa-4"
+                                >
                                     Failed to load water loss data
                                 </div>
                             </template>
 
-                            <template v-else-if="waterData && waterData.weeks.length">
+                            <template
+                                v-else-if="waterData && waterData.weeks.length"
+                            >
                                 <v-table density="compact" class="sales-table">
                                     <thead>
                                         <tr class="accent-header">
-                                            <th class="caption-label font-weight-bold">Week</th>
-                                            <th class="caption-label font-weight-bold text-right">Meter Start (L)</th>
-                                            <th class="caption-label font-weight-bold text-right">Meter End (L)</th>
-                                            <th class="caption-label font-weight-bold text-right">Consumed (L)</th>
-                                            <th class="caption-label font-weight-bold text-right">Sold (L)</th>
-                                            <th class="caption-label font-weight-bold text-right">Loss (L)</th>
-                                            <th class="caption-label font-weight-bold text-right">Loss (%)</th>
+                                            <th
+                                                class="caption-label font-weight-bold"
+                                            >
+                                                Week
+                                            </th>
+                                            <th
+                                                class="caption-label font-weight-bold text-right"
+                                            >
+                                                Meter Start (L)
+                                            </th>
+                                            <th
+                                                class="caption-label font-weight-bold text-right"
+                                            >
+                                                Meter End (L)
+                                            </th>
+                                            <th
+                                                class="caption-label font-weight-bold text-right"
+                                            >
+                                                Consumed (L)
+                                            </th>
+                                            <th
+                                                class="caption-label font-weight-bold text-right"
+                                            >
+                                                Sold (L)
+                                            </th>
+                                            <th
+                                                class="caption-label font-weight-bold text-right"
+                                            >
+                                                Loss (L)
+                                            </th>
+                                            <th
+                                                class="caption-label font-weight-bold text-right"
+                                            >
+                                                Loss (%)
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -204,13 +306,53 @@
                                             v-for="w in waterData.weeks"
                                             :key="w.week"
                                         >
-                                            <td class="font-weight-medium">{{ w.week }}</td>
-                                            <td class="text-right">{{ w.meter_start != null ? formatNumber(w.meter_start) : 'N/A' }}</td>
-                                            <td class="text-right">{{ w.meter_end != null ? formatNumber(w.meter_end) : 'N/A' }}</td>
-                                            <td class="text-right">{{ w.consumed != null ? formatNumber(w.consumed) : 'N/A' }}</td>
-                                            <td class="text-right">{{ formatNumber(w.sold) }}</td>
-                                            <td class="text-right">{{ w.loss != null ? formatNumber(w.loss) : 'N/A' }}</td>
-                                            <td class="text-right">{{ w.loss_pct != null ? w.loss_pct + '%' : 'N/A' }}</td>
+                                            <td class="font-weight-medium">
+                                                {{ w.week }}
+                                            </td>
+                                            <td class="text-right">
+                                                {{
+                                                    w.meter_start != null
+                                                        ? formatNumber(
+                                                              w.meter_start,
+                                                          )
+                                                        : "N/A"
+                                                }}
+                                            </td>
+                                            <td class="text-right">
+                                                {{
+                                                    w.meter_end != null
+                                                        ? formatNumber(
+                                                              w.meter_end,
+                                                          )
+                                                        : "N/A"
+                                                }}
+                                            </td>
+                                            <td class="text-right">
+                                                {{
+                                                    w.consumed != null
+                                                        ? formatNumber(
+                                                              w.consumed,
+                                                          )
+                                                        : "N/A"
+                                                }}
+                                            </td>
+                                            <td class="text-right">
+                                                {{ formatNumber(w.sold) }}
+                                            </td>
+                                            <td class="text-right">
+                                                {{
+                                                    w.loss != null
+                                                        ? formatNumber(w.loss)
+                                                        : "N/A"
+                                                }}
+                                            </td>
+                                            <td class="text-right">
+                                                {{
+                                                    w.loss_pct != null
+                                                        ? w.loss_pct + "%"
+                                                        : "N/A"
+                                                }}
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </v-table>
@@ -239,9 +381,7 @@ import CurrencySwitch from "./CurrencySwitch.vue";
 import ChartExportButtons from "./ChartExportButtons.vue";
 import MonthlyPerformanceChart from "./MonthlyPerformanceChart.vue";
 
-const ApexChart = defineAsyncComponent(() =>
-    import("vue3-apexcharts"),
-);
+const ApexChart = defineAsyncComponent(() => import("vue3-apexcharts"));
 
 const props = defineProps({
     site: {
@@ -304,6 +444,15 @@ function formatDate(dateStr) {
 function formatNumber(num) {
     if (num === null || num === undefined) return "-";
     return Number(num).toLocaleString("en-US");
+}
+
+function getRowTotal(sale) {
+    if (!data.value?.prices || !sale) return 0;
+    let total = 0;
+    for (const ch of channels) {
+        total += (sale[ch.key] || 0) * (data.value.prices[ch.priceKey] || 0);
+    }
+    return total;
 }
 
 const { currency, formatCurrency } = useCurrency();
@@ -381,7 +530,9 @@ watchEffect(async () => {
     comparisonError.value = false;
 
     try {
-        const res = await axios.get(`/api/sites/${props.site.id}/sales-comparison`);
+        const res = await axios.get(
+            `/api/sites/${props.site.id}/sales-comparison`,
+        );
         comparisonData.value = res.data;
     } catch {
         comparisonError.value = true;
@@ -392,13 +543,48 @@ watchEffect(async () => {
 });
 
 const channels = [
-    { key: "Free_Sales", label: "Free", priceKey: "Free_Price", incomeKey: "Free_Income" },
-    { key: "Hod_Sales", label: "Home Delivery", priceKey: "Hod_Price", incomeKey: "Hod_Income" },
-    { key: "WiS_Sales", label: "School", priceKey: "WiS_Price", incomeKey: "WiS_Income" },
-    { key: "Onsite_Sales", label: "On-Site", priceKey: "Onsite_Price", incomeKey: "Onsite_Income" },
-    { key: "Shopkeeper_Sales", label: "Shopkeeper", priceKey: "Shopkeeper_Price", incomeKey: "Shopkeeper_Income" },
-    { key: "Bottle_Sales", label: "Bottle", priceKey: "Bottle_Price", incomeKey: "Bottle_Income" },
-    { key: "Other_Sales", label: "Other", priceKey: "Other_Price", incomeKey: "Other_Income" },
+    {
+        key: "Free_Sales",
+        label: "Free",
+        priceKey: "Free_Price",
+        incomeKey: "Free_Income",
+    },
+    {
+        key: "Hod_Sales",
+        label: "Home Delivery",
+        priceKey: "Hod_Price",
+        incomeKey: "Hod_Income",
+    },
+    {
+        key: "WiS_Sales",
+        label: "School",
+        priceKey: "WiS_Price",
+        incomeKey: "WiS_Income",
+    },
+    {
+        key: "Onsite_Sales",
+        label: "On-Site",
+        priceKey: "Onsite_Price",
+        incomeKey: "Onsite_Income",
+    },
+    {
+        key: "Shopkeeper_Sales",
+        label: "Shopkeeper",
+        priceKey: "Shopkeeper_Price",
+        incomeKey: "Shopkeeper_Income",
+    },
+    {
+        key: "Bottle_Sales",
+        label: "Bottle",
+        priceKey: "Bottle_Price",
+        incomeKey: "Bottle_Income",
+    },
+    {
+        key: "Other_Sales",
+        label: "Other",
+        priceKey: "Other_Price",
+        incomeKey: "Other_Income",
+    },
 ];
 
 watchEffect(async () => {
@@ -427,9 +613,12 @@ watchEffect(async () => {
     waterError.value = false;
 
     try {
-        const res = await axios.get(`/api/sites/${props.site.id}/water-loss-by-week`, {
-            params: { month: selectedMonth.value },
-        });
+        const res = await axios.get(
+            `/api/sites/${props.site.id}/water-loss-by-week`,
+            {
+                params: { month: selectedMonth.value },
+            },
+        );
         waterData.value = res.data;
     } catch {
         waterError.value = true;
@@ -495,7 +684,12 @@ watchEffect(async () => {
 }
 
 @keyframes skeleton-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.35;
+    }
 }
 </style>
