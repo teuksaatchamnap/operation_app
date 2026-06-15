@@ -1,11 +1,12 @@
 # Installation
 
 - Must be installed on the same database server as sims3.
-- Sims3 database name must be set in .env DB_DATABASE_SIMS3
+- Sims3 database name must be set in .env DB_DATABASE_SIMS3 and sims3 storage in SIMS3_STORAGE_PATH
 
 ```sh
 # install dependencies
-composer install
+composer update
+npm update
 # create database tables
 php artisan migrate:fresh --seed
 # import sites, platforms and advisors from sims3
@@ -15,7 +16,8 @@ php artisan job:run "App\Jobs\ComputeDimensions" --year=2026 --site=M24
 php artisan job:run "App\Jobs\ComputeSalesVolume" --year=2026 --site=M24
 # All in one
 php artisan migrate:fresh --seed && php artisan compute:all
-php artisan serve
+# run frontend and backend in dev mode
+composer dev
 ```
 
 The API is automatically documented and browsable on http://localhost:8000/docs/api
