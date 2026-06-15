@@ -54,45 +54,48 @@
     </v-card>
 
     <ScrollPanel class="my-2">
-        <KpiCard :kpi="findKpi('active')" :filters="kpiFilters" />
+        <KpiCard :kpi="findKpi('active')" :filters="debouncedFilters" />
         <KpiCard
             :kpi="findKpi('super_tier_1')"
             :latest-available="1"
-            :filters="kpiFilters"
+            :filters="debouncedFilters"
         />
         <KpiCard
             :kpi="findKpi('bottles_per_day')"
             :year-to-date="1"
-            :filters="kpiFilters"
+            :filters="debouncedFilters"
         />
         <KpiCard
             :kpi="findKpi('sales_volume')"
             :year-to-date="1"
-            :filters="kpiFilters"
+            :filters="debouncedFilters"
         />
         <KpiCard
             :kpi="findKpi('sales_volume_lfl')"
             :year-to-date="1"
-            :filters="kpiFilters"
+            :filters="debouncedFilters"
         />
-        <KpiCard :kpi="findKpi('sales_volume_lfl')" :filters="kpiFilters" />
-        <KpiCard :kpi="findKpi('has_3_workers')" :filters="kpiFilters" />
-        <KpiCard :kpi="findKpi('consumers')" :filters="kpiFilters" />
+        <KpiCard
+            :kpi="findKpi('sales_volume_lfl')"
+            :filters="debouncedFilters"
+        />
+        <KpiCard :kpi="findKpi('has_3_workers')" :filters="debouncedFilters" />
+        <KpiCard :kpi="findKpi('consumers')" :filters="debouncedFilters" />
         <KpiCard
             :kpi="findKpi('who_compliance')"
-            :filters="kpiFilters"
+            :filters="debouncedFilters"
             :latest-available="1"
         />
-        <KpiCard :kpi="findKpi('is_profitable')" :filters="kpiFilters" />
+        <KpiCard :kpi="findKpi('is_profitable')" :filters="debouncedFilters" />
         <KpiCard
             :kpi="findKpi('ec_collection')"
-            :filters="kpiFilters"
+            :filters="debouncedFilters"
             :year-to-date="1"
         />
     </ScrollPanel>
 
     <KpiSiteList
-        :filters="kpiFilters"
+        :filters="debouncedFilters"
         :sites="sites"
         :platforms="platforms"
         :advisors="advisors"
@@ -101,7 +104,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import axios from "axios";
 import KpiCard from "../components/KpiCard.vue";
 import MonthPicker from "../components/MonthPicker.vue";
@@ -161,6 +164,20 @@ const kpiFilters = computed(() => ({
     month: selectedMonth.value,
 }));
 
+const debouncedFilters = ref({ ...kpiFilters.value });
+let filtersTimer = null;
+
+watch(
+    kpiFilters,
+    (newVal) => {
+        clearTimeout(filtersTimer);
+        filtersTimer = setTimeout(() => {
+            debouncedFilters.value = { ...newVal };
+        }, 300);
+    },
+    { deep: true },
+);
+
 const availableSites = computed(() => {
     if (factSiteIds.value === null) return sites.value;
     const ids = factSiteIds.value;
@@ -174,7 +191,10 @@ function findKpi(colName) {
 async function fetchFactSiteIds() {
     try {
         const res = await axios.get("/api/fact-monthly", {
-            params: { month: selectedMonth.value, kpis: "active" },
+            params: {
+                month: selectedMonth.value,
+                kpis: "active",
+            },
         });
         factSiteIds.value = new Set(res.data.map((r) => r.site_id));
     } catch {
@@ -182,10 +202,18 @@ async function fetchFactSiteIds() {
     }
 }
 
-watch(selectedMonth, fetchFactSiteIds);
+let factSiteTimer = null;
+
+watch(selectedMonth, () => {
+    clearTimeout(factSiteTimer);
+    factSiteTimer = setTimeout(() => {
+        fetchFactSiteIds();
+    }, 300);
+});
 
 onMounted(async () => {
     loadFilters();
+    debouncedFilters.value = { ...kpiFilters.value };
 
     try {
         const [kpisRes, sitesRes, advisorsRes, platformsRes] =
@@ -204,5 +232,10 @@ onMounted(async () => {
     }
 
     fetchFactSiteIds();
+});
+
+onUnmounted(() => {
+    clearTimeout(filtersTimer);
+    clearTimeout(factSiteTimer);
 });
 </script>
