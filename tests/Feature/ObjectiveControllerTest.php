@@ -17,7 +17,7 @@ class ObjectiveControllerTest extends TestCase
             'name' => 'Revenue',
             'col_name' => 'revenue',
             'unit' => 'USD',
-            'periodicity' => 'monthly',
+
             'type' => 'quantitative',
         ]);
 
@@ -37,7 +37,7 @@ class ObjectiveControllerTest extends TestCase
             'name' => 'Revenue',
             'col_name' => 'revenue',
             'unit' => 'USD',
-            'periodicity' => 'monthly',
+
             'type' => 'quantitative',
         ]);
 
@@ -88,7 +88,7 @@ class ObjectiveControllerTest extends TestCase
             'name' => 'Revenue',
             'col_name' => 'revenue',
             'unit' => 'USD',
-            'periodicity' => 'monthly',
+
             'type' => 'quantitative',
         ]);
 
@@ -110,7 +110,7 @@ class ObjectiveControllerTest extends TestCase
             'name' => 'Revenue',
             'col_name' => 'revenue',
             'unit' => 'USD',
-            'periodicity' => 'monthly',
+
             'type' => 'quantitative',
         ]);
 
@@ -157,7 +157,7 @@ class ObjectiveControllerTest extends TestCase
             'name' => 'Revenue',
             'col_name' => 'revenue',
             'unit' => 'USD',
-            'periodicity' => 'monthly',
+
             'type' => 'quantitative',
         ]);
 

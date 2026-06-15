@@ -18,7 +18,6 @@ class KpiFactory extends Factory
             'name' => fake()->word(),
             'col_name' => fake()->word(),
             'unit' => fake()->word(),
-            'periodicity' => fake()->word(),
             'type' => fake()->word(),
         ];
     }

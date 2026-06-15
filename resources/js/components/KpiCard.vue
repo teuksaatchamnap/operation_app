@@ -26,7 +26,7 @@
                         v-else
                         class="text-caption text-medium-emphasis"
                     >
-                        {{ kpi?.periodicity || "Monthly" }}
+                        Monthly
                         {{ filters.month ?? "" }}
                     </v-card-subtitle>
                 </div>

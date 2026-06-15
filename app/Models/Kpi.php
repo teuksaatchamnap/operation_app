@@ -18,7 +18,6 @@ class Kpi extends Model
         'name',
         'col_name',
         'unit',
-        'periodicity',
         'type',
         'description',
         'aggregate',

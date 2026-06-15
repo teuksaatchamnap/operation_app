@@ -96,15 +96,15 @@ class SiteAnalysisControllerTest extends TestCase
             'who_compliance' => 1,
         ]);
 
-        Kpi::factory()->create(['col_name' => 'sales_volume', 'name' => 'Sales Volume', 'periodicity' => 'monthly']);
-        Kpi::factory()->create(['col_name' => 'tier', 'name' => 'Tier', 'periodicity' => 'monthly']);
-        Kpi::factory()->create(['col_name' => 'days_open', 'name' => 'Days Open', 'periodicity' => 'monthly']);
-        Kpi::factory()->create(['col_name' => 'water_loss', 'name' => 'Water Loss', 'periodicity' => 'monthly']);
-        Kpi::factory()->create(['col_name' => 'operators', 'name' => 'Operators', 'periodicity' => 'monthly']);
-        Kpi::factory()->create(['col_name' => 'consumers', 'name' => 'Consumers', 'periodicity' => 'monthly']);
-        Kpi::factory()->create(['col_name' => 'penetration', 'name' => 'Penetration', 'periodicity' => 'monthly']);
-        Kpi::factory()->create(['col_name' => 'who_compliance', 'name' => 'WHO Compliance', 'periodicity' => 'monthly']);
-        Kpi::factory()->create(['col_name' => 'bottles_per_day', 'name' => 'Bottles Per Day', 'periodicity' => 'year to date']);
+        Kpi::factory()->create(['col_name' => 'sales_volume', 'name' => 'Sales Volume']);
+        Kpi::factory()->create(['col_name' => 'tier', 'name' => 'Tier']);
+        Kpi::factory()->create(['col_name' => 'days_open', 'name' => 'Days Open']);
+        Kpi::factory()->create(['col_name' => 'water_loss', 'name' => 'Water Loss']);
+        Kpi::factory()->create(['col_name' => 'operators', 'name' => 'Operators']);
+        Kpi::factory()->create(['col_name' => 'consumers', 'name' => 'Consumers']);
+        Kpi::factory()->create(['col_name' => 'penetration', 'name' => 'Penetration']);
+        Kpi::factory()->create(['col_name' => 'who_compliance', 'name' => 'WHO Compliance']);
+        Kpi::factory()->create(['col_name' => 'bottles_per_day', 'name' => 'Bottles Per Day']);
 
         $this->mockSims3Site('SITE01');
 
@@ -141,7 +141,7 @@ class SiteAnalysisControllerTest extends TestCase
             'month' => '2025-01-01',
             'who_compliance' => 0,
         ]);
-        Kpi::factory()->create(['col_name' => 'who_compliance', 'name' => 'WHO', 'periodicity' => 'monthly']);
+        Kpi::factory()->create(['col_name' => 'who_compliance', 'name' => 'WHO']);
 
         $this->mockSims3Site('SITE02', ['Platform' => null]);
 
@@ -162,7 +162,7 @@ class SiteAnalysisControllerTest extends TestCase
             'month' => '2025-01-01',
             'penetration' => 0.35,
         ]);
-        Kpi::factory()->create(['col_name' => 'penetration', 'name' => 'Pen', 'periodicity' => 'monthly']);
+        Kpi::factory()->create(['col_name' => 'penetration', 'name' => 'Pen']);
 
         $this->mockSims3Site('SITE03', ['Platform' => null]);
 
@@ -190,7 +190,7 @@ class SiteAnalysisControllerTest extends TestCase
             'site_id' => $site->id, 'month' => '2025-03-01',
             'sales_volume' => 1200, 'days_open' => 10, 'bottles_per_day' => 120,
         ]);
-        Kpi::factory()->create(['col_name' => 'bottles_per_day', 'name' => 'BPD', 'periodicity' => 'year to date']);
+        Kpi::factory()->create(['col_name' => 'bottles_per_day', 'name' => 'BPD']);
 
         $this->mockSims3Site('SITE04', ['Platform' => null]);
 
@@ -211,7 +211,7 @@ class SiteAnalysisControllerTest extends TestCase
             'month' => '2025-01-01',
             'sales_volume' => 50000,
         ]);
-        $kpi = Kpi::factory()->create(['col_name' => 'sales_volume', 'name' => 'SV', 'periodicity' => 'monthly']);
+        $kpi = Kpi::factory()->create(['col_name' => 'sales_volume', 'name' => 'SV']);
         $kpi->objectives()->create(['start_date' => '2025-01-01', 'end_date' => null, 'value' => '45000', 'type' => 'general']);
         $kpi->objectives()->create(['start_date' => '2025-01-01', 'end_date' => null, 'value' => '48000', 'type' => 'individual']);
 
@@ -746,7 +746,6 @@ class SiteAnalysisControllerTest extends TestCase
         $kpi = Kpi::factory()->create([
             'col_name' => 'sales_volume',
             'name' => 'Sales Volume',
-            'periodicity' => 'monthly',
         ]);
         $kpi->objectives()->create([
             'start_date' => now()->startOfYear(),

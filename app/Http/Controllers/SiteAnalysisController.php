@@ -58,6 +58,8 @@ class SiteAnalysisController extends Controller
             'who_compliance',
         ])->get()->keyBy('col_name');
 
+        $ytdColNames = ['bottles_per_day'];
+
         $kpiDefinitions = [];
 
         if (isset($kpiRows['bottles_per_day'])) {
@@ -91,7 +93,7 @@ class SiteAnalysisController extends Controller
                 'key' => $colName,
                 'label' => $kpi->name,
                 'col_name' => $colName,
-                'periodicity' => $kpi->periodicity === 'year to date' ? 'ytd' : 'monthly',
+                'periodicity' => in_array($colName, $ytdColNames) ? 'ytd' : 'monthly',
             ];
         }
 

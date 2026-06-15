@@ -24,7 +24,7 @@ class KpiControllerTest extends TestCase
             'name' => 'Revenue',
             'col_name' => 'revenue',
             'unit' => 'USD',
-            'periodicity' => 'monthly',
+
             'type' => 'quantitative',
         ]);
 
@@ -32,7 +32,7 @@ class KpiControllerTest extends TestCase
             'name' => 'Customer Satisfaction',
             'col_name' => 'csat',
             'unit' => 'score',
-            'periodicity' => 'year to date',
+
             'type' => 'qualitative',
         ]);
 
@@ -52,7 +52,7 @@ class KpiControllerTest extends TestCase
             'name' => 'Churn Rate',
             'col_name' => 'churn_rate',
             'unit' => 'percentage',
-            'periodicity' => 'monthly',
+
             'type' => 'calculated',
         ];
 
@@ -71,7 +71,7 @@ class KpiControllerTest extends TestCase
             'name' => 'NPS',
             'col_name' => 'nps',
             'unit' => 'score',
-            'periodicity' => 'year to date',
+
             'type' => 'qualitative',
         ]);
 
@@ -89,7 +89,7 @@ class KpiControllerTest extends TestCase
             'name' => 'Revenue',
             'col_name' => 'revenue',
             'unit' => 'USD',
-            'periodicity' => 'monthly',
+
             'type' => 'quantitative',
         ]);
 
@@ -111,7 +111,7 @@ class KpiControllerTest extends TestCase
             'name' => 'Revenue',
             'col_name' => 'revenue',
             'unit' => 'USD',
-            'periodicity' => 'monthly',
+
             'type' => 'quantitative',
         ]);
 

@@ -122,13 +122,6 @@
                         density="compact"
                     ></v-text-field>
                     <v-select
-                        v-model="kpiForm.periodicity"
-                        :items="['monthly', 'year to date', 'year']"
-                        label="Periodicity"
-                        variant="outlined"
-                        density="compact"
-                    ></v-select>
-                    <v-select
                         v-model="kpiForm.type"
                         :items="['quantitative', 'qualitative', 'calculated']"
                         label="Type"
@@ -284,7 +277,6 @@ const kpiHeaders = [
     { title: "Name", key: "name" },
     { title: "Column", key: "col_name" },
     { title: "Unit", key: "unit" },
-    { title: "Periodicity", key: "periodicity" },
     { title: "Type", key: "type" },
     { title: "", key: "actions", sortable: false, align: "end" },
 ];
@@ -310,7 +302,6 @@ const kpiForm = ref({
     description: "",
     col_name: "",
     unit: "",
-    periodicity: "monthly",
     type: "quantitative",
     legend: [],
 });
@@ -350,7 +341,6 @@ function openKpiDialog(item = null) {
             description: item.description || "",
             col_name: item.col_name,
             unit: item.unit,
-            periodicity: item.periodicity,
             type: item.type,
             legend: item.legend ? JSON.parse(JSON.stringify(item.legend)) : [],
         };
@@ -361,7 +351,6 @@ function openKpiDialog(item = null) {
             description: "",
             col_name: "",
             unit: "",
-            periodicity: "monthly",
             type: "quantitative",
             legend: [],
         };

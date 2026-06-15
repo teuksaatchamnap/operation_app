@@ -12,7 +12,7 @@ class KpiController extends Controller
      * List all KPIs.
      *
      * @response [
-     *     {"id": 1, "name": "Revenue", "col_name": "revenue", "unit": "$", "periodicity": "monthly", "type": "currency"}
+     *     {"id": 1, "name": "Revenue", "col_name": "revenue", "unit": "$", "type": "currency"}
      * ]
      */
     public function index(Request $request): JsonResponse
@@ -24,7 +24,7 @@ class KpiController extends Controller
      * Create a new KPI.
      *
      * @response status=201 [
-     *     {"id": 1, "name": "Revenue", "col_name": "revenue", "unit": "$", "periodicity": "monthly", "type": "currency"}
+     *     {"id": 1, "name": "Revenue", "col_name": "revenue", "unit": "$", "type": "currency"}
      * ]
      * @response status=422 {"message": "The name field is required.", "errors": {"name": ["The name field is required."]}}
      */
@@ -34,7 +34,6 @@ class KpiController extends Controller
             'name' => 'required|string',
             'col_name' => 'required|string',
             'unit' => 'required|string',
-            'periodicity' => 'required|string',
             'type' => 'required|string',
             'description' => 'sometimes|string',
             'legend' => 'nullable|array',
@@ -48,7 +47,7 @@ class KpiController extends Controller
     /**
      * Get a single KPI by ID.
      *
-     * @response {"id": 1, "name": "Revenue", "col_name": "revenue", "unit": "$", "periodicity": "monthly", "type": "currency"}
+     * @response {"id": 1, "name": "Revenue", "col_name": "revenue", "unit": "$", "type": "currency"}
      * @response status=404 {"message": "No query results for model [App\\Models\\Kpi] 1"}
      */
     public function show(int $id): JsonResponse
@@ -59,7 +58,7 @@ class KpiController extends Controller
     /**
      * Update an existing KPI.
      *
-     * @response {"id": 1, "name": "Updated Revenue", "col_name": "revenue", "unit": "$", "periodicity": "monthly", "type": "currency"}
+     * @response {"id": 1, "name": "Updated Revenue", "col_name": "revenue", "unit": "$", "type": "currency"}
      * @response status=404 {"message": "No query results for model [App\\Models\\Kpi] 1"}
      * @response status=422 {"message": "The name field is required.", "errors": {"name": ["The name field is required."]}}
      */
@@ -71,7 +70,6 @@ class KpiController extends Controller
             'name' => 'sometimes|required|string',
             'col_name' => 'sometimes|required|string',
             'unit' => 'sometimes|required|string',
-            'periodicity' => 'sometimes|required|string',
             'type' => 'sometimes|required|string',
             'description' => 'sometimes|string',
             'legend' => 'nullable|array',
