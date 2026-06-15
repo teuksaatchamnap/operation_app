@@ -354,6 +354,60 @@
                                                 }}
                                             </td>
                                         </tr>
+                                        <tr class="sales-total-row">
+                                            <td
+                                                class="font-weight-bold text-uppercase caption-label"
+                                            >
+                                                Total
+                                            </td>
+                                            <td
+                                                class="text-right font-weight-bold"
+                                            ></td>
+                                            <td
+                                                class="text-right font-weight-bold"
+                                            ></td>
+                                            <td
+                                                class="text-right font-weight-bold"
+                                            >
+                                                {{
+                                                    waterTotals.consumed != null
+                                                        ? formatNumber(
+                                                              waterTotals.consumed,
+                                                          )
+                                                        : "N/A"
+                                                }}
+                                            </td>
+                                            <td
+                                                class="text-right font-weight-bold"
+                                            >
+                                                {{
+                                                    formatNumber(
+                                                        waterTotals.sold,
+                                                    )
+                                                }}
+                                            </td>
+                                            <td
+                                                class="text-right font-weight-bold"
+                                            >
+                                                {{
+                                                    waterTotals.loss != null
+                                                        ? formatNumber(
+                                                              waterTotals.loss,
+                                                          )
+                                                        : "N/A"
+                                                }}
+                                            </td>
+                                            <td
+                                                class="text-right font-weight-bold"
+                                            >
+                                                {{
+                                                    waterTotals.loss_pct != null
+                                                        ? waterTotals.loss_pct +
+                                                          "%"
+                                                        : "N/A"
+                                                }}
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </v-table>
                             </template>
@@ -456,6 +510,50 @@ function getRowTotal(sale) {
 }
 
 const { currency, formatCurrency } = useCurrency();
+
+const waterTotals = computed(() => {
+    if (!waterData.value?.weeks?.length) {
+        return {
+            meter_start: null,
+            meter_end: null,
+            consumed: null,
+            sold: 0,
+            loss: null,
+            loss_pct: null,
+        };
+    }
+
+    const weeks = waterData.value.weeks;
+    const hasMeterStart = weeks.every((w) => w.meter_start != null);
+    const hasMeterEnd = weeks.every((w) => w.meter_end != null);
+    const hasConsumed = weeks.every((w) => w.consumed != null);
+    const hasLoss = weeks.every((w) => w.loss != null);
+
+    const totalMeterStart = hasMeterStart
+        ? weeks.reduce((s, w) => s + w.meter_start, 0)
+        : null;
+    const totalMeterEnd = hasMeterEnd
+        ? weeks.reduce((s, w) => s + w.meter_end, 0)
+        : null;
+    const totalConsumed = hasConsumed
+        ? weeks.reduce((s, w) => s + w.consumed, 0)
+        : null;
+    const totalSold = weeks.reduce((s, w) => s + w.sold, 0);
+    const totalLoss = hasLoss ? weeks.reduce((s, w) => s + w.loss, 0) : null;
+    const totalLossPct =
+        totalConsumed != null && totalLoss != null && totalConsumed > 0
+            ? ((totalLoss / totalConsumed) * 100).toFixed(1)
+            : null;
+
+    return {
+        meter_start: totalMeterStart,
+        meter_end: totalMeterEnd,
+        consumed: totalConsumed,
+        sold: totalSold,
+        loss: totalLoss,
+        loss_pct: totalLossPct,
+    };
+});
 
 const comparisonLoading = ref(false);
 const comparisonError = ref(false);
