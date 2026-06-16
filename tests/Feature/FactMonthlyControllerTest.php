@@ -401,4 +401,145 @@ class FactMonthlyControllerTest extends TestCase
         // Site2 is excluded because active is null
         $this->assertEquals(100.0, $data[0]['is_profitable']);
     }
+
+    // -- pct tests --
+
+    public function test_pct_returns_percentage_of_sites_with_non_null_kpi(): void
+    {
+        $site1 = Site::factory()->create();
+        $site2 = Site::factory()->create();
+        $site3 = Site::factory()->create();
+
+        // Site 1: who_compliance = 1, active = 1
+        FactMonthly::factory()->create([
+            'site_id' => $site1->id,
+            'month' => '2025-01-01',
+            'who_compliance' => 1,
+            'active' => 1,
+        ]);
+
+        // Site 2: who_compliance = 0, active = 0 (inactive but included by pct)
+        FactMonthly::factory()->create([
+            'site_id' => $site2->id,
+            'month' => '2025-01-01',
+            'who_compliance' => 0,
+            'active' => 0,
+        ]);
+
+        // Site 3: who_compliance = null (should be excluded from calculation)
+        FactMonthly::factory()->create([
+            'site_id' => $site3->id,
+            'month' => '2025-01-01',
+            'who_compliance' => null,
+            'active' => 1,
+        ]);
+
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)
+            ->getJson('/api/fact-monthly?kpis=who_compliance&aggregate=pct&month=2025-01')
+            ->assertSuccessful();
+
+        $data = $response->json();
+        // 1 out of 2 sites with non-null who_compliance has value = 1 -> 50%
+        // Site 3 is excluded because who_compliance is null
+        $this->assertEquals(50.0, $data[0]['who_compliance']);
+    }
+
+    public function test_pct_with_year_to_date_returns_correct_percentage(): void
+    {
+        $site1 = Site::factory()->create();
+        $site2 = Site::factory()->create();
+
+        // Site 1: compliant in Jan and Feb
+        FactMonthly::factory()->create([
+            'site_id' => $site1->id,
+            'month' => '2025-01-01',
+            'who_compliance' => 1,
+            'active' => 1,
+        ]);
+        FactMonthly::factory()->create([
+            'site_id' => $site1->id,
+            'month' => '2025-02-01',
+            'who_compliance' => 1,
+            'active' => 1,
+        ]);
+
+        // Site 2: not compliant in Jan, compliant in Feb
+        FactMonthly::factory()->create([
+            'site_id' => $site2->id,
+            'month' => '2025-01-01',
+            'who_compliance' => 0,
+            'active' => 1,
+        ]);
+        FactMonthly::factory()->create([
+            'site_id' => $site2->id,
+            'month' => '2025-02-01',
+            'who_compliance' => 1,
+            'active' => 1,
+        ]);
+
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)
+            ->getJson('/api/fact-monthly?kpis=who_compliance&aggregate=pct&year_to_date=1&month=2025-02')
+            ->assertSuccessful();
+
+        $data = $response->json();
+        // 3 out of 4 site-month records have who_compliance = 1 -> 75%
+        $this->assertEquals(75.0, $data[0]['who_compliance']);
+    }
+
+    public function test_pct_with_latest_available_returns_correct_percentage(): void
+    {
+        $site1 = Site::factory()->create();
+        $site2 = Site::factory()->create();
+        $site3 = Site::factory()->create();
+
+        // Site 1: latest who_compliance = 1 (in March), also active
+        FactMonthly::factory()->create([
+            'site_id' => $site1->id,
+            'month' => '2025-01-01',
+            'who_compliance' => 0,
+            'active' => 1,
+        ]);
+        FactMonthly::factory()->create([
+            'site_id' => $site1->id,
+            'month' => '2025-03-01',
+            'who_compliance' => 1,
+            'active' => 1,
+        ]);
+
+        // Site 2: latest who_compliance = 0 (in February), inactive
+        FactMonthly::factory()->create([
+            'site_id' => $site2->id,
+            'month' => '2025-02-01',
+            'who_compliance' => 0,
+            'active' => 0,
+        ]);
+
+        // Site 3: has who_compliance but also has a null month (null should be skipped)
+        FactMonthly::factory()->create([
+            'site_id' => $site3->id,
+            'month' => '2025-01-01',
+            'who_compliance' => 1,
+            'active' => 1,
+        ]);
+        FactMonthly::factory()->create([
+            'site_id' => $site3->id,
+            'month' => '2025-02-01',
+            'who_compliance' => null,
+            'active' => 1,
+        ]);
+
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)
+            ->getJson('/api/fact-monthly?kpis=who_compliance&aggregate=pct&latest_available=1&year=2025')
+            ->assertSuccessful();
+
+        $data = $response->json();
+        // Site 1: latest = 2025-03, who_compliance = 1
+        // Site 2: latest = 2025-02, who_compliance = 0  (inactive, but pct includes it)
+        // Site 3: latest non-null = 2025-01, who_compliance = 1
+        // 2 out of 3 sites -> ~66.67%
+        $this->assertEqualsWithDelta(66.67, $data[0]['who_compliance'], 0.01);
+    }
 }

@@ -17,6 +17,7 @@ class ComputeWhoCompliance extends BaseComputeJob
             ->select(['site', 'analysis_date', 'sample_date', 'escherichia', 'total_coliform', 'contamination_level_bottle', 'contamination_level_machine'])
             ->whereBetween('sample_date', [$from, $to])
             ->whereIn('site', $siteNames)
+            ->where('type', 'Monthly Test')
             ->orderBy('analysis_date', 'desc')
             ->get();
 
@@ -24,7 +25,7 @@ class ComputeWhoCompliance extends BaseComputeJob
         foreach ($samples as $sample) {
             $site = trim($sample->site);
             $monthKey = Carbon::parse($sample->sample_date)->startOfMonth()->format('Y-m-d');
-            $key = $site.'|'.$monthKey;
+            $key = $site . '|' . $monthKey;
 
             if (! isset($latestBySiteMonth[$key])) {
                 $latestBySiteMonth[$key] = $sample;
@@ -33,13 +34,13 @@ class ComputeWhoCompliance extends BaseComputeJob
 
         $map = [];
         foreach ($latestBySiteMonth as $key => $sample) {
-            $escherichiaOk = in_array($sample->escherichia, [null, '', '0'], true);
-            $totalColiformOk = in_array($sample->total_coliform, [null, '', '0'], true);
+            $escherichiaOk = in_array($sample->escherichia, [null, '', '0', 0], true);
+            $totalColiformOk = in_array($sample->total_coliform, [null, '', '0', 0], true);
             $compliant = $escherichiaOk && $totalColiformOk ? 1 : 0;
 
             $map[$key] = [
                 'who_compliance' => $compliant,
-                'contamination_level' => max($sample->contamination_level_bottle, $sample->contamination_level_machine),
+                'contamination_level' => max($sample->contamination_level_machine, $sample->contamination_level_bottle),
             ];
         }
 

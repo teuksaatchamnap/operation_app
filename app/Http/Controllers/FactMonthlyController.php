@@ -23,9 +23,10 @@ class FactMonthlyController extends Controller
      * @queryParam kpis string required. Single KPI column name.
      *   Available: tier, sales_volume, days_open, active, super_tier_1, bottles_per_day, expenses, revenue, workers, consumers, who_compliance, profitable, water_loss, is_water_loss_ok, data_collection, water_source.
      *   Example: revenue
-     * @queryParam aggregate string Optional. Aggregate function to apply to KPI column. Options: sum, avg, count, pct_active.
-     *   pct_active returns SUM(kpi) / NULLIF(SUM(active), 0) * 100 (percentage of active sites).
-     *   When provided, returns a single aggregated result instead of multiple rows.
+ * @queryParam aggregate string Optional. Aggregate function to apply to KPI column. Options: sum, avg, count, pct_active, pct.
+ *   pct_active returns SUM(kpi) / NULLIF(SUM(active), 0) * 100 (percentage of active sites).
+ *   pct returns SUM(kpi) / NULLIF(COUNT(kpi), 0) * 100 (percentage of sites with non-null kpi where kpi=1).
+ *   When provided, returns a single aggregated result instead of multiple rows.
      *   Required when using latest_available.
      * @queryParam year_to_date bool Optional. When true, aggregates values from January 1 to the selected month
      *   (or full year if only year is given). Requires the month or year parameter.
@@ -53,7 +54,7 @@ class FactMonthlyController extends Controller
             'site_ids.*' => 'integer',
             'include_unassigned' => 'sometimes|boolean',
             'kpis' => 'required|string',
-            'aggregate' => 'sometimes|string|in:sum,avg,count,pct_active',
+            'aggregate' => 'sometimes|string|in:sum,avg,count,pct_active,pct',
             'year_to_date' => 'sometimes|boolean',
             'latest_available' => 'sometimes|boolean',
         ]);
@@ -85,10 +86,15 @@ class FactMonthlyController extends Controller
                 ? substr($validated['month'], 0, 4)
                 : $validated['year'];
 
+            $aggregateFunc = $validated['aggregate'];
+
             $baseQuery = FactMonthly::query()
                 ->whereYear('month', '=', $year)
-                ->where('active', 1)
                 ->whereNotNull($kpi);
+
+            if ($aggregateFunc === 'pct_active') {
+                $baseQuery->where('active', 1);
+            }
 
             if (! $request->boolean('include_unassigned')) {
                 $baseQuery->whereNotNull('platform_id');
@@ -111,11 +117,11 @@ class FactMonthlyController extends Controller
 
             $bindings = $baseQuery->getBindings();
 
-            $aggregateFunc = $validated['aggregate'];
-
-            $rawExpr = $aggregateFunc === 'pct_active'
-                ? "SUM(fm.{$kpi}) / NULLIF(SUM(fm.active), 0) * 100"
-                : "{$aggregateFunc}(fm.{$kpi})";
+            $rawExpr = match (true) {
+                $aggregateFunc === 'pct_active' => "SUM(fm.{$kpi}) / NULLIF(SUM(fm.active), 0) * 100",
+                $aggregateFunc === 'pct' => "SUM(fm.{$kpi}) / NULLIF(COUNT(fm.{$kpi}), 0) * 100",
+                default => "{$aggregateFunc}(fm.{$kpi})",
+            };
 
             $result = FactMonthly::query()
                 ->from(DB::raw("({$latestSubquery}) as latest"))
@@ -175,8 +181,13 @@ class FactMonthlyController extends Controller
                 $query->where('active', 1);
             }
 
+            if ($aggregateFunc === 'pct') {
+                $query->whereNotNull($kpi);
+            }
+
             $rawExpr = match (true) {
                 $aggregateFunc === 'pct_active' => "SUM({$kpi}) / NULLIF(SUM(active), 0) * 100",
+                $aggregateFunc === 'pct' => "SUM({$kpi}) / NULLIF(COUNT({$kpi}), 0) * 100",
                 $isBottlesPerDayYtd => 'SUM(sales_volume) / NULLIF(SUM(days_open), 0)',
                 default => "{$aggregateFunc}({$kpi})",
             };

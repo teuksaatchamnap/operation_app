@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\Advisor;
 use App\Models\Platform;
-use App\Models\Sims3\Sale as Sims3Sale;
 use App\Models\Sims3\Site as Sims3Site;
 use App\Models\Site;
 use Illuminate\Console\Command;
@@ -28,18 +27,14 @@ class ImportFromSims3 extends Command
     {
         $this->info('Importing sites from SIMS3...');
 
-        $distinctSites = Sims3Sale::select('Id_Site')
-            ->distinct()
-            ->whereNotNull('Id_Site')
-            ->pluck('Id_Site');
-
-        $this->info("Found {$distinctSites->count()} distinct sites");
-
-        // Fetch geolocation data for all sites from SIMS3 Sites table
         $sitesGeo = Sims3Site::select(['Id_Site', 'Latitude', 'Longitude'])
-            ->whereIn('Id_Site', $distinctSites)
+            ->whereNotNull('Id_Site')
             ->get()
             ->keyBy('Id_Site');
+
+        $distinctSites = $sitesGeo->keys();
+
+        $this->info("Found {$distinctSites->count()} distinct sites");
 
         $created = 0;
         $skipped = 0;

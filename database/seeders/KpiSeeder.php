@@ -153,7 +153,7 @@ class KpiSeeder extends Seeder
                 'unit' => '%',
                 'type' => 'qualitative',
                 'description' => 'WHO compliance E.Coli and Coliform 0 CFU/100ml',
-                'aggregate' => 'pct_active',
+                'aggregate' => 'pct',
                 'default_objective' => 99.5,
             ],
             [
@@ -162,7 +162,7 @@ class KpiSeeder extends Seeder
                 'unit' => '%',
                 'type' => 'qualitative',
                 'description' => '0=safe, 1,2,3',
-                'aggregate' => 'pct_active',
+                'aggregate' => 'pct',
                 'legend' => [
                     ['value' => 'Safe', 'color' => '#4CAF50'],
                     ['value' => '1', 'color' => '#f4f136'],
@@ -177,7 +177,7 @@ class KpiSeeder extends Seeder
                 'unit' => '%',
                 'type' => 'qualitative',
                 'description' => 'True if site revenue - site expense + salary entrepreneur >= 200',
-                'aggregate' => 'pct_active',
+                'aggregate' => 'pct',
                 'default_objective' => 100,
                 'legend' => [
                     ['value' => 'Profitable', 'color' => '#4CAF50'],
@@ -190,7 +190,7 @@ class KpiSeeder extends Seeder
                 'unit' => '%',
                 'type' => 'qualitative',
                 'description' => 'Percentage of active sites where paid >= amount_expenses for entrepreneur_contribution expenses',
-                'aggregate' => 'pct_active',
+                'aggregate' => 'pct',
                 'default_objective' => 100,
             ],
             [
@@ -208,7 +208,7 @@ class KpiSeeder extends Seeder
                 'unit' => '%',
                 'type' => 'qualitative',
                 'description' => '0 if water_loss is between 15-25%, 1 otherwise, null if no data',
-                'aggregate' => 'pct_active',
+                'aggregate' => 'pct',
                 'default_objective' => 100,
                 'legend' => [
                     ['value' => 'OK', 'color' => '#4CAF50'],

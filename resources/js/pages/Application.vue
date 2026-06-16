@@ -55,11 +55,7 @@
 
     <ScrollPanel class="my-2">
         <KpiCard :kpi="findKpi('active')" :filters="debouncedFilters" />
-        <KpiCard
-            :kpi="findKpi('super_tier_1')"
-            :latest-available="1"
-            :filters="debouncedFilters"
-        />
+        <KpiCard :kpi="findKpi('super_tier_1')" :filters="debouncedFilters" />
         <KpiCard
             :kpi="findKpi('bottles_per_day')"
             :year-to-date="1"
@@ -84,7 +80,7 @@
         <KpiCard
             :kpi="findKpi('who_compliance')"
             :filters="debouncedFilters"
-            :latest-available="1"
+            :year-to-date="1"
         />
         <KpiCard :kpi="findKpi('is_profitable')" :filters="debouncedFilters" />
         <KpiCard
