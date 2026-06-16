@@ -22,10 +22,7 @@
                 :options="chartOptions"
                 :series="chartData.series"
             />
-            <div
-                v-else
-                class="text-medium-emphasis text-center pa-4"
-            >
+            <div v-else class="text-medium-emphasis text-center pa-4">
                 No performance data available
             </div>
             <ChartExportButtons
@@ -44,9 +41,7 @@ import { useTheme } from "vuetify";
 
 import ChartExportButtons from "./ChartExportButtons.vue";
 
-const ApexChart = defineAsyncComponent(() =>
-    import("vue3-apexcharts"),
-);
+const ApexChart = defineAsyncComponent(() => import("vue3-apexcharts"));
 
 const props = defineProps({
     site: {
@@ -131,7 +126,9 @@ const chartOptions = computed(() => {
         },
         stroke: {
             curve: "smooth",
-            width: 2,
+            width: series.map((s) =>
+                s.name === String(now.getFullYear()) ? 6 : 2,
+            ),
             dashArray: series.map((s) => (s.name === "Objectives" ? 6 : 0)),
         },
         legend: {
@@ -155,7 +152,8 @@ const chartOptions = computed(() => {
         ],
     };
 
-    const selMonth = props.month ||
+    const selMonth =
+        props.month ||
         `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
     const [selYear, selMonthNum] = selMonth.split("-");
