@@ -176,8 +176,8 @@ class KpiSeeder extends Seeder
                 'col_name' => 'is_profitable',
                 'unit' => '%',
                 'type' => 'qualitative',
-                'description' => 'True if site revenue - site expense + salary entrepreneur >= 200',
-                'aggregate' => 'pct',
+                'description' => 'True if (site revenue - site expense + salary entrepreneur) >= 200',
+                'aggregate' => 'pct_active',
                 'default_objective' => 100,
                 'legend' => [
                     ['value' => 'Profitable', 'color' => '#4CAF50'],
