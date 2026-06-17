@@ -6,8 +6,17 @@ use App\Models\Sims3\Expense;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
-class ComputeEcCollection extends BaseComputeJob
+class ComputeCollectionRate extends BaseComputeJob
 {
+    private const REF_EXPENSES = [
+        'stock_ts',
+        'bottle_invoice',
+        'entrepreneur_contribution',
+        'water quality alert',
+        'technical intervention',
+        'delivery_program_fee',
+    ];
+
     protected function prepareData(Collection $siteMap, Collection $months, array $siteNames): array
     {
         $from = $months->first()->copy()->startOfMonth();
@@ -17,7 +26,7 @@ class ComputeEcCollection extends BaseComputeJob
             ->select(['Id_Site', 'Month', 'Amount_expenses', 'Paid'])
             ->whereBetween('Month', [$from, $to])
             ->whereIn('Id_Site', $siteNames)
-            ->where('Ref_expenses', 'entrepreneur_contribution')
+            ->whereIn('Ref_expenses', self::REF_EXPENSES)
             ->get();
 
         $paidBySiteMonth = [];
@@ -35,9 +44,11 @@ class ComputeEcCollection extends BaseComputeJob
         $map = [];
         foreach ($paidBySiteMonth as $key => $paid) {
             $amount = $amountBySiteMonth[$key] ?? 0;
-            $map[$key] = [
-                'ec_collection' => $paid >= $amount ? 1 : 0,
-            ];
+            if ($amount > 0) {
+                $map[$key] = [
+                    'collection_rate' => round(($paid / $amount) * 100, 2),
+                ];
+            }
         }
 
         return $map;

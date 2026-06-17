@@ -69,8 +69,8 @@ class ComputeAll extends Command
             Artisan::call('job:run', ['job' => "App\Jobs\ComputeIsProfitable", '--year' => $year]);
             $bar->advance();
 
-            $bar->setMessage("ComputeEcCollection $year");
-            Artisan::call('job:run', ['job' => "App\Jobs\ComputeEcCollection", '--year' => $year]);
+            $bar->setMessage("ComputeCollectionRate $year");
+            Artisan::call('job:run', ['job' => "App\Jobs\ComputeCollectionRate", '--year' => $year]);
             $bar->advance();
 
             $bar->setMessage("ComputeWaterLoss $year");

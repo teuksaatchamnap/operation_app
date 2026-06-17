@@ -37,7 +37,7 @@ class FactMonthly extends Model
         'penetration',
         'who_compliance',
         'contamination_level',
-        'ec_collection',
+        'collection_rate',
         'water_loss',
         'is_water_loss_ok',
         'data_collection',

@@ -185,12 +185,12 @@ class KpiSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'EC Collection',
-                'col_name' => 'ec_collection',
+                'name' => 'Collection Rate',
+                'col_name' => 'collection_rate',
                 'unit' => '%',
-                'type' => 'qualitative',
-                'description' => 'Percentage of active sites where paid >= amount_expenses for entrepreneur_contribution expenses',
-                'aggregate' => 'pct',
+                'type' => 'quantitative',
+                'description' => 'Average collection rate: SUM(Paid) / SUM(Amount_expenses) across 6 expense categories',
+                'aggregate' => 'avg',
                 'default_objective' => 100,
             ],
             [

@@ -84,7 +84,7 @@
         />
         <KpiCard :kpi="findKpi('is_profitable')" :filters="debouncedFilters" />
         <KpiCard
-            :kpi="findKpi('ec_collection')"
+            :kpi="findKpi('collection_rate')"
             :filters="debouncedFilters"
             :year-to-date="1"
         />
