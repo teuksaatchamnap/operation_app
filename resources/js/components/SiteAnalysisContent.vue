@@ -3,8 +3,12 @@
         <v-card-text>
             <template v-if="loading">
                 <v-card variant="outlined" class="subtle-border">
-                    <v-card-title class="section-title d-flex align-center ga-2">
-                        <v-icon size="small" color="primary">mdi-store-outline</v-icon>
+                    <v-card-title
+                        class="section-title d-flex align-center ga-2"
+                    >
+                        <v-icon size="small" color="primary"
+                            >mdi-store-outline</v-icon
+                        >
                         General Details
                     </v-card-title>
                     <v-card-text>
@@ -18,7 +22,9 @@
                 </v-card>
 
                 <v-card variant="outlined" class="subtle-border mt-4">
-                    <v-card-title class="section-title d-flex align-center ga-2">
+                    <v-card-title
+                        class="section-title d-flex align-center ga-2"
+                    >
                         <v-icon size="small" color="primary">mdi-gauge</v-icon>
                         Site KPI
                     </v-card-title>
@@ -33,8 +39,12 @@
                 </v-card>
 
                 <v-card variant="outlined" class="subtle-border mt-4">
-                    <v-card-title class="section-title d-flex align-center ga-2">
-                        <v-icon size="small" color="primary">mdi-chart-line</v-icon>
+                    <v-card-title
+                        class="section-title d-flex align-center ga-2"
+                    >
+                        <v-icon size="small" color="primary"
+                            >mdi-chart-line</v-icon
+                        >
                         Monthly Sales Performance
                     </v-card-title>
                     <v-card-text>
@@ -53,8 +63,12 @@
 
             <template v-else-if="data">
                 <v-card variant="outlined" class="subtle-border">
-                    <v-card-title class="section-title d-flex align-center ga-2">
-                        <v-icon size="small" color="primary">mdi-store-outline</v-icon>
+                    <v-card-title
+                        class="section-title d-flex align-center ga-2"
+                    >
+                        <v-icon size="small" color="primary"
+                            >mdi-store-outline</v-icon
+                        >
                         General Details
                     </v-card-title>
                     <v-card-text>
@@ -128,7 +142,11 @@
                                     Delivery Program
                                 </div>
                                 <div class="text-body-1">
-                                    {{ data.delivery_program == 1 ? "Yes" : "No" }}
+                                    {{
+                                        data.delivery_program == 1
+                                            ? "Yes"
+                                            : "No"
+                                    }}
                                 </div>
                             </v-col>
                             <v-col cols="3">
@@ -144,7 +162,9 @@
                 </v-card>
 
                 <v-card variant="outlined" class="subtle-border mt-4">
-                    <v-card-title class="section-title d-flex align-center ga-2">
+                    <v-card-title
+                        class="section-title d-flex align-center ga-2"
+                    >
                         <v-icon size="small" color="primary">mdi-gauge</v-icon>
                         Site KPI
                         <v-spacer />
@@ -224,13 +244,21 @@
                     </v-card-text>
                 </v-card>
 
-                <MonthlyPerformanceChart :site="site" :month="selectedMonth" />
+                <MonthlyPerformanceChart
+                    :site="site"
+                    :month="selectedMonth"
+                    class="mt-4"
+                />
 
                 <v-row class="mt-4">
                     <v-col cols="6">
                         <v-card variant="outlined" class="subtle-border h-100">
-                            <v-card-title class="section-title d-flex align-center ga-2">
-                                <v-icon size="small" color="primary">mdi-chart-pie</v-icon>
+                            <v-card-title
+                                class="section-title d-flex align-center ga-2"
+                            >
+                                <v-icon size="small" color="primary"
+                                    >mdi-chart-pie</v-icon
+                                >
                                 Monthly Sales Breakdown
                             </v-card-title>
                             <v-card-text>
@@ -240,19 +268,19 @@
                                 >
                                     <v-progress-circular indeterminate />
                                 </div>
-                            <template v-else-if="salesBreakdown.length">
-                                <ApexChart
-                                    ref="salesChartRef"
-                                    type="pie"
-                                    height="350"
-                                    :options="salesChartOptions"
-                                    :series="salesSeries"
-                                />
-                                <ChartExportButtons
-                                    :chart="salesChartRef?.chart"
-                                    filename="monthly-sales-breakdown"
-                                />
-                            </template>
+                                <template v-else-if="salesBreakdown.length">
+                                    <ApexChart
+                                        ref="salesChartRef"
+                                        type="pie"
+                                        height="350"
+                                        :options="salesChartOptions"
+                                        :series="salesSeries"
+                                    />
+                                    <ChartExportButtons
+                                        :chart="salesChartRef?.chart"
+                                        filename="monthly-sales-breakdown"
+                                    />
+                                </template>
                                 <div
                                     v-else
                                     class="text-medium-emphasis text-center pa-4"
@@ -264,8 +292,12 @@
                     </v-col>
                     <v-col cols="6">
                         <v-card variant="outlined" class="subtle-border h-100">
-                            <v-card-title class="section-title d-flex align-center ga-2">
-                                <v-icon size="small" color="primary">mdi-chart-bar</v-icon>
+                            <v-card-title
+                                class="section-title d-flex align-center ga-2"
+                            >
+                                <v-icon size="small" color="primary"
+                                    >mdi-chart-bar</v-icon
+                                >
                                 Monthly Expenses Comparison
                             </v-card-title>
                             <v-card-text>
@@ -300,8 +332,12 @@
                 </v-row>
 
                 <v-card variant="outlined" class="subtle-border mt-4">
-                    <v-card-title class="section-title d-flex align-center ga-2">
-                        <v-icon size="small" color="primary">mdi-cash-multiple</v-icon>
+                    <v-card-title
+                        class="section-title d-flex align-center ga-2"
+                    >
+                        <v-icon size="small" color="primary"
+                            >mdi-cash-multiple</v-icon
+                        >
                         Profit &amp; Loss Details
                         <v-spacer />
                         <CurrencySwitch />
@@ -317,7 +353,9 @@
                         >
                             <thead>
                                 <tr class="pl-header-row">
-                                    <th class="caption-label font-weight-bold text-uppercase">
+                                    <th
+                                        class="caption-label font-weight-bold text-uppercase"
+                                    >
                                         Category
                                     </th>
                                     <th
@@ -332,7 +370,10 @@
                             <tbody>
                                 <tr class="pl-section-header pl-revenue-header">
                                     <td colspan="5">
-                                        <span class="font-weight-bold text-uppercase caption-label">Revenue</span>
+                                        <span
+                                            class="font-weight-bold text-uppercase caption-label"
+                                            >Revenue</span
+                                        >
                                     </td>
                                 </tr>
                                 <tr>
@@ -371,7 +412,9 @@
                                     </td>
                                 </tr>
                                 <tr class="pl-revenue-subtotal">
-                                    <td class="font-weight-bold">Subtotal Revenue</td>
+                                    <td class="font-weight-bold">
+                                        Subtotal Revenue
+                                    </td>
                                     <td
                                         v-for="col in profitLossColumns"
                                         :key="col.key"
@@ -385,9 +428,14 @@
                                         }}
                                     </td>
                                 </tr>
-                                <tr class="pl-section-header pl-expenses-header">
+                                <tr
+                                    class="pl-section-header pl-expenses-header"
+                                >
                                     <td colspan="5">
-                                        <span class="font-weight-bold text-uppercase caption-label">Expenses</span>
+                                        <span
+                                            class="font-weight-bold text-uppercase caption-label"
+                                            >Expenses</span
+                                        >
                                     </td>
                                 </tr>
                                 <tr
@@ -407,7 +455,9 @@
                                     </td>
                                 </tr>
                                 <tr class="pl-expenses-subtotal">
-                                    <td class="font-weight-bold">Subtotal Expenses</td>
+                                    <td class="font-weight-bold">
+                                        Subtotal Expenses
+                                    </td>
                                     <td
                                         v-for="col in profitLossColumns"
                                         :key="col.key"
@@ -429,7 +479,9 @@
                                             : 'text-error'
                                     "
                                 >
-                                    <td class="font-weight-bold">Result (Revenue &minus; Expenses)</td>
+                                    <td class="font-weight-bold">
+                                        Result (Revenue &minus; Expenses)
+                                    </td>
                                     <td
                                         v-for="col in profitLossColumns"
                                         :key="col.key"
@@ -466,12 +518,19 @@
                 <v-row class="mt-4">
                     <v-col cols="6">
                         <v-card variant="outlined" class="subtle-border h-100">
-                            <v-card-title class="section-title d-flex align-center ga-2">
-                                <v-icon size="small" color="primary">mdi-tag-multiple</v-icon>
+                            <v-card-title
+                                class="section-title d-flex align-center ga-2"
+                            >
+                                <v-icon size="small" color="primary"
+                                    >mdi-tag-multiple</v-icon
+                                >
                                 Average Prices by Channel
                             </v-card-title>
                             <v-card-text>
-                                <div v-if="pricesLoading" class="text-center pa-4">
+                                <div
+                                    v-if="pricesLoading"
+                                    class="text-center pa-4"
+                                >
                                     <v-progress-circular indeterminate />
                                 </div>
                                 <v-table
@@ -481,10 +540,14 @@
                                 >
                                     <thead>
                                         <tr class="accent-header">
-                                            <th class="caption-label font-weight-bold">
+                                            <th
+                                                class="caption-label font-weight-bold"
+                                            >
                                                 Channel
                                             </th>
-                                            <th class="caption-label font-weight-bold text-right">
+                                            <th
+                                                class="caption-label font-weight-bold text-right"
+                                            >
                                                 Avg Price
                                             </th>
                                         </tr>
@@ -494,8 +557,12 @@
                                             v-for="item in pricesData"
                                             :key="item.label"
                                         >
-                                            <td class="font-weight-medium">{{ item.label }}</td>
-                                            <td class="text-right font-weight-bold">
+                                            <td class="font-weight-medium">
+                                                {{ item.label }}
+                                            </td>
+                                            <td
+                                                class="text-right font-weight-bold"
+                                            >
                                                 {{ formatCurrency(item.price) }}
                                             </td>
                                         </tr>
@@ -512,12 +579,19 @@
                     </v-col>
                     <v-col cols="6">
                         <v-card variant="outlined" class="subtle-border h-100">
-                            <v-card-title class="section-title d-flex align-center ga-2">
-                                <v-icon size="small" color="primary">mdi-bottle-wine</v-icon>
+                            <v-card-title
+                                class="section-title d-flex align-center ga-2"
+                            >
+                                <v-icon size="small" color="primary"
+                                    >mdi-bottle-wine</v-icon
+                                >
                                 New Bottles Bought
                             </v-card-title>
                             <v-card-text>
-                                <div v-if="bottleLoading" class="text-center pa-4">
+                                <div
+                                    v-if="bottleLoading"
+                                    class="text-center pa-4"
+                                >
                                     <v-progress-circular indeterminate />
                                 </div>
                                 <v-table
@@ -527,34 +601,67 @@
                                 >
                                     <thead>
                                         <tr class="accent-header">
-                                            <th class="caption-label font-weight-bold">
+                                            <th
+                                                class="caption-label font-weight-bold"
+                                            >
                                                 Period
                                             </th>
-                                            <th class="caption-label font-weight-bold text-right">
+                                            <th
+                                                class="caption-label font-weight-bold text-right"
+                                            >
                                                 Bottles
                                             </th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td class="font-weight-medium">YTD</td>
-                                            <td class="text-right font-weight-bold bottle-value">
-                                                {{ formatBottleNumber(bottleData.ytd) }}
+                                            <td class="font-weight-medium">
+                                                YTD
+                                            </td>
+                                            <td
+                                                class="text-right font-weight-bold bottle-value"
+                                            >
+                                                {{
+                                                    formatBottleNumber(
+                                                        bottleData.ytd,
+                                                    )
+                                                }}
                                             </td>
                                         </tr>
                                         <tr>
-                                            <td class="font-weight-medium">Previous Year</td>
-                                            <td class="text-right font-weight-bold bottle-value">
-                                                {{ formatBottleNumber(bottleData.last_year) }}
+                                            <td class="font-weight-medium">
+                                                Previous Year
+                                            </td>
+                                            <td
+                                                class="text-right font-weight-bold bottle-value"
+                                            >
+                                                {{
+                                                    formatBottleNumber(
+                                                        bottleData.last_year,
+                                                    )
+                                                }}
                                             </td>
                                         </tr>
                                         <tr
                                             class="bottle-diff-row"
-                                            :class="bottleDiff >= 0 ? 'text-success' : 'text-error'"
+                                            :class="
+                                                bottleDiff >= 0
+                                                    ? 'text-success'
+                                                    : 'text-error'
+                                            "
                                         >
-                                            <td class="font-weight-medium">YTD vs Previous Year</td>
-                                            <td class="text-right font-weight-bold bottle-value">
-                                                {{ bottleDiff >= 0 ? '+' : '-' }}{{ formatBottleNumber(Math.abs(bottleDiff)) }}
+                                            <td class="font-weight-medium">
+                                                YTD vs Previous Year
+                                            </td>
+                                            <td
+                                                class="text-right font-weight-bold bottle-value"
+                                            >
+                                                {{ bottleDiff >= 0 ? "+" : "-"
+                                                }}{{
+                                                    formatBottleNumber(
+                                                        Math.abs(bottleDiff),
+                                                    )
+                                                }}
                                                 ({{ bottleDiffPct }}%)
                                             </td>
                                         </tr>
@@ -584,9 +691,7 @@ import CurrencySwitch from "./CurrencySwitch.vue";
 import ChartExportButtons from "./ChartExportButtons.vue";
 import MonthlyPerformanceChart from "./MonthlyPerformanceChart.vue";
 
-const ApexChart = defineAsyncComponent(() =>
-    import("vue3-apexcharts"),
-);
+const ApexChart = defineAsyncComponent(() => import("vue3-apexcharts"));
 
 const props = defineProps({
     site: {
@@ -885,8 +990,6 @@ const entrepreneurIncome = computed(() => {
     };
 });
 
-
-
 watchEffect(async () => {
     if (!props.site?.id) return;
 
@@ -1096,7 +1199,12 @@ watchEffect(async () => {
 }
 
 @keyframes skeleton-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.35;
+    }
 }
 </style>
