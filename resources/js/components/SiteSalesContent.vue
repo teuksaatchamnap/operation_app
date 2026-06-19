@@ -307,7 +307,7 @@
                                             :key="w.week"
                                         >
                                             <td class="font-weight-medium">
-                                                {{ w.week }}
+                                                {{ w.start_date }} - {{ w.end_date }}
                                             </td>
                                             <td class="text-right">
                                                 {{

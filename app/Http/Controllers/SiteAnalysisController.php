@@ -839,7 +839,7 @@ class SiteAnalysisController extends Controller
             $startDate = Carbon::parse($startMeter->date);
             $endDate = Carbon::parse($endMeter->date);
 
-            if ($endDate < $monthStart || $startDate > $monthEnd) {
+            if ($endDate < $monthStart || $startDate > $monthEnd || $endDate > $monthEnd) {
                 continue;
             }
 
@@ -872,6 +872,8 @@ class SiteAnalysisController extends Controller
 
             $weeks[] = [
                 'week' => $weekNum,
+                'start_date' => $startDate->format('Y-m-d'),
+                'end_date' => $endDate->format('Y-m-d'),
                 'meter_start' => $startValue,
                 'meter_end' => $endValue,
                 'consumed' => $consumed,

@@ -849,15 +849,17 @@ class SiteAnalysisControllerTest extends TestCase
         $response->assertSuccessful();
         $response->assertJsonStructure([
             'weeks' => [
-                '*' => ['week', 'meter_start', 'meter_end', 'consumed', 'sold', 'loss', 'loss_pct'],
+                '*' => ['week', 'start_date', 'end_date', 'meter_start', 'meter_end', 'consumed', 'sold', 'loss', 'loss_pct'],
             ],
         ]);
 
         $weeks = $response->json('weeks');
-        $this->assertCount(5, $weeks);
+        $this->assertCount(4, $weeks);
 
         // Pair 1: Jan 1 -> Jan 8, days 1-7 (7 days), meter (10.0 -> 25.0)
         $this->assertEquals(1, $weeks[0]['week']);
+        $this->assertEquals('2025-01-01', $weeks[0]['start_date']);
+        $this->assertEquals('2025-01-08', $weeks[0]['end_date']);
         $this->assertEquals(10.0, $weeks[0]['meter_start']);
         $this->assertEquals(25.0, $weeks[0]['meter_end']);
         $this->assertEquals(15000.0, $weeks[0]['consumed']);
@@ -867,6 +869,8 @@ class SiteAnalysisControllerTest extends TestCase
 
         // Pair 2: Jan 8 -> Jan 15, days 8-14 (7 days), meter (25.0 -> 45.0)
         $this->assertEquals(2, $weeks[1]['week']);
+        $this->assertEquals('2025-01-08', $weeks[1]['start_date']);
+        $this->assertEquals('2025-01-15', $weeks[1]['end_date']);
         $this->assertEquals(25.0, $weeks[1]['meter_start']);
         $this->assertEquals(45.0, $weeks[1]['meter_end']);
         $this->assertEquals(20000.0, $weeks[1]['consumed']);
@@ -876,6 +880,8 @@ class SiteAnalysisControllerTest extends TestCase
 
         // Pair 3: Jan 15 -> Jan 22, days 15-21 (7 days), meter (45.0 -> 70.0)
         $this->assertEquals(3, $weeks[2]['week']);
+        $this->assertEquals('2025-01-15', $weeks[2]['start_date']);
+        $this->assertEquals('2025-01-22', $weeks[2]['end_date']);
         $this->assertEquals(45.0, $weeks[2]['meter_start']);
         $this->assertEquals(70.0, $weeks[2]['meter_end']);
         $this->assertEquals(25000.0, $weeks[2]['consumed']);
@@ -885,21 +891,14 @@ class SiteAnalysisControllerTest extends TestCase
 
         // Pair 4: Jan 22 -> Jan 29, days 22-28 (7 days), meter (70.0 -> 100.0)
         $this->assertEquals(4, $weeks[3]['week']);
+        $this->assertEquals('2025-01-22', $weeks[3]['start_date']);
+        $this->assertEquals('2025-01-29', $weeks[3]['end_date']);
         $this->assertEquals(70.0, $weeks[3]['meter_start']);
         $this->assertEquals(100.0, $weeks[3]['meter_end']);
         $this->assertEquals(30000.0, $weeks[3]['consumed']);
         $this->assertEquals(7000.0, $weeks[3]['sold']);
         $this->assertEquals(23000.0, $weeks[3]['loss']);
         $this->assertEqualsWithDelta(76.67, $weeks[3]['loss_pct'], 0.01);
-
-        // Pair 5: Jan 29 -> Feb 1, days 29-31 (3 days), meter (100.0 -> 135.0)
-        $this->assertEquals(5, $weeks[4]['week']);
-        $this->assertEquals(100.0, $weeks[4]['meter_start']);
-        $this->assertEquals(135.0, $weeks[4]['meter_end']);
-        $this->assertEquals(35000.0, $weeks[4]['consumed']);
-        $this->assertEquals(3000.0, $weeks[4]['sold']);
-        $this->assertEquals(32000.0, $weeks[4]['loss']);
-        $this->assertEqualsWithDelta(91.43, $weeks[4]['loss_pct'], 0.01);
     }
 
     public function test_water_loss_by_week_no_meter_data(): void
@@ -1000,15 +999,17 @@ class SiteAnalysisControllerTest extends TestCase
         $response->assertSuccessful();
         $response->assertJsonStructure([
             'weeks' => [
-                '*' => ['week', 'meter_start', 'meter_end', 'consumed', 'sold', 'loss', 'loss_pct'],
+                '*' => ['week', 'start_date', 'end_date', 'meter_start', 'meter_end', 'consumed', 'sold', 'loss', 'loss_pct'],
             ],
         ]);
 
         $weeks = $response->json('weeks');
-        $this->assertCount(4, $weeks);
+        $this->assertCount(3, $weeks);
 
         // Pair 1: May 7 -> May 14, days 7-13 (7 days), meter (703 -> 729)
         $this->assertEquals(1, $weeks[0]['week']);
+        $this->assertEquals('2026-05-07', $weeks[0]['start_date']);
+        $this->assertEquals('2026-05-14', $weeks[0]['end_date']);
         $this->assertEquals(703, $weeks[0]['meter_start']);
         $this->assertEquals(729, $weeks[0]['meter_end']);
         $this->assertEquals(26000.0, $weeks[0]['consumed']);
@@ -1018,6 +1019,8 @@ class SiteAnalysisControllerTest extends TestCase
 
         // Pair 2: May 14 -> May 21, days 14-20 (7 days), meter (729 -> 742)
         $this->assertEquals(2, $weeks[1]['week']);
+        $this->assertEquals('2026-05-14', $weeks[1]['start_date']);
+        $this->assertEquals('2026-05-21', $weeks[1]['end_date']);
         $this->assertEquals(729, $weeks[1]['meter_start']);
         $this->assertEquals(742, $weeks[1]['meter_end']);
         $this->assertEquals(13000.0, $weeks[1]['consumed']);
@@ -1027,21 +1030,14 @@ class SiteAnalysisControllerTest extends TestCase
 
         // Pair 3: May 21 -> May 28, days 21-27 (7 days), meter (742 -> 760)
         $this->assertEquals(3, $weeks[2]['week']);
+        $this->assertEquals('2026-05-21', $weeks[2]['start_date']);
+        $this->assertEquals('2026-05-28', $weeks[2]['end_date']);
         $this->assertEquals(742, $weeks[2]['meter_start']);
         $this->assertEquals(760, $weeks[2]['meter_end']);
         $this->assertEquals(18000.0, $weeks[2]['consumed']);
         $this->assertEquals(7000.0, $weeks[2]['sold']);
         $this->assertEquals(11000.0, $weeks[2]['loss']);
         $this->assertEqualsWithDelta(61.11, $weeks[2]['loss_pct'], 0.01);
-
-        // Pair 4: May 28 -> Jun 4, days 28-Jun 3 (7 days), meter (760 -> 785)
-        $this->assertEquals(4, $weeks[3]['week']);
-        $this->assertEquals(760, $weeks[3]['meter_start']);
-        $this->assertEquals(785, $weeks[3]['meter_end']);
-        $this->assertEquals(25000.0, $weeks[3]['consumed']);
-        $this->assertEquals(7000.0, $weeks[3]['sold']);
-        $this->assertEquals(18000.0, $weeks[3]['loss']);
-        $this->assertEqualsWithDelta(72.0, $weeks[3]['loss_pct'], 0.01);
     }
 
     public function test_daily_sales_site_not_found_returns_404(): void
