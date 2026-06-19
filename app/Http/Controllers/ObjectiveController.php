@@ -36,7 +36,7 @@ class ObjectiveController extends Controller
 
         $validated = $request->validate([
             'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
+            'end_date' => 'nullable|date|after:start_date',
             'value' => 'required|numeric',
             'type' => 'required|in:individual,global',
         ]);
@@ -63,7 +63,7 @@ class ObjectiveController extends Controller
 
         $validated = $request->validate([
             'start_date' => 'sometimes|required|date',
-            'end_date' => 'sometimes|required|date|after:start_date',
+            'end_date' => 'sometimes|nullable|date|after:start_date',
             'value' => 'sometimes|required|numeric',
             'type' => 'sometimes|required|in:individual,global',
         ]);

@@ -164,6 +164,8 @@ class SiteAnalysisController extends Controller
             'commune_name' => $sims3Site->Commune,
             'population_commune' => $sims3Site->Population,
             'households' => $sims3Site->Households,
+            'delivery_program' => $sims3Site->delivery_program,
+            'treatment_process' => $fact?->treatment_process,
             'kpis' => $kpiData,
         ]);
     }

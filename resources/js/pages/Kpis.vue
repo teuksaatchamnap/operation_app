@@ -458,7 +458,7 @@ async function saveObjective() {
 
         const { data } = await axios[method](url, {
             start_date: objectiveForm.value.start_date,
-            end_date: objectiveForm.value.end_date,
+            end_date: objectiveForm.value.end_date || null,
             value: Number(objectiveForm.value.value),
             type: objectiveForm.value.type,
         });

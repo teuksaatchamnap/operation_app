@@ -9,7 +9,7 @@
                     </v-card-title>
                     <v-card-text>
                         <v-row density="comfortable">
-                            <v-col v-for="i in 8" :key="i" cols="3">
+                            <v-col v-for="i in 10" :key="i" cols="3">
                                 <div class="skeleton skeleton-label" />
                                 <div class="skeleton skeleton-value mt-1" />
                             </v-col>
@@ -121,6 +121,22 @@
                                 </div>
                                 <div class="text-body-1">
                                     {{ formattedHouseholds }}
+                                </div>
+                            </v-col>
+                            <v-col cols="3">
+                                <div class="caption-label text-medium-emphasis">
+                                    Delivery Program
+                                </div>
+                                <div class="text-body-1">
+                                    {{ data.delivery_program == 1 ? "Yes" : "No" }}
+                                </div>
+                            </v-col>
+                            <v-col cols="3">
+                                <div class="caption-label text-medium-emphasis">
+                                    Treatment Process
+                                </div>
+                                <div class="text-body-1">
+                                    {{ data.treatment_process ?? "-" }}
                                 </div>
                             </v-col>
                         </v-row>
