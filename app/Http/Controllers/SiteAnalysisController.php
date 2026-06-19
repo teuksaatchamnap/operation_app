@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\SiteAnalysisExport;
 use App\Models\FactMonthly;
 use App\Models\Kpi;
 use App\Models\Objective;
@@ -21,6 +22,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SiteAnalysisController extends Controller
@@ -79,7 +82,7 @@ class SiteAnalysisController extends Controller
         if (isset($kpiRows['bottles_per_day'])) {
             $kpiDefinitions[] = [
                 'key' => 'bottles_per_day_ytd',
-                'label' => $kpiRows['bottles_per_day']->name . ' (YTD)',
+                'label' => $kpiRows['bottles_per_day']->name.' (YTD)',
                 'col_name' => 'bottles_per_day',
                 'periodicity' => 'ytd',
             ];
@@ -146,7 +149,7 @@ class SiteAnalysisController extends Controller
                 if ($kpi) {
                     $matchingObjective = Objective::where('kpi_id', $kpi->id)
                         ->where('start_date', '<=', $month)
-                        ->where(fn($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', $month))
+                        ->where(fn ($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', $month))
                         ->orderByRaw("CASE WHEN type = 'individual' THEN 0 ELSE 1 END")
                         ->first();
                     $objective = $matchingObjective ? (float) $matchingObjective->value : null;
@@ -206,15 +209,15 @@ class SiteAnalysisController extends Controller
             ->whereNotIn('Ref_expenses', $expensesToIgnore)
             ->whereIn('Ref_expenses', $allRefs)
             ->get(['Ref_expenses', 'Amount_expenses'])
-            ->groupBy(fn($e) => collect($categoryRefs)->search(fn($refs) => in_array($e->Ref_expenses, $refs)))
-            ->map(fn($group) => round($group->sum('Amount_expenses')));
+            ->groupBy(fn ($e) => collect($categoryRefs)->search(fn ($refs) => in_array($e->Ref_expenses, $refs)))
+            ->map(fn ($group) => round($group->sum('Amount_expenses')));
 
         $allMonthly = Sims3Expense::whereYear('Month', $month->year)
             ->whereMonth('Month', $month->month)
             ->whereNotIn('Ref_expenses', $expensesToIgnore)
             ->whereIn('Ref_expenses', $allRefs)
             ->get(['Id_Site', 'Ref_expenses', 'Amount_expenses'])
-            ->groupBy(fn($e) => collect($categoryRefs)->search(fn($refs) => in_array($e->Ref_expenses, $refs)));
+            ->groupBy(fn ($e) => collect($categoryRefs)->search(fn ($refs) => in_array($e->Ref_expenses, $refs)));
 
         $expenses = [];
         foreach ($categoryRefs as $category => $refs) {
@@ -254,7 +257,7 @@ class SiteAnalysisController extends Controller
         ];
 
         $breakdown = $sale
-            ? array_map(fn($c) => [
+            ? array_map(fn ($c) => [
                 'label' => $c['label'],
                 'value' => (float) ($sale->{$c['key']} ?? 0),
             ], $categories)
@@ -283,7 +286,7 @@ class SiteAnalysisController extends Controller
         ];
 
         $prices = $sale
-            ? array_map(fn($c) => [
+            ? array_map(fn ($c) => [
                 'label' => $c['label'],
                 'price' => round((float) ($sale->{$c['key']} ?? 0), 2),
             ], $channels)
@@ -382,7 +385,7 @@ class SiteAnalysisController extends Controller
         $periodLabels = [
             'current' => $currentStart->format('M Y'),
             'previous' => $previousStart->format('M Y'),
-            'ytd' => $ytdStart->format('Y') . ' YTD',
+            'ytd' => $ytdStart->format('Y').' YTD',
             'last_year' => $lastYearStart->format('M Y'),
         ];
 
@@ -485,11 +488,11 @@ class SiteAnalysisController extends Controller
         foreach ($categories as $cat => $refs) {
             $series[] = [
                 'name' => $cat,
-                'data' => array_map(fn($v) => round($v), $seriesData[$cat]),
+                'data' => array_map(fn ($v) => round($v), $seriesData[$cat]),
             ];
         }
 
-        $monthLabels = array_map(fn($m) => Carbon::parse($m . '-01')->format('M Y'), $months);
+        $monthLabels = array_map(fn ($m) => Carbon::parse($m.'-01')->format('M Y'), $months);
 
         return response()->json([
             'months' => $monthLabels,
@@ -518,7 +521,7 @@ class SiteAnalysisController extends Controller
         $expensesData = [];
         $netProfitData = [];
 
-        $recordsByMonth = $records->keyBy(fn($r) => Carbon::parse($r->month)->format('Y-m'));
+        $recordsByMonth = $records->keyBy(fn ($r) => Carbon::parse($r->month)->format('Y-m'));
 
         foreach ($months as $m) {
             $rec = $recordsByMonth->get($m);
@@ -529,7 +532,7 @@ class SiteAnalysisController extends Controller
             $netProfitData[] = round($rev - $exp);
         }
 
-        $monthLabels = array_map(fn($m) => Carbon::parse($m . '-01')->format('M Y'), $months);
+        $monthLabels = array_map(fn ($m) => Carbon::parse($m.'-01')->format('M Y'), $months);
 
         return response()->json([
             'months' => $monthLabels,
@@ -599,10 +602,10 @@ class SiteAnalysisController extends Controller
                 'number_of_primary_schools' => $sims3Site->Number_Primary_School ? (int) $sims3Site->Number_Primary_School : null,
                 'kiosk_land' => $sims3Site->Land_of_kiosk,
                 'kiosk_road_type' => $sims3Site->Road_Leading_to_Kiosk,
-                'paved_asphalt_pct' => $sims3Site->Paved_Asphalt_Road !== null ? round((float) $sims3Site->Paved_Asphalt_Road * 100) . '%' : null,
-                'concrete_road_pct' => $sims3Site->Concrete_Road !== null ? round((float) $sims3Site->Concrete_Road * 100) . '%' : null,
-                'laterite_road_pct' => $sims3Site->Laterite_Road !== null ? round((float) $sims3Site->Laterite_Road * 100) . '%' : null,
-                'white_soiled_road_pct' => $sims3Site->White_Soiled_Road !== null ? round((float) $sims3Site->White_Soiled_Road * 100) . '%' : null,
+                'paved_asphalt_pct' => $sims3Site->Paved_Asphalt_Road !== null ? round((float) $sims3Site->Paved_Asphalt_Road * 100).'%' : null,
+                'concrete_road_pct' => $sims3Site->Concrete_Road !== null ? round((float) $sims3Site->Concrete_Road * 100).'%' : null,
+                'laterite_road_pct' => $sims3Site->Laterite_Road !== null ? round((float) $sims3Site->Laterite_Road * 100).'%' : null,
+                'white_soiled_road_pct' => $sims3Site->White_Soiled_Road !== null ? round((float) $sims3Site->White_Soiled_Road * 100).'%' : null,
             ],
             'project' => [
                 'agreement_date' => $sims3Site->ProjectAgreement
@@ -638,7 +641,7 @@ class SiteAnalysisController extends Controller
 
         foreach ($years as $year) {
             $data = array_fill(0, 12, null);
-            $yearRecords = $records->filter(fn($r) => Carbon::parse($r->month)->year === $year);
+            $yearRecords = $records->filter(fn ($r) => Carbon::parse($r->month)->year === $year);
             foreach ($yearRecords as $r) {
                 $m = Carbon::parse($r->month);
                 $data[$m->month - 1] = round($r->bottles_per_day);
@@ -656,7 +659,7 @@ class SiteAnalysisController extends Controller
             /** @var Objective|null $matchingObjective */
             $matchingObjective = $bottlesPerDayKpi->objectives()
                 ->where('start_date', '<=', $currentMonth)
-                ->where(fn($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', $currentMonth))
+                ->where(fn ($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', $currentMonth))
                 ->orderByRaw("CASE WHEN type = 'individual' THEN 0 ELSE 1 END")
                 ->first();
             $objectiveValue = $matchingObjective ? (int) $matchingObjective->value : null;
@@ -693,7 +696,7 @@ class SiteAnalysisController extends Controller
             ->whereNotNull('sales_volume')
             ->get(['site_id', 'platform_id', 'month', 'sales_volume']);
 
-        $recordsByMonth = $records->groupBy(fn($r) => Carbon::parse($r->month)->format('Y-m'));
+        $recordsByMonth = $records->groupBy(fn ($r) => Carbon::parse($r->month)->format('Y-m'));
 
         $salesVolumeKpi = Kpi::where('col_name', 'sales_volume')->first();
 
@@ -726,7 +729,7 @@ class SiteAnalysisController extends Controller
                 /** @var Objective|null $matchingObjective */
                 $matchingObjective = $salesVolumeKpi->objectives()
                     ->where('start_date', '<=', $month)
-                    ->where(fn($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', $month))
+                    ->where(fn ($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', $month))
                     ->orderByRaw("CASE WHEN type = 'individual' THEN 0 ELSE 1 END")
                     ->first();
                 if ($matchingObjective) {
@@ -794,9 +797,9 @@ class SiteAnalysisController extends Controller
 
             $totalSales = (float) $monthlySale->Total_Sales;
             $totalIncome = (float) $monthlySale->Total_Income;
-            $knownSales = collect($channelKeys)->sum(fn($c) => (float) ($monthlySale->{$c} ?? 0))
+            $knownSales = collect($channelKeys)->sum(fn ($c) => (float) ($monthlySale->{$c} ?? 0))
                 + (float) ($monthlySale->Emergency_Sales ?? 0);
-            $knownIncomeSum = collect($incomeMap)->sum(fn($ic) => (float) ($monthlySale->{$ic} ?? 0));
+            $knownIncomeSum = collect($incomeMap)->sum(fn ($ic) => (float) ($monthlySale->{$ic} ?? 0));
             $otherSales = max(0, $totalSales - $knownSales);
             $otherIncome = max(0, $totalIncome - $knownIncomeSum);
 
@@ -927,7 +930,7 @@ class SiteAnalysisController extends Controller
         $grandTotal = 0;
 
         foreach ($categories as $cat => $refs) {
-            $catRows = $rows->filter(fn($r) => in_array($r->Ref_expenses, $refs));
+            $catRows = $rows->filter(fn ($r) => in_array($r->Ref_expenses, $refs));
             $catTotal = 0;
             $items = [];
 
@@ -977,10 +980,10 @@ class SiteAnalysisController extends Controller
         }
 
         if (! Storage::disk('sims3')->exists($contract->commune_contract)) {
-            return response()->json(['error' => 'Contract file not found on disk : ' . $contract->commune_contract], 404);
+            return response()->json(['error' => 'Contract file not found on disk : '.$contract->commune_contract], 404);
         }
 
-        return Storage::disk('sims3')->download($contract->commune_contract, $site->name . '_commune_contract.pdf');
+        return Storage::disk('sims3')->download($contract->commune_contract, $site->name.'_commune_contract.pdf');
     }
 
     public function entrepreneurHistory(Site $site): JsonResponse
@@ -1014,13 +1017,391 @@ class SiteAnalysisController extends Controller
 
     public function downloadEntrepreneurContract(string $filename): JsonResponse|StreamedResponse
     {
-        $path = 'En_Contract/' . $filename;
+        $path = 'En_Contract/'.$filename;
 
         if (! Storage::disk('sims3')->exists($path)) {
-            return response()->json(['error' => 'File not found : ' . $path], 404);
+            return response()->json(['error' => 'File not found : '.$path], 404);
         }
 
         return Storage::disk('sims3')->download($path, $filename);
+    }
+
+    public function exportExcel(Site $site, Request $request): JsonResponse|BinaryFileResponse
+    {
+        $sims3Site = $this->resolveSims3Site($site);
+
+        if (! $sims3Site) {
+            return response()->json(['error' => 'Site not found in Sims3 database'], 404);
+        }
+
+        $month = $this->resolveMonth($request);
+
+        // ---- General Details ----
+        $advisorName = $sims3Site->Advisor_email;
+        if ($advisorName) {
+            $advisorUser = Sims3User::where('email', $advisorName)->first();
+            if ($advisorUser?->staff_name) {
+                $advisorName = $advisorUser->staff_name;
+            }
+        }
+
+        $romEmail = $sims3Site->Platform
+            ? Sims3Platform::where('Code_Platform', $sims3Site->Platform)->value('Mail_ROM')
+            : null;
+        $romName = $romEmail;
+        $romUser = $romEmail ? Sims3User::where('email', $romEmail)->first() : null;
+        if ($romUser?->staff_name) {
+            $romName = $romUser->staff_name;
+        }
+
+        $fact = FactMonthly::where('site_id', $site->id)
+            ->where('month', $month)
+            ->first();
+
+        $general = [
+            'platform' => $sims3Site->Platform ?? '-',
+            'entrepreneur_name' => $sims3Site->Entrepreneur_English_Name ?? '-',
+            'start_working_date' => $sims3Site->Date_start_working ?? '-',
+            'advisor_name' => $advisorName ?? '-',
+            'rom_name' => $romName ?? '-',
+            'commune_name' => $sims3Site->Commune ?? '-',
+            'population_commune' => $sims3Site->Number_Population
+                ? (int) $sims3Site->Number_Population
+                : (int) ($sims3Site->Population ?? 0),
+            'households' => (int) ($sims3Site->Households ?? 0),
+            'delivery_program' => $sims3Site->delivery_program == 1 ? 'Yes' : 'No',
+            'treatment_process' => $fact !== null ? ($fact->treatment_process ?? '-') : '-',
+        ];
+
+        // ---- KPIs ----
+        $kpiRows = Kpi::whereIn('col_name', [
+            'bottles_per_day',
+            'sales_volume',
+            'tier',
+            'days_open',
+            'water_loss',
+            'operators',
+            'consumers',
+            'penetration',
+            'who_compliance',
+        ])->get()->keyBy('col_name');
+
+        $displayColNames = [
+            'bottles_per_day',
+            'sales_volume',
+            'tier',
+            'days_open',
+            'water_loss',
+            'operators',
+            'consumers',
+            'penetration',
+            'who_compliance',
+        ];
+
+        $kpiData = [];
+        foreach ($displayColNames as $colName) {
+            $kpi = $kpiRows[$colName] ?? null;
+            if (! $kpi) {
+                continue;
+            }
+
+            $def = [
+                'col_name' => $colName,
+                'label' => $kpi->name,
+                'periodicity' => $colName === 'bottles_per_day' ? 'ytd' : 'monthly',
+            ];
+
+            $value = null;
+            $objective = null;
+
+            if ($fact) {
+                if ($def['periodicity'] === 'ytd') {
+                    $totals = DB::table('fact_monthly')
+                        ->where('site_id', $site->id)
+                        ->whereYear('month', $month->year)
+                        ->where('month', '<=', $month)
+                        ->selectRaw('SUM(sales_volume) as total_volume, SUM(days_open) as total_days')
+                        ->first();
+
+                    $value = $totals && $totals->total_days > 0
+                        ? round($totals->total_volume / $totals->total_days)
+                        : 0;
+                } else {
+                    $value = $fact->{$def['col_name']};
+                }
+
+                $matchingObjective = Objective::where('kpi_id', $kpi->id)
+                    ->where('start_date', '<=', $month)
+                    ->where(fn ($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', $month))
+                    ->orderByRaw("CASE WHEN type = 'individual' THEN 0 ELSE 1 END")
+                    ->first();
+                $objective = $matchingObjective ? (float) $matchingObjective->value : null;
+            }
+
+            if ($colName === 'who_compliance' && $value !== null) {
+                $value = $value ? 'Safe' : 'Unsafe';
+            } elseif ($colName === 'penetration' && is_numeric($value)) {
+                $value = round((float) $value * 100);
+            } elseif (is_numeric($value)) {
+                $value = round((float) $value);
+            }
+
+            $kpiData[] = [
+                'label' => $def['label'],
+                'value' => $value ?? 0,
+                'objective' => $objective ?? 0,
+            ];
+        }
+
+        // ---- Monthly Sales Performance (5 years) ----
+        $currentYear = now()->year;
+        $years = range($currentYear - 5, $currentYear);
+
+        $records = FactMonthly::where('site_id', $site->id)
+            ->whereYear('month', '>=', $currentYear - 5)
+            ->whereNotNull('bottles_per_day')
+            ->orderBy('month')
+            ->get(['month', 'bottles_per_day']);
+
+        $monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        $performanceSeries = [];
+        foreach ($years as $year) {
+            $data = array_fill(0, 12, null);
+            $yearRecords = $records->filter(fn ($r) => Carbon::parse($r->month)->year === $year);
+            foreach ($yearRecords as $r) {
+                $m = Carbon::parse($r->month);
+                $data[$m->month - 1] = round($r->bottles_per_day);
+            }
+            $performanceSeries[] = [
+                'name' => (string) $year,
+                'data' => $data,
+            ];
+        }
+
+        $bottlesPerDayKpi = Kpi::where('col_name', 'bottles_per_day')->first();
+        $objectiveData = array_fill(0, 12, null);
+        if ($bottlesPerDayKpi) {
+            $currentMonthObj = now()->startOfMonth();
+            $matchingObjective = Objective::where('kpi_id', $bottlesPerDayKpi->id)
+                ->where('start_date', '<=', $currentMonthObj)
+                ->where(fn ($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', $currentMonthObj))
+                ->orderByRaw("CASE WHEN type = 'individual' THEN 0 ELSE 1 END")
+                ->first();
+            $objVal = $matchingObjective ? (int) $matchingObjective->value : null;
+            $objectiveData = array_fill(0, 12, $objVal);
+        }
+        $performanceSeries[] = ['name' => 'Objectives', 'data' => $objectiveData];
+
+        $salesPerformance = [
+            'categories' => $monthLabels,
+            'series' => $performanceSeries,
+        ];
+
+        // ---- Monthly Sales Breakdown ----
+        $sale = $this->resolveSale($sims3Site, $month);
+
+        $channelDefinitions = [
+            ['key' => 'Hod_Sales', 'label' => 'Home Delivery'],
+            ['key' => 'Shopkeeper_Sales', 'label' => 'Shopkeeper'],
+            ['key' => 'WiS_Sales', 'label' => 'Water in school'],
+            ['key' => 'Onsite_Sales', 'label' => 'On site'],
+            ['key' => 'Free_Sales', 'label' => 'Free'],
+            ['key' => 'Bottle_Sales', 'label' => 'Bottle'],
+            ['key' => 'Emergency_Sales', 'label' => 'Emergency'],
+            ['key' => 'Other_Sales', 'label' => 'Other'],
+        ];
+
+        $salesBreakdown = $sale
+            ? array_map(fn ($c) => [
+                'label' => $c['label'],
+                'value' => (float) ($sale->{$c['key']} ?? 0),
+            ], $channelDefinitions)
+            : [];
+
+        // ---- Monthly Expenses Comparison ----
+        $categoryRefs = $this->getExpenseCategories();
+        $allRefs = collect($categoryRefs)->values()->flatten()->all();
+        $expensesToIgnore = $this->getExpensesToIgnore();
+
+        $siteExpenses = Sims3Expense::where('Id_Site', $sims3Site->Id_Site)
+            ->whereYear('Month', $month->year)
+            ->whereMonth('Month', $month->month)
+            ->whereNotIn('Ref_expenses', $expensesToIgnore)
+            ->whereIn('Ref_expenses', $allRefs)
+            ->get(['Ref_expenses', 'Amount_expenses'])
+            ->groupBy(fn ($e) => collect($categoryRefs)->search(fn ($refs) => in_array($e->Ref_expenses, $refs)))
+            ->map(fn ($group) => round($group->sum('Amount_expenses')));
+
+        $allMonthly = Sims3Expense::whereYear('Month', $month->year)
+            ->whereMonth('Month', $month->month)
+            ->whereNotIn('Ref_expenses', $expensesToIgnore)
+            ->whereIn('Ref_expenses', $allRefs)
+            ->get(['Id_Site', 'Ref_expenses', 'Amount_expenses'])
+            ->groupBy(fn ($e) => collect($categoryRefs)->search(fn ($refs) => in_array($e->Ref_expenses, $refs)));
+
+        $expenseComparison = [];
+        foreach ($categoryRefs as $category => $refs) {
+            $expenseComparison[] = [
+                'category' => $category,
+                'site_amount' => $siteExpenses->get($category, 0),
+                'avg_amount' => $allMonthly->has($category)
+                    ? round($allMonthly->get($category)->avg('Amount_expenses'))
+                    : 0,
+            ];
+        }
+
+        // ---- Profit & Loss ----
+        $currentStart = $month->copy()->startOfMonth();
+        $currentEnd = $month->copy()->endOfMonth();
+        $previousStart = $month->copy()->subMonth()->startOfMonth();
+        $previousEnd = $month->copy()->subMonth()->endOfMonth();
+        $ytdStart = $month->copy()->startOfYear();
+        $ytdEnd = $month->copy()->endOfMonth();
+        $lastYearStart = $month->copy()->subYear()->startOfMonth();
+        $lastYearEnd = $month->copy()->subYear()->endOfMonth();
+
+        $periods = [
+            'current' => [$currentStart, $currentEnd],
+            'previous' => [$previousStart, $previousEnd],
+            'ytd' => [$ytdStart, $ytdEnd],
+            'last_year' => [$lastYearStart, $lastYearEnd],
+        ];
+
+        $revenue = [];
+        $expenseCategoriesData = [];
+        $expenseSubTotals = [];
+        $entrepreneurSalaries = [];
+
+        foreach ($periods as $key => [$start, $end]) {
+            $rev = $this->getRevenueForPeriod($sims3Site, $start, $end);
+            $revenue[$key] = $rev;
+
+            $exp = $this->getExpensesForPeriod($sims3Site, $start, $end);
+            $expenseSubTotals[$key] = $exp['sub_total'];
+            $entrepreneurSalaries[$key] = $exp['entrepreneur_salary'];
+            foreach ($exp['categoryAmounts'] as $cat => $amt) {
+                $expenseCategoriesData[$cat][$key] = $amt;
+            }
+        }
+
+        $expenseCategoriesList = [];
+        foreach ($categoryRefs as $cat => $refs) {
+            $expenseCategoriesList[] = [
+                'category' => $cat,
+                'current' => $expenseCategoriesData[$cat]['current'] ?? 0,
+                'previous' => $expenseCategoriesData[$cat]['previous'] ?? 0,
+                'ytd' => $expenseCategoriesData[$cat]['ytd'] ?? 0,
+                'last_year' => $expenseCategoriesData[$cat]['last_year'] ?? 0,
+            ];
+        }
+
+        $periodLabels = [
+            'current' => $currentStart->format('M Y'),
+            'previous' => $previousStart->format('M Y'),
+            'ytd' => $ytdStart->format('Y').' YTD',
+            'last_year' => $lastYearStart->format('M Y'),
+        ];
+
+        $profitLoss = [
+            'labels' => $periodLabels,
+            'revenue' => [
+                'sales' => [
+                    'current' => $revenue['current']['sales'],
+                    'previous' => $revenue['previous']['sales'],
+                    'ytd' => $revenue['ytd']['sales'],
+                    'last_year' => $revenue['last_year']['sales'],
+                ],
+                'water_in_school' => [
+                    'current' => $revenue['current']['water_in_school'],
+                    'previous' => $revenue['previous']['water_in_school'],
+                    'ytd' => $revenue['ytd']['water_in_school'],
+                    'last_year' => $revenue['last_year']['water_in_school'],
+                ],
+                'sub_total' => [
+                    'current' => $revenue['current']['sub_total'],
+                    'previous' => $revenue['previous']['sub_total'],
+                    'ytd' => $revenue['ytd']['sub_total'],
+                    'last_year' => $revenue['last_year']['sub_total'],
+                ],
+            ],
+            'expenses' => [
+                'categories' => $expenseCategoriesList,
+                'sub_total' => [
+                    'current' => $expenseSubTotals['current'],
+                    'previous' => $expenseSubTotals['previous'],
+                    'ytd' => $expenseSubTotals['ytd'],
+                    'last_year' => $expenseSubTotals['last_year'],
+                ],
+            ],
+            'result' => [
+                'current' => $revenue['current']['sub_total'] - $expenseSubTotals['current'],
+                'previous' => $revenue['previous']['sub_total'] - $expenseSubTotals['previous'],
+                'ytd' => $revenue['ytd']['sub_total'] - $expenseSubTotals['ytd'],
+                'last_year' => $revenue['last_year']['sub_total'] - $expenseSubTotals['last_year'],
+            ],
+            'entrepreneur_salary' => [
+                'current' => $entrepreneurSalaries['current'],
+                'previous' => $entrepreneurSalaries['previous'],
+                'ytd' => $entrepreneurSalaries['ytd'],
+                'last_year' => $entrepreneurSalaries['last_year'],
+            ],
+        ];
+
+        // ---- Channel Prices ----
+        $priceChannels = [
+            ['key' => 'Hod_Price', 'label' => 'Home Delivery'],
+            ['key' => 'Shopkeeper_Price', 'label' => 'Shopkeeper'],
+            ['key' => 'Onsite_Price', 'label' => 'On site'],
+            ['key' => 'WiS_Price', 'label' => 'Water in school'],
+        ];
+
+        $channelPrices = $sale
+            ? array_map(fn ($c) => [
+                'label' => $c['label'],
+                'price' => round((float) ($sale->{$c['key']} ?? 0), 2),
+            ], $priceChannels)
+            : [];
+
+        // ---- Bottle Purchases ----
+        $bottleYtdStart = $month->copy()->startOfYear();
+        $bottleYtdEnd = $month->copy()->endOfMonth();
+        $bottleLastYearStart = $month->copy()->subYear()->startOfYear();
+        $bottleLastYearEnd = $month->copy()->subYear()->endOfMonth();
+
+        $bottleYtd = (float) Sims3Sale::where('Id_Site', $sims3Site->Id_Site)
+            ->where('Month', '>=', $bottleYtdStart)
+            ->where('Month', '<=', $bottleYtdEnd)
+            ->sum('Bottle_Sales');
+
+        $bottleLastYear = (float) Sims3Sale::where('Id_Site', $sims3Site->Id_Site)
+            ->where('Month', '>=', $bottleLastYearStart)
+            ->where('Month', '<=', $bottleLastYearEnd)
+            ->sum('Bottle_Sales');
+
+        $bottlePurchases = [
+            'ytd' => round($bottleYtd),
+            'last_year' => round($bottleLastYear),
+        ];
+
+        // ---- Build and download ----
+        $siteName = preg_replace('/[^A-Za-z0-9_-]/', '_', $site->name);
+        $monthStr = $month->format('Y-m');
+        $filename = "site-analysis-{$siteName}-{$monthStr}.xlsx";
+
+        return Excel::download(
+            new SiteAnalysisExport([
+                'general' => $general,
+                'kpis' => $kpiData,
+                'sales_performance' => $salesPerformance,
+                'sales_breakdown' => $salesBreakdown,
+                'expense_comparison' => $expenseComparison,
+                'profit_loss' => $profitLoss,
+                'channel_prices' => $channelPrices,
+                'bottle_purchases' => $bottlePurchases,
+            ]),
+            $filename
+        );
     }
 
     private function getExpenseCategories(): array
@@ -1065,7 +1446,7 @@ class SiteAnalysisController extends Controller
 
     private function resolveMonth(Request $request): Carbon
     {
-        return Carbon::parse($request->query('month', now()->format('Y-m')) . '-01');
+        return Carbon::parse($request->query('month', now()->format('Y-m')).'-01');
     }
 
     private function resolveSims3Site(Site $site): ?Sims3Site
@@ -1111,11 +1492,11 @@ class SiteAnalysisController extends Controller
 
         $categoryAmounts = [];
         foreach ($categories as $cat => $refs) {
-            $categoryAmounts[$cat] = round($rows->filter(fn($r) => in_array($r->Ref_expenses, $refs))->sum('Amount_expenses'));
+            $categoryAmounts[$cat] = round($rows->filter(fn ($r) => in_array($r->Ref_expenses, $refs))->sum('Amount_expenses'));
         }
 
         $entrepreneurSalaryRefs = ['fix_salary_entrepreneurs', 'variable_salary_entrepreneurs'];
-        $entrepreneurSalary = round($rows->filter(fn($r) => in_array($r->Ref_expenses, $entrepreneurSalaryRefs))->sum('Amount_expenses'));
+        $entrepreneurSalary = round($rows->filter(fn ($r) => in_array($r->Ref_expenses, $entrepreneurSalaryRefs))->sum('Amount_expenses'));
 
         return [
             'categoryAmounts' => $categoryAmounts,

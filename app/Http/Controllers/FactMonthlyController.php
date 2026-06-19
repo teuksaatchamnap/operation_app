@@ -23,10 +23,10 @@ class FactMonthlyController extends Controller
      * @queryParam kpis string required. Single KPI column name.
      *   Available: tier, sales_volume, days_open, active, super_tier_1, bottles_per_day, expenses, revenue, workers, consumers, who_compliance, profitable, water_loss, is_water_loss_ok, data_collection, water_source.
      *   Example: revenue
- * @queryParam aggregate string Optional. Aggregate function to apply to KPI column. Options: sum, avg, count, pct_active, pct.
- *   pct_active returns SUM(kpi) / NULLIF(SUM(active), 0) * 100 (percentage of active sites).
- *   pct returns SUM(kpi) / NULLIF(COUNT(kpi), 0) * 100 (percentage of sites with non-null kpi where kpi=1).
- *   When provided, returns a single aggregated result instead of multiple rows.
+     * @queryParam aggregate string Optional. Aggregate function to apply to KPI column. Options: sum, avg, count, pct_active, pct.
+     *   pct_active returns SUM(kpi) / NULLIF(SUM(active), 0) * 100 (percentage of active sites).
+     *   pct returns SUM(kpi) / NULLIF(COUNT(kpi), 0) * 100 (percentage of sites with non-null kpi where kpi=1).
+     *   When provided, returns a single aggregated result instead of multiple rows.
      *   Required when using latest_available.
      * @queryParam year_to_date bool Optional. When true, aggregates values from January 1 to the selected month
      *   (or full year if only year is given). Requires the month or year parameter.

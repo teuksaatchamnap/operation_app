@@ -74,6 +74,7 @@
                         <ScreenCaptureButton
                             :target="contentRef"
                             filename="site-analysis"
+                            :export-url="exportUrl"
                         />
                     </v-card-title>
                     <v-card-text>
@@ -793,6 +794,11 @@ const formattedPopulation = computed(() =>
 const formattedHouseholds = computed(() =>
     formatNumber(data.value?.households),
 );
+
+const exportUrl = computed(() => {
+    if (!props.site?.id) return null;
+    return `/api/sites/${props.site.id}/analysis/export?month=${selectedMonth.value}`;
+});
 
 const theme = useTheme();
 const isDark = computed(() => theme.global.name.value === "dark");

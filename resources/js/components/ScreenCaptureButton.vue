@@ -22,6 +22,13 @@
             >
                 PDF
             </v-list-item>
+            <v-list-item
+                v-if="exportUrl"
+                prepend-icon="mdi-file-excel"
+                @click="downloadExcel"
+            >
+                Excel (.xlsx)
+            </v-list-item>
         </v-list>
     </v-menu>
 </template>
@@ -40,9 +47,20 @@ const props = defineProps({
         type: String,
         default: "export",
     },
+    exportUrl: {
+        type: String,
+        default: null,
+    },
 });
 
 const menu = ref(false);
+
+function downloadExcel() {
+    menu.value = false;
+    if (props.exportUrl) {
+        window.open(props.exportUrl, "_blank");
+    }
+}
 
 function downloadAs(format) {
     menu.value = false;
