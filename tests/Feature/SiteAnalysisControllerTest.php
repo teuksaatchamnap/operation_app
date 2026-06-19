@@ -34,7 +34,9 @@ class SiteAnalysisControllerTest extends TestCase
             'Advisor_email' => 'advisor@test.com',
             'Commune' => 'Test Commune',
             'Population' => 5000,
+            'Number_Population' => 5000,
             'Households' => 1000,
+            'delivery_program' => 0,
         ];
         $attrs = array_merge($defaults, $attributes);
 
@@ -49,6 +51,14 @@ class SiteAnalysisControllerTest extends TestCase
         $mock->shouldReceive('where')->with('Id_Site', $siteName)->andReturn($builderMock);
 
         return $mock;
+    }
+
+    private function mockSims3User(): void
+    {
+        $userBuilder = Mockery::mock(Builder::class);
+        $userBuilder->shouldReceive('first')->andReturn(null);
+        Mockery::mock('overload:App\Models\Sims3\User')
+            ->shouldReceive('where')->andReturn($userBuilder);
     }
 
     // ------------------------------------------------------------------
@@ -107,6 +117,7 @@ class SiteAnalysisControllerTest extends TestCase
         Kpi::factory()->create(['col_name' => 'bottles_per_day', 'name' => 'Bottles Per Day']);
 
         $this->mockSims3Site('SITE01');
+        $this->mockSims3User();
 
         $platformBuilderMock = Mockery::mock(Builder::class);
         $platformBuilderMock->shouldReceive('value')->with('Mail_ROM')->andReturn('test@rom.com');
@@ -144,6 +155,7 @@ class SiteAnalysisControllerTest extends TestCase
         Kpi::factory()->create(['col_name' => 'who_compliance', 'name' => 'WHO']);
 
         $this->mockSims3Site('SITE02', ['Platform' => null]);
+        $this->mockSims3User();
 
         $response = $this->actingAs($user)
             ->getJson("/api/sites/{$site->id}/analysis?month=2025-01");
@@ -165,6 +177,7 @@ class SiteAnalysisControllerTest extends TestCase
         Kpi::factory()->create(['col_name' => 'penetration', 'name' => 'Pen']);
 
         $this->mockSims3Site('SITE03', ['Platform' => null]);
+        $this->mockSims3User();
 
         $response = $this->actingAs($user)
             ->getJson("/api/sites/{$site->id}/analysis?month=2025-01");
@@ -193,6 +206,7 @@ class SiteAnalysisControllerTest extends TestCase
         Kpi::factory()->create(['col_name' => 'bottles_per_day', 'name' => 'BPD']);
 
         $this->mockSims3Site('SITE04', ['Platform' => null]);
+        $this->mockSims3User();
 
         $response = $this->actingAs($user)
             ->getJson("/api/sites/{$site->id}/analysis?month=2025-03");
@@ -216,6 +230,7 @@ class SiteAnalysisControllerTest extends TestCase
         $kpi->objectives()->create(['start_date' => '2025-01-01', 'end_date' => null, 'value' => '48000', 'type' => 'individual']);
 
         $this->mockSims3Site('SITE05', ['Platform' => null]);
+        $this->mockSims3User();
 
         $response = $this->actingAs($user)
             ->getJson("/api/sites/{$site->id}/analysis?month=2025-01");
