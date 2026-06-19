@@ -162,7 +162,9 @@ class SiteAnalysisController extends Controller
             'advisor_name' => $sims3Site->Advisor_email,
             'rom_name' => $romName,
             'commune_name' => $sims3Site->Commune,
-            'population_commune' => $sims3Site->Population,
+            'population_commune' => $sims3Site->Number_Population
+                ? (int) $sims3Site->Number_Population
+                : (int) ($sims3Site->Population ?? null),
             'households' => $sims3Site->Households,
             'delivery_program' => $sims3Site->delivery_program,
             'treatment_process' => $fact?->treatment_process,
