@@ -1,6 +1,6 @@
 <template>
     <v-card flat>
-        <v-card-text>
+        <v-card-text ref="contentRef">
             <template v-if="loading">
                 <v-card variant="outlined" class="subtle-border">
                     <v-card-title
@@ -70,6 +70,11 @@
                             >mdi-store-outline</v-icon
                         >
                         General Details
+                        <v-spacer />
+                        <ScreenCaptureButton
+                            :target="contentRef"
+                            filename="site-analysis"
+                        />
                     </v-card-title>
                     <v-card-text>
                         <v-row density="comfortable">
@@ -690,6 +695,7 @@ import { useCurrency } from "../composables/useCurrency";
 import CurrencySwitch from "./CurrencySwitch.vue";
 import ChartExportButtons from "./ChartExportButtons.vue";
 import MonthlyPerformanceChart from "./MonthlyPerformanceChart.vue";
+import ScreenCaptureButton from "./ScreenCaptureButton.vue";
 
 const ApexChart = defineAsyncComponent(() => import("vue3-apexcharts"));
 
@@ -708,6 +714,7 @@ const now = new Date();
 const loading = ref(false);
 const error = ref(false);
 const data = ref(null);
+const contentRef = ref(null);
 const selectedMonth = ref(
     props.initialMonth ||
         `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
