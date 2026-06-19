@@ -12,6 +12,7 @@ use App\Models\Sims3\Platform as Sims3Platform;
 use App\Models\Sims3\Sale as Sims3Sale;
 use App\Models\Sims3\Site as Sims3Site;
 use App\Models\Sims3\SiteContract as Sims3SiteContract;
+use App\Models\Sims3\User as Sims3User;
 use App\Models\Sims3\WaterMeter;
 use App\Models\Site;
 use App\Services\DailySalesProvider;
@@ -38,9 +39,22 @@ class SiteAnalysisController extends Controller
 
         $month = $this->resolveMonth($request);
 
-        $romName = $sims3Site->Platform
+        $advisorName = $sims3Site->Advisor_email;
+        if ($advisorName) {
+            $advisorUser = Sims3User::where('email', $advisorName)->first();
+            if ($advisorUser?->staff_name) {
+                $advisorName = $advisorUser->staff_name;
+            }
+        }
+
+        $romEmail = $sims3Site->Platform
             ? Sims3Platform::where('Code_Platform', $sims3Site->Platform)->value('Mail_ROM')
             : null;
+        $romName = $romEmail;
+        $romUser = $romEmail ? Sims3User::where('email', $romEmail)->first() : null;
+        if ($romUser?->staff_name) {
+            $romName = $romUser->staff_name;
+        }
 
         $fact = FactMonthly::where('site_id', $site->id)
             ->where('month', $month)
@@ -159,7 +173,7 @@ class SiteAnalysisController extends Controller
             'platform' => $sims3Site->Platform,
             'entrepreneur_name' => $sims3Site->Entrepreneur_English_Name,
             'start_working_date' => $sims3Site->Date_start_working,
-            'advisor_name' => $sims3Site->Advisor_email,
+            'advisor_name' => $advisorName,
             'rom_name' => $romName,
             'commune_name' => $sims3Site->Commune,
             'population_commune' => $sims3Site->Number_Population
