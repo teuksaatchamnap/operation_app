@@ -1,10 +1,10 @@
 <template>
     <v-card class="pa-4">
         <v-row align="center">
-            <v-col>
+            <v-col cols="12" sm="6" md="3">
                 <MonthPicker v-model="selectedMonth" />
             </v-col>
-            <v-col>
+            <v-col cols="12" sm="6" md="3">
                 <v-autocomplete
                     v-model="selectedSites"
                     :items="availableSites"
@@ -20,7 +20,7 @@
                     autocomplete="off"
                 />
             </v-col>
-            <v-col>
+            <v-col cols="12" sm="6" md="3">
                 <v-autocomplete
                     v-model="selectedAdvisors"
                     :items="advisors"
@@ -36,7 +36,7 @@
                     autocomplete="off"
                 />
             </v-col>
-            <v-col>
+            <v-col cols="12" sm="6" md="3">
                 <v-select
                     v-model="selectedPlatforms"
                     :items="platforms"

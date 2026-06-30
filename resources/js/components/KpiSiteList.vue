@@ -1,6 +1,6 @@
 <template>
     <v-card class="mb-6 pa-4">
-        <div class="d-flex align-center mb-4">
+        <div class="d-flex flex-wrap align-center ga-2 mb-4">
             <div class="text-subtitle-1 font-weight-bold">Sites</div>
             <v-spacer />
             <v-text-field
@@ -10,8 +10,7 @@
                 clearable
                 prepend-inner-icon="mdi-magnify"
                 placeholder="Search sites..."
-                class="mr-4"
-                style="max-width: 200px"
+                class="site-filter-search"
             />
             <v-select
                 v-model="dataMode"
@@ -20,8 +19,7 @@
                 item-value="value"
                 density="compact"
                 hide-details
-                class="mr-4"
-                style="max-width: 260px"
+                class="site-filter-select"
             />
             <v-btn-toggle
                 v-model="viewMode"
@@ -505,6 +503,26 @@ onMounted(() => {
     height: 14px;
     border-radius: 3px;
     flex-shrink: 0;
+}
+
+.site-filter-search {
+    max-width: 200px;
+    min-width: 150px;
+    flex: 1 1 auto;
+}
+
+.site-filter-select {
+    max-width: 260px;
+    min-width: 200px;
+    flex: 1 1 auto;
+}
+
+@media (max-width: 600px) {
+    .site-filter-search,
+    .site-filter-select {
+        max-width: none;
+        width: 100%;
+    }
 }
 
 /* ========== Skeleton loading ========== */

@@ -91,7 +91,6 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import axios from "axios";
-
 const props = defineProps({
     kpi: {
         type: Object,
@@ -273,5 +272,11 @@ watch(
 .kpi-card {
     min-width: 210px;
     flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+    .kpi-card {
+        min-width: 160px;
+    }
 }
 </style>

@@ -1,19 +1,20 @@
 <template>
-    <v-navigation-drawer
-        v-model="drawer"
-        :rail="rail"
-        permanent
-        @click="rail = false"
-    >
-        <v-list-item :title="rail ? '' : 'Operations App'" nav class="px-2">
-            <template v-slot:append>
-                <v-btn
-                    variant="text"
-                    :icon="rail ? 'mdi-chevron-right' : 'mdi-chevron-left'"
-                    @click.stop="rail = !rail"
-                ></v-btn>
-            </template>
-        </v-list-item>
+        <v-navigation-drawer
+            v-model="drawer"
+            :rail="rail"
+            permanent
+            @click="onDrawerClick"
+        >
+            <v-list-item :title="rail ? '' : 'Operations App'" nav class="px-2">
+                <template v-slot:append>
+                    <v-btn
+                        v-if="!display.mobile.value"
+                        variant="text"
+                        :icon="railInternal ? 'mdi-chevron-right' : 'mdi-chevron-left'"
+                        @click.stop="toggleRail"
+                    ></v-btn>
+                </template>
+            </v-list-item>
 
         <v-divider></v-divider>
 
@@ -91,16 +92,31 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { useTheme } from "vuetify";
+import { useTheme, useDisplay } from "vuetify";
 import { useAuthStore } from "../stores/auth";
 import axios from "axios";
 
 const router = useRouter();
 const authStore = useAuthStore();
 const theme = useTheme();
+const display = useDisplay();
 
 const drawer = ref(true);
-const rail = ref(false);
+const railInternal = ref(false);
+
+const rail = computed(() => {
+    if (display.mobile.value) return true;
+    return railInternal.value;
+});
+
+function toggleRail() {
+    if (display.mobile.value) return;
+    railInternal.value = !railInternal.value;
+}
+
+function onDrawerClick() {
+    if (!display.mobile.value) railInternal.value = false;
+}
 
 const isDark = computed(() => theme.global.current.value.dark);
 

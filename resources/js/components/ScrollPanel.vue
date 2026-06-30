@@ -18,6 +18,9 @@
             @mousemove="onDragMove"
             @mouseup="onDragEnd"
             @mouseleave="onDragEnd"
+            @touchstart.prevent="onTouchStart"
+            @touchmove.prevent="onTouchMove"
+            @touchend="onDragEnd"
         >
             <slot />
         </div>
@@ -54,6 +57,19 @@ function onDragMove(e) {
     if (!isDragging.value) return;
     e.preventDefault();
     const x = e.pageX - scroller.value.offsetLeft;
+    const walk = (x - dragStartX) * 1.5;
+    scroller.value.scrollLeft = dragScrollLeft - walk;
+}
+
+function onTouchStart(e) {
+    isDragging.value = true;
+    dragStartX = e.touches[0].pageX - scroller.value.offsetLeft;
+    dragScrollLeft = scroller.value.scrollLeft;
+}
+
+function onTouchMove(e) {
+    if (!isDragging.value) return;
+    const x = e.touches[0].pageX - scroller.value.offsetLeft;
     const walk = (x - dragStartX) * 1.5;
     scroller.value.scrollLeft = dragScrollLeft - walk;
 }
