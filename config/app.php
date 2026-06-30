@@ -14,6 +14,7 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
+    'dashboard_url' => env('DASHBOARD_URL', 'https://dashboard.teuksaat1001.com'),
 
     /*
     |--------------------------------------------------------------------------
