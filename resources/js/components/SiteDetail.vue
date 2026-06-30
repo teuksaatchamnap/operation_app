@@ -36,7 +36,7 @@
 
                 <v-tabs
                     v-model="tab"
-                    fixed-tabs
+                    show-arrows
                     density="compact"
                     slider-color="primary"
                 >

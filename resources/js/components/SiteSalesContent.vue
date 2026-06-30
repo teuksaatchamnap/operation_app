@@ -59,8 +59,9 @@
                         </div>
                     </v-card-title>
                     <v-card-text>
+                        <template v-if="data.sales.length">
+                        <div class="table-scroll">
                         <v-table
-                            v-if="data.sales.length"
                             density="compact"
                             class="sales-table"
                         >
@@ -173,6 +174,8 @@
                                 </tr>
                             </tbody>
                         </v-table>
+                        </div>
+                        </template>
                         <div
                             v-else
                             class="text-medium-emphasis text-center pa-4"
@@ -261,6 +264,7 @@
                             <template
                                 v-else-if="waterData && waterData.weeks.length"
                             >
+                                <div class="table-scroll">
                                 <v-table density="compact" class="sales-table">
                                     <thead>
                                         <tr class="accent-header">
@@ -410,6 +414,7 @@
                                         </tr>
                                     </tbody>
                                 </v-table>
+                                </div>
                             </template>
 
                             <div
@@ -779,6 +784,11 @@ watchEffect(async () => {
 .skeleton-table {
     height: 350px;
     width: 100%;
+}
+
+.table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 @keyframes skeleton-pulse {

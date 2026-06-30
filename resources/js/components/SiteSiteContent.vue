@@ -26,7 +26,7 @@
                             </v-card-title>
                             <v-card-text>
                                 <v-row density="comfortable">
-                                    <v-col v-for="i in 8" :key="i" cols="3">
+                                    <v-col v-for="i in 8" :key="i" cols="6" sm="4" md="3">
                                         <div class="skeleton skeleton-label" />
                                         <div
                                             class="skeleton skeleton-value mt-1"
@@ -47,7 +47,7 @@
                             </v-card-title>
                             <v-card-text>
                                 <v-row density="comfortable">
-                                    <v-col v-for="i in 4" :key="i" cols="3">
+                                    <v-col v-for="i in 4" :key="i" cols="6" sm="4" md="3">
                                         <div class="skeleton skeleton-label" />
                                         <div
                                             class="skeleton skeleton-value mt-1"
@@ -68,7 +68,7 @@
                             </v-card-title>
                             <v-card-text>
                                 <v-row density="comfortable">
-                                    <v-col v-for="i in 4" :key="i" cols="3">
+                                    <v-col v-for="i in 4" :key="i" cols="6" sm="4" md="3">
                                         <div class="skeleton skeleton-label" />
                                         <div
                                             class="skeleton skeleton-value mt-1"
@@ -89,7 +89,7 @@
                             </v-card-title>
                             <v-card-text>
                                 <v-row density="comfortable">
-                                    <v-col v-for="i in 3" :key="i" cols="3">
+                                    <v-col v-for="i in 3" :key="i" cols="6" sm="4" md="3">
                                         <div class="skeleton skeleton-label" />
                                         <div
                                             class="skeleton skeleton-value mt-1"
@@ -110,7 +110,7 @@
                             </v-card-title>
                             <v-card-text>
                                 <v-row density="comfortable">
-                                    <v-col v-for="i in 8" :key="i" cols="3">
+                                    <v-col v-for="i in 8" :key="i" cols="6" sm="4" md="3">
                                         <div class="skeleton skeleton-label" />
                                         <div
                                             class="skeleton skeleton-value mt-1"
@@ -141,7 +141,7 @@
                             </v-card-title>
                             <v-card-text>
                                 <v-row density="comfortable">
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -161,7 +161,7 @@
                                             }}</template>
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -173,7 +173,7 @@
                                             }}
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -186,7 +186,7 @@
                                             >
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -196,7 +196,7 @@
                                             {{ data.profile.rom ?? "-" }}
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -209,7 +209,7 @@
                                             >
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -221,7 +221,7 @@
                                             >
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -234,7 +234,7 @@
                                             }}
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -244,7 +244,7 @@
                                             {{ data.profile.phone ?? "-" }}
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -254,7 +254,7 @@
                                             {{ data.profile.education ?? "-" }}
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -293,7 +293,7 @@
                             </v-card-title>
                             <v-card-text>
                                 <v-row density="comfortable">
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -312,7 +312,7 @@
                                             >
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -331,7 +331,7 @@
                                             >
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -350,7 +350,7 @@
                                             >
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -384,7 +384,7 @@
                             </v-card-title>
                             <v-card-text>
                                 <v-row density="comfortable">
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -397,7 +397,7 @@
                                             }}
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -407,7 +407,7 @@
                                             {{ formattedFamilies }}
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -417,7 +417,7 @@
                                             {{ formattedHouseholds }}
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -442,7 +442,7 @@
                             </v-card-title>
                             <v-card-text>
                                 <v-row density="comfortable">
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -455,7 +455,7 @@
                                             }}
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -465,7 +465,7 @@
                                             {{ data.project?.wave ?? "-" }}
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -490,7 +490,7 @@
                             </v-card-title>
                             <v-card-text>
                                 <v-row density="comfortable">
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -503,7 +503,7 @@
                                             }}
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -517,7 +517,7 @@
                                             }}
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -530,7 +530,7 @@
                                             }}
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -543,7 +543,7 @@
                                             }}
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -556,7 +556,7 @@
                                             }}
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -569,7 +569,7 @@
                                             }}
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -582,7 +582,7 @@
                                             }}
                                         </div>
                                     </v-col>
-                                    <v-col cols="3">
+                                    <v-col cols="6" sm="4" md="3">
                                         <div
                                             class="caption-label text-medium-emphasis"
                                         >
@@ -626,8 +626,9 @@
                         </v-col>
                     </v-row>
 
+                    <template v-else>
+                    <div class="table-scroll">
                     <v-data-table
-                        v-else
                         :headers="entrepreneurHeaders"
                         :items="entrepreneurItems"
                         density="compact"
@@ -701,6 +702,8 @@
                             >
                         </template>
                     </v-data-table>
+                    </div>
+                    </template>
                 </v-tabs-window-item>
             </v-tabs-window>
         </v-card-text>
@@ -730,13 +733,13 @@ const entrepreneurError = ref(false);
 const entrepreneurData = ref({ current: null, history: [] });
 
 const entrepreneurHeaders = [
-    { title: "Name", key: "name", width: 200 },
-    { title: "Sex", key: "Sex", width: 60 },
-    { title: "Start Date", key: "Working_Date", width: 120 },
-    { title: "Resign Date", key: "Resignation_Date", width: 120 },
-    { title: "Reason", key: "Reason_Resign", width: 200 },
-    { title: "Comment", key: "Detail_Resign", width: 300 },
-    { title: "Contract", key: "Contract", width: 100, sortable: false },
+    { title: "Name", key: "name" },
+    { title: "Sex", key: "Sex" },
+    { title: "Start Date", key: "Working_Date" },
+    { title: "Resign Date", key: "Resignation_Date" },
+    { title: "Reason", key: "Reason_Resign" },
+    { title: "Comment", key: "Detail_Resign" },
+    { title: "Contract", key: "Contract", sortable: false },
 ];
 
 const entrepreneurItems = computed(() => {
@@ -887,6 +890,11 @@ const downloadCommuneContract = async () => {
 
 .location-link:hover {
     text-decoration: underline;
+}
+
+.table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .skeleton {

@@ -13,7 +13,7 @@
                     </v-card-title>
                     <v-card-text>
                         <v-row density="comfortable">
-                            <v-col v-for="i in 10" :key="i" cols="3">
+                            <v-col v-for="i in 10" :key="i" cols="6" sm="4" md="3">
                                 <div class="skeleton skeleton-label" />
                                 <div class="skeleton skeleton-value mt-1" />
                             </v-col>
@@ -30,7 +30,7 @@
                     </v-card-title>
                     <v-card-text>
                         <v-row density="comfortable">
-                            <v-col v-for="i in 8" :key="i" cols="3">
+                            <v-col v-for="i in 8" :key="i" cols="6" sm="4" md="3">
                                 <div class="skeleton skeleton-label" />
                                 <div class="skeleton skeleton-value mt-1" />
                             </v-col>
@@ -79,7 +79,7 @@
                     </v-card-title>
                     <v-card-text>
                         <v-row density="comfortable">
-                            <v-col cols="3">
+                            <v-col cols="6" sm="4" md="3" lg="2">
                                 <div class="caption-label text-medium-emphasis">
                                     Platform
                                 </div>
@@ -87,7 +87,7 @@
                                     {{ data.platform ?? "-" }}
                                 </div>
                             </v-col>
-                            <v-col cols="3">
+                            <v-col cols="6" sm="4" md="3" lg="2">
                                 <div class="caption-label text-medium-emphasis">
                                     Entrepreneur Name
                                 </div>
@@ -95,7 +95,7 @@
                                     {{ data.entrepreneur_name ?? "-" }}
                                 </div>
                             </v-col>
-                            <v-col cols="3">
+                            <v-col cols="6" sm="4" md="3" lg="2">
                                 <div class="caption-label text-medium-emphasis">
                                     Start Working Date
                                 </div>
@@ -103,7 +103,7 @@
                                     {{ formattedDate }}
                                 </div>
                             </v-col>
-                            <v-col cols="3">
+                            <v-col cols="6" sm="4" md="3" lg="2">
                                 <div class="caption-label text-medium-emphasis">
                                     Advisor Name
                                 </div>
@@ -111,7 +111,7 @@
                                     {{ data.advisor_name ?? "-" }}
                                 </div>
                             </v-col>
-                            <v-col cols="3">
+                            <v-col cols="6" sm="4" md="3" lg="2">
                                 <div class="caption-label text-medium-emphasis">
                                     ROM Name
                                 </div>
@@ -119,7 +119,7 @@
                                     {{ data.rom_name ?? "-" }}
                                 </div>
                             </v-col>
-                            <v-col cols="3">
+                            <v-col cols="6" sm="4" md="3" lg="2">
                                 <div class="caption-label text-medium-emphasis">
                                     Commune Name
                                 </div>
@@ -127,7 +127,7 @@
                                     {{ data.commune_name ?? "-" }}
                                 </div>
                             </v-col>
-                            <v-col cols="3">
+                            <v-col cols="6" sm="4" md="3" lg="2">
                                 <div class="caption-label text-medium-emphasis">
                                     Population Commune
                                 </div>
@@ -135,7 +135,7 @@
                                     {{ formattedPopulation }}
                                 </div>
                             </v-col>
-                            <v-col cols="3">
+                            <v-col cols="6" sm="4" md="3" lg="2">
                                 <div class="caption-label text-medium-emphasis">
                                     Households
                                 </div>
@@ -143,7 +143,7 @@
                                     {{ formattedHouseholds }}
                                 </div>
                             </v-col>
-                            <v-col cols="3">
+                            <v-col cols="6" sm="4" md="3" lg="2">
                                 <div class="caption-label text-medium-emphasis">
                                     Delivery Program
                                 </div>
@@ -155,7 +155,7 @@
                                     }}
                                 </div>
                             </v-col>
-                            <v-col cols="3">
+                            <v-col cols="6" sm="4" md="3" lg="2">
                                 <div class="caption-label text-medium-emphasis">
                                     Treatment Process
                                 </div>
@@ -199,7 +199,7 @@
                             <v-col
                                 v-for="(kpi, key) in data.kpis"
                                 :key="key"
-                                cols="3"
+                                cols="6" sm="4" md="3"
                             >
                                 <div class="caption-label text-medium-emphasis">
                                     <v-tooltip
@@ -257,7 +257,7 @@
                 />
 
                 <v-row class="mt-4">
-                    <v-col cols="6">
+                    <v-col cols="12" md="6">
                         <v-card variant="outlined" class="subtle-border h-100">
                             <v-card-title
                                 class="section-title d-flex align-center ga-2"
@@ -296,7 +296,7 @@
                             </v-card-text>
                         </v-card>
                     </v-col>
-                    <v-col cols="6">
+                    <v-col cols="12" md="6">
                         <v-card variant="outlined" class="subtle-border h-100">
                             <v-card-title
                                 class="section-title d-flex align-center ga-2"
@@ -349,14 +349,17 @@
                         <CurrencySwitch />
                     </v-card-title>
                     <v-card-text>
-                        <div v-if="profitLossLoading" class="text-center pa-4">
-                            <v-progress-circular indeterminate />
-                        </div>
-                        <v-table
-                            v-else-if="profitLossData"
-                            density="compact"
-                            class="pl-table"
-                        >
+                        <template v-if="profitLossLoading">
+                            <div class="text-center pa-4">
+                                <v-progress-circular indeterminate />
+                            </div>
+                        </template>
+                        <template v-else-if="profitLossData">
+                            <div class="table-scroll">
+                            <v-table
+                                density="compact"
+                                class="pl-table"
+                            >
                             <thead>
                                 <tr class="pl-header-row">
                                     <th
@@ -518,11 +521,13 @@
                                 </tr>
                             </tbody>
                         </v-table>
+                            </div>
+                        </template>
                     </v-card-text>
                 </v-card>
 
                 <v-row class="mt-4">
-                    <v-col cols="6">
+                    <v-col cols="12" md="6">
                         <v-card variant="outlined" class="subtle-border h-100">
                             <v-card-title
                                 class="section-title d-flex align-center ga-2"
@@ -583,7 +588,7 @@
                             </v-card-text>
                         </v-card>
                     </v-col>
-                    <v-col cols="6">
+                    <v-col cols="12" md="6">
                         <v-card variant="outlined" class="subtle-border h-100">
                             <v-card-title
                                 class="section-title d-flex align-center ga-2"
@@ -1153,6 +1158,17 @@ watchEffect(async () => {
 /* Indented sub-items */
 .pl-indent {
     padding-left: 36px !important;
+}
+
+.table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 600px) {
+    .pl-indent {
+        padding-left: 24px !important;
+    }
 }
 
 /* P&L row hover — skip section headers to keep their tint */

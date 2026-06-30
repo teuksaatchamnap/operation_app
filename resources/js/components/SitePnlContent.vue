@@ -547,6 +547,17 @@ watchEffect(async () => {
     padding-left: 36px !important;
 }
 
+.table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 600px) {
+    .pl-indent {
+        padding-left: 24px !important;
+    }
+}
+
 .pl-grand-total td {
     font-weight: 700;
     font-size: 1rem;
