@@ -19,7 +19,7 @@ class ComputeAll extends Command
      *
      * @var string
      */
-    protected $description = 'Compute all data from 2005';
+    protected $description = 'Compute all data from 2024';
 
     /**
      * Execute the console command.
@@ -30,7 +30,7 @@ class ComputeAll extends Command
         $startDateTime = now()->toDateTimeString();
         $this->info("Starting computation at {$startDateTime}");
 
-        $startYear = 2005;
+        $startYear = 2024;
         $endYear = date('Y');
         $totalYears = $endYear - $startYear + 1;
         $totalIterations = $totalYears * 12;

@@ -50,6 +50,13 @@
                 to="/kpis"
                 color="primary"
             ></v-list-item>
+            <v-list-item
+                prepend-icon="mdi-bullseye-arrow"
+                title="Advisor"
+                value="Advisor"
+                to="/Advisor"
+                color="primary"
+            ></v-list-item>
         </v-list>
     </v-navigation-drawer>
 

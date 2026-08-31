@@ -21,6 +21,12 @@ class DimensionsController extends Controller
 
     public function getSites(): JsonResponse
     {
-        return response()->json(Site::all());
+        $excludedNames = collect(range(1, 20))->map(fn (int $n) => "A{$n}");
+
+        $sites = Site::whereHas('factMonthlies', fn ($query) => $query->whereNotNull('platform_id'))
+            ->whereNotIn('name', $excludedNames)
+            ->get();
+
+        return response()->json($sites);
     }
 }
