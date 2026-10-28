@@ -124,6 +124,7 @@ class DailySalesProvider
             $day['Total_Sales'] = 0;
             $day['date'] = $date;
 
+
             foreach ($byType as $type => $items) {
                 $column = self::TYPE_MAP[$type] ?? null;
                 if ($column !== null) {

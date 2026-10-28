@@ -1,63 +1,25 @@
 <template>
-        <v-navigation-drawer
-            v-model="drawer"
-            :rail="rail"
-            permanent
-            @click="onDrawerClick"
-        >
-            <v-list-item :title="rail ? '' : 'Operations App'" nav class="px-2">
-                <template v-slot:append>
-                    <v-btn
-                        v-if="!display.mobile.value"
-                        variant="text"
-                        :icon="railInternal ? 'mdi-chevron-right' : 'mdi-chevron-left'"
-                        @click.stop="toggleRail"
-                    ></v-btn>
-                </template>
-            </v-list-item>
-
+    <v-navigation-drawer v-model="drawer" :rail="rail" permanent @click="onDrawerClick">
+        <v-list-item :title="rail ? '' : 'Operations App'" nav class="px-2">
+            <template v-slot:append>
+                <v-btn v-if="!display.mobile.value" variant="text"
+                    :icon="railInternal ? 'mdi-chevron-right' : 'mdi-chevron-left'" @click.stop="toggleRail"></v-btn>
+            </template>
+        </v-list-item>
+ <!-- <test only  -->
         <v-divider></v-divider>
 
         <v-list density="compact" nav>
-            <v-list-item
-                prepend-icon="mdi-view-dashboard"
-                title="Command Center"
-                value="dashboard"
-                to="/application"
-                color="primary"
-            ></v-list-item>
-            <v-list-item
-                prepend-icon="mdi-file-chart"
-                title="Technical"
-                value="reports"
-                disabled
-            ></v-list-item>
-            <v-list-item
-                prepend-icon="mdi-chart-line"
-                title="Tech manager"
-                value="analytics"
-                disabled
-            ></v-list-item>
-            <v-list-item
-                prepend-icon="mdi-cog"
-                title="Laboratory"
-                value="settings"
-                disabled
-            ></v-list-item>
-            <v-list-item
-                prepend-icon="mdi-bullseye-arrow"
-                title="Kpis"
-                value="kpis"
-                to="/kpis"
-                color="primary"
-            ></v-list-item>
-            <v-list-item
-                prepend-icon="mdi-bullseye-arrow"
-                title="Advisor"
-                value="Advisor"
-                to="/Advisor"
-                color="primary"
-            ></v-list-item>
+            <v-list-item prepend-icon="mdi-view-dashboard" title="Command Center" value="dashboard" to="/application"
+                color="primary"></v-list-item>
+            <v-list-item prepend-icon="mdi-file-chart" title="Technical" value="technical" to="/technicalpart"
+                color="primary"></v-list-item>
+            <v-list-item prepend-icon="mdi-chart-line" title="Tech manager" value="analytics" disabled></v-list-item>
+            <v-list-item prepend-icon="mdi-cog" title="Laboratory" value="settings" disabled></v-list-item>
+            <v-list-item prepend-icon="mdi-bullseye-arrow" title="Kpis" value="kpis" to="/kpis"
+                color="primary"></v-list-item>
+            <v-list-item prepend-icon="mdi-bullseye-arrow" title="Advisor" value="Advisor" to="/Advisor"
+                color="primary"></v-list-item>
         </v-list>
     </v-navigation-drawer>
 
@@ -70,28 +32,19 @@
 
         <v-tooltip location="bottom" text="Toggle dark mode">
             <template v-slot:activator="{ props }">
-                <v-btn
-                    :icon="isDark ? 'mdi-weather-night' : 'mdi-weather-sunny'"
-                    variant="text"
-                    v-bind="props"
-                    @click="toggleDarkMode"
-                ></v-btn>
+                <v-btn :icon="isDark ? 'mdi-weather-night' : 'mdi-weather-sunny'" variant="text" v-bind="props"
+                    @click="toggleDarkMode"></v-btn>
             </template>
         </v-tooltip>
 
         <v-tooltip location="bottom" text="Logout">
             <template v-slot:activator="{ props }">
-                <v-btn
-                    icon="mdi-logout"
-                    variant="text"
-                    v-bind="props"
-                    @click="logout"
-                ></v-btn>
+                <v-btn icon="mdi-logout" variant="text" v-bind="props" @click="logout"></v-btn>
             </template>
         </v-tooltip>
     </v-app-bar>
 
-    <v-main class="bg-background mt-2 ml-1 mr-1">
+    <v-main class="bg-background mt-2 ml-1 mr-1" @click="onMainClick">
         <slot></slot>
     </v-main>
 </template>
@@ -121,8 +74,13 @@ function toggleRail() {
     railInternal.value = !railInternal.value;
 }
 
+// Clicking the menu expands it; clicking the page collapses it back to icons
 function onDrawerClick() {
     if (!display.mobile.value) railInternal.value = false;
+}
+
+function onMainClick() {
+    if (!display.mobile.value) railInternal.value = true;
 }
 
 const isDark = computed(() => theme.global.current.value.dark);
